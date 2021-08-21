@@ -1,0 +1,25 @@
+{
+  "name": "node-notifier",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Node-Notifier.js",
+  "scripts": {
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Sv443",
+    "email": "contact@sv443.net",
+    "url": "https://github.com/Sv443"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "node-notifier": "^10.0.0",
+    "svcorelib": "^1.14.2"
+  },
+  "devDependencies": {
+    "@types/node-notifier": "^8.0.1",
+    "eslint": "^7.32.0"
+  }
+}
