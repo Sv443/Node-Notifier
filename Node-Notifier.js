@@ -18,7 +18,6 @@ async function init()
     {
         await server.init();
 
-
         try
         {
             const { result, meta } = await sendNotification({

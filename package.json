@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "Node-Notifier.js",
+  "bin": "Node-Notifier.js",
   "scripts": {
     "start": "node .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
+    "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
+    "build-linux": "pkg -t node14-linux -o dist/NodeNotifier-Linux .",
+    "build-mac": "pkg -t node14-macos -o dist/NodeNotifier-MacOS ."
   },
   "author": {
     "name": "Sv443",
