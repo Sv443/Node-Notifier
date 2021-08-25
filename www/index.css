@@ -1,0 +1,9 @@
+body {
+    font-family: "Arial", "Segoe UI", sans-serif;
+    background-color: #282c34;
+    color: #fff;
+}
+
+footer {
+    position: fixed; bottom: 0;
+}

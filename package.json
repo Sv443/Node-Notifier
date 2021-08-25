@@ -2,8 +2,8 @@
   "name": "node-notifier",
   "version": "1.0.0",
   "description": "",
-  "main": "Node-Notifier.js",
-  "bin": "Node-Notifier.js",
+  "main": "src/Node-Notifier.js",
+  "bin": "src/Node-Notifier.js",
   "scripts": {
     "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1",
