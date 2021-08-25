@@ -1,77 +1,25 @@
-const { colors } = require("svcorelib");
-const { resolve } = require("path");
-
-const server = require("./server");
-const error = require("./error");
-const sendNotification = require("./sendNotification");
-
-const packageJSON = require("../package.json");
-const cfg = require("../config");
-
-const col = colors.fg;
+const pm2 = require("pm2");
 
 
-/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
-/** @typedef {import("node-notifier").NotificationMetadata} NotificationMetadata */
-
-/**
- * @typedef {object} SendNotifResult
- * @prop {string} result Result string
- * @prop {NotificationMetadata} meta Notification metadata object
- */
-
-async function init()
+function init()
 {
-    console.log(`\n${col.blue}Node-Notifier v${packageJSON.version}${col.rst}\n`);
+    pm2.connect((err) => {
+        if(err)
+            return console.error(`Error while connecting to pm2: ${err}`);
 
-    try
-    {
-        try
-        {
-            await server.init();
-        }
-        catch(err)
-        {
-            return error("Error while initializing express server", err, true);
-        }
+        pm2.start({
+            name: "Node-Notifier-Test",
+            script: "./src/main.js"
+        }, (err, processes) => {
+            if(err)
+                return console.error(`Error while starting process: ${err}`);
 
-        try
-        {
-            if(cfg.notifications.startupNotificationEnabled)
-            {
-                await sendNotification({
-                    title: "Node-Notifier is running",
-                    message: `The HTTP server is listening on port ${cfg.server.port}`,
-                    icon: resolve("./www/favicon.png"),
-                    contentImage: resolve("./www/favicon.png"),
-                    requireInteraction: false
-                });
-                // const { result, meta } = await sendNotification({
-                //     icon: resolve("./www/favicon.png"),
-                //     contentImage: resolve("./www/favicon.png"),
-                //     title: "Title",
-                //     message: "Message",
-                //     closeLabel: "CloseLabel",
-                //     dropdownLabel: "DropdownLabel2",
-                //     actions: [ "Act1", "Act2" ],
-                //     subtitle: "Subtitle",
-                //     wait: true,
-                //     reply: "Reply",
-                // });
-            
-                // console.log(`Result: ${result}`);
-                // console.log(`Meta:\n${JSON.stringify(meta, undefined, 4)}`);
-            }
-        }
-        catch(err)
-        {
-            return error("Error while sending notification", err, true);
-        }
-    }
-    catch(err)
-    {
-        return error("General error", err, true);
-    }
+            const proc = processes[0];
+
+            console.log(`Created pm2 process '${proc.name}' with ID ${proc.pm_id}`);
+            console.log("To automatically start Node-Notifier after reboot please use the command 'pm2 save'");
+        });
+    });
 }
 
 init();

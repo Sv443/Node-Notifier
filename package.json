@@ -6,6 +6,7 @@
   "bin": "src/Node-Notifier.js",
   "scripts": {
     "start": "node .",
+    "debug": "node src/main",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
@@ -21,6 +22,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "node-notifier": "^10.0.0",
+    "pm2": "^5.1.1",
     "svcorelib": "^1.14.2"
   },
   "devDependencies": {

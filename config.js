@@ -1,10 +1,10 @@
 const config = {
     notifications: {
-        startupNotificationEnabled: true, // send notification on startup
+        startupNotificationEnabled: false, // send notification on startup
     },
     server: {
         port: 8042,
-        timeout: 5 // in seconds
+        timeout: 10 // in seconds
     }
 };
 

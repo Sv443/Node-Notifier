@@ -9,7 +9,7 @@ function error(message, err, fatal = false)
     if(typeof message !== "string")
         throw new TypeError(`Message has to be of type string but got ${typeof message} instead`);
 
-    if(typeof err !== "string" || !(err instanceof Error))
+    if(typeof err !== "string" && !(err instanceof Error))
         throw new TypeError(`Err has to be an instance of the Error class or a string but got ${typeof err} instead`);
 
     if(fatal !== true)

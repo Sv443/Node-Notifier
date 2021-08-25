@@ -1,8 +1,10 @@
 const express = require("express");
 const { resolve } = require("path");
+const { unused } = require("svcorelib");
 
 const cfg = require("../config");
 const error = require("./error");
+const sendNotification = require("./sendNotification");
 
 
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
@@ -30,6 +32,15 @@ function init()
 
         // use JSON middleware
         app.use(express.json());
+
+        app.use((err, req, res, next) => {
+            unused(req, next);
+
+            return respondJSON(res, 400, {
+                error: true,
+                message: err.toString()
+            });
+        });
 
         // CORS & OPTIONS middleware
         app.use((req, res, next) => {
@@ -129,6 +140,8 @@ function respondJSON(res, statusCode = 500, jsonObj)
  */
 async function parseRequest(req, res, url)
 {
+    unused(url);
+
     if(req.body === undefined || (req.body && req.body.length < 1))
     {
         return respondJSON(res, 400, {
@@ -137,11 +150,48 @@ async function parseRequest(req, res, url)
         });
     }
 
-    console.log(`#DEBUG parse request - URL: '${url}' - data:\n${JSON.stringify(req.body, undefined, 4)}\n`);
-    
-    // TODO:
-    // - parse data
-    // - send notification
+    try
+    {
+        const invalidProps = [];
+
+        const { title, message, icon } = req.body;
+
+        (typeof title != "string") && invalidProps.push("title");
+        (typeof title != "string") && invalidProps.push("message");
+
+        if(invalidProps.length != 0)
+        {
+            return respondJSON(res, 400, {
+                error: true,
+                message: `Request body is missing the following ${invalidProps.length == 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
+            });
+        }
+        else
+        {
+            const iconProps = typeof icon === "string" ? {
+                icon: resolve(icon),
+                contentImage: resolve(icon)
+            } : {};
+
+            sendNotification({
+                title,
+                message,
+                ...iconProps
+            });
+
+            return respondJSON(res, 200, {
+                error: false,
+                message: "Successfully sent notification"
+            });
+        }
+    }
+    catch(err)
+    {
+        return respondJSON(res, 400, {
+            error: true,
+            message: `Error while parsing request body: ${err.toString()}`
+        });
+    }
 }
 
 module.exports = { init };
