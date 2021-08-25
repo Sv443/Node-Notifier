@@ -173,10 +173,13 @@ async function parseRequest(req, res, url)
                 contentImage: resolve(icon)
             } : {};
 
+            // TODO: add option to wait for notification result
             sendNotification({
                 title,
                 message,
                 ...iconProps
+            }).catch(err => {
+                unused("TODO:", err);
             });
 
             return respondJSON(res, 200, {
