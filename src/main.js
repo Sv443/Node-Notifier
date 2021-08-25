@@ -11,15 +11,6 @@ const cfg = require("../config");
 const col = colors.fg;
 
 
-/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
-/** @typedef {import("node-notifier").NotificationMetadata} NotificationMetadata */
-
-/**
- * @typedef {object} SendNotifResult
- * @prop {string} result Result string
- * @prop {NotificationMetadata} meta Notification metadata object
- */
-
 async function init()
 {
     console.log(`\n${col.blue}Node-Notifier v${packageJSON.version}${col.rst}\n`);
