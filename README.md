@@ -19,15 +19,21 @@ Desktop client for [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) t
 <br><br>
 
 ## Sending Requests:
+The IP addresses in this section are placeholders, instead you need to use the IP of the device Node-Notifier is running on.  
+(Make sure the DHCP server in your router doesn't change this IP address).  
+  
+If the client and server are running on the same device, you can use `127.0.0.1` or `localhost`.
 
 > ### Triggering a Notification:
 > 
-> `POST` &bull; `http://1.2.3.4:8042/send`
+> `POST` &bull; `http://192.168.x.x:8042/send`
 > 
 > Expected request body (JSON):
 > ```json
 > {
->     "foo": "bar"
+>     "title": "My Notification",
+>     "message": "Duis ex ipsum velit ea cillum laboris laborum ex consequat consectetur fugiat magna.",
+>     "icon": "path/to/some/image.png"
 > }
 > ```
 
