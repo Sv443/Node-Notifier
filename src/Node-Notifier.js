@@ -14,7 +14,8 @@ function init()
             if(err)
                 return console.error(`Error while starting process: ${err}`);
 
-            const proc = processes[0];
+            const fProc = processes[0];
+            const proc = fProc.pm2_env ? fProc.pm2_env : fProc;
 
             console.log(`Created pm2 process '${proc.name}' with ID ${proc.pm_id}`);
             console.log("To automatically start Node-Notifier after reboot please use the command 'pm2 save'");
