@@ -55,3 +55,12 @@ Usually this is fine as long as all devices are part of the same network.
 But still, a compromised network could allow third parties to read your requests, so make sure you are not sending any important data.  
   
 If I feel like it I might add HTTPS support in the future.
+
+<br><br>
+
+### Dependencies:
+Node-Notifier wouldn't be possible without these libraries:
+- [express](https://npmjs.com/package/express)
+- [node-notifier](https://npmjs.com/package/node-notifier)
+- [pm2](https://npmjs.com/package/pm2)
+- [svcorelib](https://npmjs.com/package/svcorelib)
