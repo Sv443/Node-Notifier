@@ -173,14 +173,26 @@ async function parseRequest(req, res, url)
                 contentImage: resolve(icon)
             } : {};
 
-            // TODO: add option to wait for notification result
-            sendNotification({
-                title,
-                message,
-                ...iconProps
-            }).catch(err => {
-                unused("TODO:", err);
-            });
+            const waitForResult = (req.query && (typeof req.query["waitForResult"] === "string" || req.query["waitForResult"] == "true"));
+
+            if(waitForResult)
+            {
+                await sendNotification({
+                    title,
+                    message,
+                    ...iconProps
+                });
+            }
+            else
+            {
+                sendNotification({
+                    title,
+                    message,
+                    ...iconProps
+                }).catch(err => {
+                    unused("TODO:", err);
+                });
+            }
 
             return respondJSON(res, 200, {
                 error: false,
