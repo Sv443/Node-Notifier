@@ -7,6 +7,7 @@ const error = require("./error");
 const sendNotification = require("./sendNotification");
 
 
+/** @typedef {import("./sendNotification").Notification} Notification */
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
@@ -168,35 +169,58 @@ async function parseRequest(req, res, url)
         }
         else
         {
+            /** @type {Notification} */
             const iconProps = typeof icon === "string" ? {
                 icon: resolve(icon),
                 contentImage: resolve(icon)
             } : {};
 
+            /** @type {Notification} */
+            const notifProps = {
+                title,
+                message,
+                ...iconProps
+            };
+
+            let resultProps = {};
+
+
             const waitForResult = (req.query && (typeof req.query["waitForResult"] === "string" || req.query["waitForResult"] == "true"));
+
+            let responseMessage = "";
 
             if(waitForResult)
             {
-                await sendNotification({
-                    title,
-                    message,
-                    ...iconProps
-                });
+                try
+                {
+                    const { result, meta } = await sendNotification(notifProps);
+
+                    resultProps = {
+                        result: result || null,
+                        type: meta.activationType,
+                        value: meta.activationValue
+                    };
+                    responseMessage = "Successfully sent desktop notification and got a result";
+                }
+                catch(err)
+                {
+                    return respondJSON(res, 400, {
+                        error: true,
+                        message: `Error while sending desktop notification: ${err}`
+                    });
+                }
             }
             else
             {
-                sendNotification({
-                    title,
-                    message,
-                    ...iconProps
-                }).catch(err => {
-                    unused("TODO:", err);
-                });
+                sendNotification(notifProps).catch(unused);
+                responseMessage = "Sent desktop notification";
             }
+
 
             return respondJSON(res, 200, {
                 error: false,
-                message: "Successfully sent notification"
+                message: responseMessage,
+                ...resultProps
             });
         }
     }
