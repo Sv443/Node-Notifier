@@ -3,6 +3,11 @@
 # Node-Notifier
 Desktop client for [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to trigger a desktop notification through an electrical button press
 
+<br>
+
+### Showcase Video:
+[![TODO: image preview of video, click to open video in new tab](./.github/assets/TODO.jpg)](https://youtu.be/)
+
 </div>
 
 <br><br>
