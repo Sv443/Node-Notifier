@@ -64,3 +64,12 @@ Node-Notifier wouldn't be possible without these libraries:
 - [node-notifier](https://npmjs.com/package/node-notifier)
 - [pm2](https://npmjs.com/package/pm2)
 - [svcorelib](https://npmjs.com/package/svcorelib)
+
+
+<br><br>
+<div style="text-align:center;" align="center">
+
+Made with ❤️ by [Sv443](https://github.com/Sv443)  
+Like Node-Notifier? Please consider [supporting me](https://github.com/sponsors/Sv443)
+
+</div>
