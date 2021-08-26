@@ -28,7 +28,9 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > `POST` &bull; `http://192.168.x.x:8042/send`
 > 
-> Expected request body (JSON):
+> <br>
+> 
+> **Expected request body (JSON):**
 > ```json
 > {
 >     "title": "My Notification",
@@ -36,6 +38,14 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 >     "icon": "path/to/some/image.png"
 > }
 > ```
+> Note that the image needs to be present on the system the Node-Notifier server runs on  
+>   
+> <br>
+> 
+> **Query parameters:**
+> | Parameter | Description |
+> | :-- | :-- |
+> | `?waitForResult` | Value-less parameter that makes Node-Notifier wait until the notification was reacted upon by the user or times out and makes it return that data. |
 
 <br><br>
 
