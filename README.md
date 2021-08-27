@@ -67,6 +67,7 @@ If I feel like it I might add HTTPS support in the future.
 ### Dependencies:
 Node-Notifier wouldn't be possible without these libraries:
 - [express](https://npmjs.com/package/express)
+- [fs-extra](https://npmjs.com/package/fs-extra)
 - [node-notifier](https://npmjs.com/package/node-notifier)
 - [pm2](https://npmjs.com/package/pm2)
 - [svcorelib](https://npmjs.com/package/svcorelib)
