@@ -13,7 +13,7 @@ const config = {
         /** TCP port to listen for requests on */
         port: 8042,
         /** Duration in seconds after which a request will be timed out */
-        timeout: 10,
+        timeout: 15,
     }
 };
 

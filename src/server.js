@@ -209,18 +209,24 @@ async function sendNotificationRequest(req, res)
             contentImage: resolve(placeholderIcon),
         };
 
+
+        const { waitForResult, actions } = parseParameters(req);
+
+        /** @type {Notification} */
+        const actionProps = actions.length > 0 ? { actions } : {};
+
+
+        let resultProps = {};
+        let responseMessage = "";
+
+
         /** @type {Notification} Notification properties */
         const notifProps = {
             title,
             message,
-            ...iconProps
+            ...actionProps,
+            ...iconProps,
         };
-
-
-        const { waitForResult, actions } = parseParameters(req);
-
-        let resultProps = {};
-        let responseMessage = "";
 
         if(waitForResult)
         {
