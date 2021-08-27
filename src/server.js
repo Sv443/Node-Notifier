@@ -11,14 +11,25 @@ const sendNotification = require("./sendNotification");
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
+
 /** @typedef {"GET"|"POST"} HttpMethod */
+/**
+ * @typedef {object} QueryObj
+ * @prop {boolean} waitForResult
+ * @prop {string[]} actions
+ */
+
+
+/** Placeholder icon path - relative to project root */
+const placeholderIcon = "./www/favicon.png";
+
+/** URLs that can be accessed with GET */
+const getURLs = [ "/" ];
+/** URLs that can be accessed with POST */
+const postURLs = [ "/send" ];
 
 
 const app = express();
-
-
-const getURLs = [ "/" ];
-const postURLs = [ "/send" ];
 
 
 /**
@@ -91,11 +102,13 @@ function init()
  * @param {HttpMethod} method 
  * @param {Request} req 
  * @param {Response} res 
- * @param {string} url 
+ * @param {string} url Lowercase request URL
  */
 function incomingRequest(method, req, res, url)
 {
     console.log(`Incoming ${method} request to '${url}'`);
+
+    url = url.toLowerCase();
 
     switch(method)
     {
@@ -141,8 +154,6 @@ function respondJSON(res, statusCode = 500, jsonObj)
  */
 async function parseRequest(req, res, url)
 {
-    unused(url);
-
     if(req.body === undefined || (req.body && req.body.length < 1))
     {
         return respondJSON(res, 400, {
@@ -153,76 +164,9 @@ async function parseRequest(req, res, url)
 
     try
     {
-        const invalidProps = [];
-
-        const { title, message, icon } = req.body;
-
-        (typeof title != "string") && invalidProps.push("title");
-        (typeof title != "string") && invalidProps.push("message");
-
-        if(invalidProps.length != 0)
-        {
-            return respondJSON(res, 400, {
-                error: true,
-                message: `Request body is missing the following ${invalidProps.length == 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
-            });
-        }
-        else
-        {
-            /** @type {Notification} */
-            const iconProps = typeof icon === "string" ? {
-                icon: resolve(icon),
-                contentImage: resolve(icon)
-            } : {};
-
-            /** @type {Notification} */
-            const notifProps = {
-                title,
-                message,
-                ...iconProps
-            };
-
-            let resultProps = {};
-
-
-            const waitForResult = (req.query && (typeof req.query["waitForResult"] === "string" || req.query["waitForResult"] == "true"));
-
-            let responseMessage = "";
-
-            if(waitForResult)
-            {
-                try
-                {
-                    const { result, meta } = await sendNotification(notifProps);
-
-                    resultProps = {
-                        result: result || null,
-                        type: meta.activationType,
-                        value: meta.activationValue
-                    };
-                    responseMessage = "Successfully sent desktop notification and got a result";
-                }
-                catch(err)
-                {
-                    return respondJSON(res, 400, {
-                        error: true,
-                        message: `Error while sending desktop notification: ${err}`
-                    });
-                }
-            }
-            else
-            {
-                sendNotification(notifProps).catch(unused);
-                responseMessage = "Sent desktop notification";
-            }
-
-
-            return respondJSON(res, 200, {
-                error: false,
-                message: responseMessage,
-                ...resultProps
-            });
-        }
+        // POST /send
+        if(url.startsWith("/send"))
+            return sendNotificationRequest(req, res);
     }
     catch(err)
     {
@@ -231,6 +175,127 @@ async function parseRequest(req, res, url)
             message: `Error while parsing request body: ${err.toString()}`
         });
     }
+}
+
+/**
+ * Called when a request to '/send' is received
+ * @param {Request} req 
+ * @param {Response} res 
+ */
+async function sendNotificationRequest(req, res)
+{
+    const invalidProps = [];
+
+    const { title, message, icon } = req.body;
+
+    (typeof title != "string") && invalidProps.push("title");
+    (typeof title != "string") && invalidProps.push("message");
+
+    if(invalidProps.length != 0)
+    {
+        return respondJSON(res, 400, {
+            error: true,
+            message: `Request body is missing the following ${invalidProps.length == 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
+        });
+    }
+    else
+    {
+        /** @type {Notification} */
+        const iconProps = typeof icon === "string" ? {
+            icon: resolve(icon),
+            contentImage: resolve(icon),
+        } : {
+            icon: resolve(placeholderIcon),
+            contentImage: resolve(placeholderIcon),
+        };
+
+        /** @type {Notification} Notification properties */
+        const notifProps = {
+            title,
+            message,
+            ...iconProps
+        };
+
+
+        const { waitForResult, actions } = parseParameters(req);
+
+        let resultProps = {};
+        let responseMessage = "";
+
+        if(waitForResult)
+        {
+            try
+            {
+                const { result, meta } = await sendNotification(notifProps);
+
+                resultProps = {
+                    result: result || null,
+                    type: meta.activationType,
+                    value: meta.activationValue
+                };
+                responseMessage = "Successfully sent desktop notification and got a result";
+            }
+            catch(err)
+            {
+                return respondJSON(res, 400, {
+                    error: true,
+                    message: `Error while sending desktop notification: ${err}`
+                });
+            }
+        }
+        else
+        {
+            sendNotification(notifProps).catch(unused);
+            responseMessage = "Sent desktop notification";
+        }
+
+
+        return respondJSON(res, 200, {
+            error: false,
+            message: responseMessage,
+            ...resultProps
+        });
+    }
+}
+
+/**
+ * Parses query parameters of a request
+ * @param {Request} req 
+ * @returns {QueryObj}
+ */
+function parseParameters(req)
+{
+    let waitForResult = false;
+    let actions = [];
+
+    if(typeof req.query === "object" && Object.keys(req.query).length > 0)
+    {
+        // ?waitForResult
+        const qWaitForRes = (req.query["waitForResult"]) ? req.query["waitForResult"].toString() : undefined;
+
+        waitForResult = (typeof qWaitForRes === "string" || qWaitForRes === "true" || qWaitForRes === "1" || qWaitForRes === "yes");
+
+
+        // ?actions
+        const qActions = req.query["actions"];
+
+        const actionsRaw = ((req.query && typeof qActions === "string") ? qActions : null).trim();
+
+        if(typeof actionsRaw === "string")
+        {
+            if(actionsRaw.includes(","))
+                actions = actionsRaw.split(/,/g);
+            else
+                actions = [ actionsRaw ];
+
+            waitForResult = true;
+        }
+    }
+
+    return {
+        waitForResult,
+        actions
+    };
 }
 
 module.exports = { init };
