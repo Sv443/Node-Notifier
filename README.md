@@ -1,13 +1,21 @@
 <div style="text-align:center;" align="center">
 
 # Node-Notifier
-Desktop client that triggers desktop notifications through HTTP requests  
+Open client that triggers desktop notifications through HTTP requests  
 Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to send a desktop notification through an electrical button press
 
 <br>
 
-### Showcase Video:
-[![TODO: image preview of video, click to open video in new tab](./.github/assets/TODO.jpg)](https://youtu.be/)
+---
+
+### [Changelog](./changelog.md#readme) &bull; [License (MIT)](./LICENSE.txt)
+
+---
+
+<br><br>
+
+## Video Showcase:
+[![TODO: image preview of video, click to open video in new tab](./.github/assets/video_showcase.png)](https://youtu.be/)
 
 </div>
 
@@ -49,9 +57,16 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > <br>
 > 
 > **Query parameters:**
-> | Parameter | Description |
-> | :-- | :-- |
-> | `?waitForResult` | Value-less parameter that makes Node-Notifier wait until the notification was reacted upon by the user or times out and makes it return that data. |
+> > `?waitForResult`  
+> > This is a value-less parameter that makes Node-Notifier wait until the notification was reacted upon by the user or times out.  
+> > Also, it will make the API return some data on how the user interacted with the notification.  
+> > Make sure your HTTP client waits long enough before getting timed out while the API waits for user interaction!
+> 
+> <br>
+> 
+> > `?actions=Ok;Cancel`  
+> > Semicolon-separated list of actions the user can choose between when the notification pops up.  
+> > If this parameter is set, `?waitForResult` will automatically be set too.
 
 <br><br>
 

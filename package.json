@@ -1,7 +1,8 @@
 {
   "name": "node-notifier",
   "version": "1.0.0",
-  "description": "Desktop client that triggers desktop notifications through HTTP requests",
+  "description": "Open client that triggers desktop notifications through HTTP requests",
+  "homepage": "https://github.com/Sv443/Node-Notifier",
   "main": "src/Node-Notifier.js",
   "bin": "src/Node-Notifier.js",
   "scripts": {
