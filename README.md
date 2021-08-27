@@ -1,7 +1,8 @@
 <div style="text-align:center;" align="center">
 
 # Node-Notifier
-Desktop client for [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to trigger a desktop notification through an electrical button press
+Desktop client that triggers desktop notifications through HTTP requests  
+Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to send a desktop notification through an electrical button press
 
 <br>
 

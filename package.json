@@ -1,7 +1,7 @@
 {
   "name": "node-notifier",
   "version": "1.0.0",
-  "description": "",
+  "description": "Desktop client that triggers desktop notifications through HTTP requests",
   "main": "src/Node-Notifier.js",
   "bin": "src/Node-Notifier.js",
   "scripts": {
