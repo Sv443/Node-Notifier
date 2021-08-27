@@ -1,4 +1,4 @@
-const { colors } = require("svcorelib");
+const { filesystem, colors } = require("svcorelib");
 const { resolve } = require("path");
 
 const server = require("./server");
@@ -10,6 +10,8 @@ const cfg = require("../config");
 
 const col = colors.fg;
 
+const initDirs = [ "assets" ];
+
 
 async function init()
 {
@@ -19,6 +21,8 @@ async function init()
     {
         try
         {
+            await filesystem.ensureDirs(initDirs);
+
             await server.init();
         }
         catch(err)

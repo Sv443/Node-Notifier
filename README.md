@@ -39,22 +39,43 @@ The IP addresses in this section are placeholders, instead you need to use the I
 If the client and server are running on the same device, you can use `127.0.0.1` or `localhost`.
 
 > ### Triggering a Notification:
-> 
-> `POST` &bull; `http://192.168.x.x:8042/send`
+> #### `POST /send`
 > 
 > <br>
 > 
-> **Expected request body (JSON):**
+> This is the main endpoint, used to send a desktop notification on the device this service is running on.  
+> It accepts data in JSON format and has a few query parameters you can set.
+> 
+> <br><br>
+> 
+> **Expected request body (JSON):**  
+> This is what the request body should look like.  
+> Properties prefixed with `?` are optional.  
+> 
+> | Property | Description |
+> | :-- | :-- |
+> | `title` | The (short) title of the notification |
+> | `message` | A more detailed message |
+> | `?icon` | An icon to show on the notification. Defaults to a placeholder icon if left empty. This image needs to be present on the system the Node-Notifier server runs on. An `assets` folder will be created at first startup, it is intended for storing these images. |
+> | `?actions` | Array of actions (buttons or dropdown) the user can select on the notification. Using this automatically enables `?waitForResult` |
+> 
+> <details><summary><b>Full example (click to view)</b></summary>
+> 
 > ```json
 > {
->     "title": "My Notification",
->     "message": "Duis ex ipsum velit ea cillum laboris laborum ex consequat consectetur fugiat magna.",
->     "icon": "path/to/some/image.png"
+>     "title": "Pizza Time!",
+>     "message": "It's pizza time, do you want me to order a pizza?",
+>     "icon": "assets/pizza.png",
+>     "actions": [
+>         "Sure",
+>         "Nah"
+>     ]
 > }
 > ```
-> Note that the image needs to be present on the system the Node-Notifier server runs on  
->   
-> <br>
+> 
+> </details>
+> 
+> <br><br>
 > 
 > **Query parameters:**
 > > `?waitForResult`  
@@ -62,11 +83,49 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > > Also, it will make the API return some data on how the user interacted with the notification.  
 > > Make sure your HTTP client waits long enough before getting timed out while the API waits for user interaction!
 > 
+> <br><br>
+> 
+> **Possible response bodies:**
+> 
+> <details><summary>Base response (click to view)</summary>
+> 
+> ```json
+> {
+>     "error": false,
+>     "message": "Notification was sent"
+> }
+> ```
+> 
+> </details>
+> 
 > <br>
 > 
-> > `?actions=Ok;Cancel`  
-> > Semicolon-separated list of actions the user can choose between when the notification pops up.  
-> > If this parameter is set, `?waitForResult` will automatically be set too.
+> <details><summary>Response when waiting for result (click to view)</summary>
+> 
+> ```json
+> {
+>     "error": false,
+>     "message": "Hello, I am a success message",
+>     "result": "Can be a string or null",
+>     "type": "Describes the type of notification interaction",
+>     "value": "Some other value, idk"
+> }
+> ```
+> 
+> </details>
+> 
+> <br>
+> 
+> <details><summary>Errored response (click to view)</summary>
+> 
+> ```json
+> {
+>     "error": true,
+>     "message": "Hello, I am an error message"
+> }
+> ```
+> 
+> </details>
 
 <br><br>
 

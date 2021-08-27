@@ -1,6 +1,6 @@
 const express = require("express");
 const { resolve } = require("path");
-const { unused } = require("svcorelib");
+const { unused, allOfType } = require("svcorelib");
 
 const cfg = require("../config");
 const error = require("./error");
@@ -16,7 +16,6 @@ const sendNotification = require("./sendNotification");
 /**
  * @typedef {object} QueryObj
  * @prop {boolean} waitForResult
- * @prop {string[]} actions
  */
 
 
@@ -186,10 +185,12 @@ async function sendNotificationRequest(req, res)
 {
     const invalidProps = [];
 
-    const { title, message, icon } = req.body;
+    const { title, message, icon, actions } = req.body;
 
     (typeof title != "string") && invalidProps.push("title");
-    (typeof title != "string") && invalidProps.push("message");
+    (typeof message != "string") && invalidProps.push("message");
+    (typeof icon != "undefined" && typeof icon != "string") && invalidProps.push("icon");
+    (typeof actions != "undefined" && (!Array.isArray(actions) || !allOfType(actions, "string"))) && invalidProps.push("actions");
 
     if(invalidProps.length != 0)
     {
@@ -210,10 +211,14 @@ async function sendNotificationRequest(req, res)
         };
 
 
-        const { waitForResult, actions } = getQueryParams(req);
+        const { waitForResult } = getQueryParams(req);
+
+
+        /** @type {string[]|undefined} */
+        const parsedActions = (Array.isArray(actions) && allOfType(actions, "string")) ? actions : undefined;
 
         /** @type {Notification} */
-        const actionProps = actions.length > 0 ? { actions } : {};
+        const actionProps = (parsedActions && parsedActions.length > 0) ? { actions: parsedActions } : {};
 
 
         let resultProps = {};
@@ -272,7 +277,7 @@ async function sendNotificationRequest(req, res)
 function getQueryParams(req)
 {
     let waitForResult = false;
-    let actions = [];
+
 
     if(typeof req.query === "object" && Object.keys(req.query).length > 0)
     {
@@ -280,27 +285,11 @@ function getQueryParams(req)
         const qWaitForRes = (req.query["waitForResult"]) ? req.query["waitForResult"].toString() : undefined;
 
         waitForResult = (typeof qWaitForRes === "string" || qWaitForRes === "true" || qWaitForRes === "1" || qWaitForRes === "yes");
-
-
-        // ?actions
-        const qActions = req.query["actions"];
-
-        const actionsRaw = ((req.query && typeof qActions === "string") ? qActions : null).trim();
-
-        if(typeof actionsRaw === "string")
-        {
-            if(actionsRaw.includes(","))
-                actions = actionsRaw.split(/,/g);
-            else
-                actions = [ actionsRaw ];
-
-            waitForResult = true;
-        }
     }
 
+
     return {
-        waitForResult,
-        actions
+        waitForResult
     };
 }
 
