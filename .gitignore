@@ -1,3 +1,12 @@
+# Built executables
+dist
+
+# Asset files
+assets
+
+# Other
+test.js
+
 # Logs
 logs
 *.log
@@ -26,9 +35,3 @@ node_modules/
 # dotenv environment variables file
 .env
 .env.test
-
-# Built executables
-dist
-
-# Other
-test.js
