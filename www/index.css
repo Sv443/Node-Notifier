@@ -4,6 +4,56 @@ body {
     color: #fff;
 }
 
+a {
+    text-decoration: none;
+    color: #7d7dff;
+
+    transition: color 0.15s linear;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #afafff;
+}
+
+header {
+    text-align: center;
+}
+
+h2 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+main {
+    text-align: center;
+    padding-top: 25px;
+}
+
+#statusMessage {
+    display: inline-block;
+    padding: 15px;
+    font-size: 120%;
+
+    background-color: #1a4e1a;
+    border: 2px solid #999;
+    border-radius: 20px;
+}
+
 footer {
-    position: fixed; bottom: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+
+    position: fixed;
+    bottom: 0;
+    width: 100vw;
+
+    text-align: center;
+}
+
+#footerContent {
+    padding: 10px;
 }
