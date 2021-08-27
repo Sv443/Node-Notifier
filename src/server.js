@@ -210,7 +210,7 @@ async function sendNotificationRequest(req, res)
         };
 
 
-        const { waitForResult, actions } = parseParameters(req);
+        const { waitForResult, actions } = getQueryParams(req);
 
         /** @type {Notification} */
         const actionProps = actions.length > 0 ? { actions } : {};
@@ -269,7 +269,7 @@ async function sendNotificationRequest(req, res)
  * @param {Request} req 
  * @returns {QueryObj}
  */
-function parseParameters(req)
+function getQueryParams(req)
 {
     let waitForResult = false;
     let actions = [];
