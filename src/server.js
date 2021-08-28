@@ -1,6 +1,7 @@
 const express = require("express");
 const { resolve } = require("path");
 const { unused, allOfType } = require("svcorelib");
+const { platform } = require("os");
 
 const cfg = require("../config");
 const error = require("./error");
@@ -49,17 +50,20 @@ function init()
 
             return respondJSON(res, 400, {
                 error: true,
-                message: err.toString()
+                message: `General error: ${err.toString()}`
             });
         });
 
         // CORS & OPTIONS middleware
         app.use((req, res, next) => {
-            const allowedHeaders = "GET,POST,HEAD";
+            const allowedHeaders = "GET,POST,HEAD,OPTIONS";
             
             // CORS
-            res.setHeader("Access-Control-Allow-Origin", "*"); // TODO: maybe set this? idk
-            res.setHeader("Access-Control-Allow-Methods", allowedHeaders);
+            if(cfg.server.cors.enabled)
+            {
+                res.setHeader("Access-Control-Allow-Origin", cfg.server.cors.allowOrigin);
+                res.setHeader("Access-Control-Allow-Methods", allowedHeaders);
+            }
 
             // OPTIONS
             if(req.method === "OPTIONS")
@@ -187,16 +191,16 @@ async function sendNotificationRequest(req, res)
 
     const { title, message, icon, actions } = req.body;
 
-    (typeof title != "string") && invalidProps.push("title");
-    (typeof message != "string") && invalidProps.push("message");
-    (typeof icon != "undefined" && typeof icon != "string") && invalidProps.push("icon");
-    (typeof actions != "undefined" && (!Array.isArray(actions) || !allOfType(actions, "string"))) && invalidProps.push("actions");
+    (typeof title !== "string") && invalidProps.push("title");
+    (typeof message !== "string") && invalidProps.push("message");
+    (typeof icon !== "undefined" && typeof icon != "string") && invalidProps.push("icon");
+    (typeof actions !== "undefined" && (!Array.isArray(actions) || !allOfType(actions, "string"))) && invalidProps.push("actions");
 
-    if(invalidProps.length != 0)
+    if(invalidProps.length > 0)
     {
         return respondJSON(res, 400, {
             error: true,
-            message: `Request body is missing the following ${invalidProps.length == 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
+            message: `Request body is missing the following ${invalidProps.length === 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
         });
     }
     else
@@ -205,10 +209,7 @@ async function sendNotificationRequest(req, res)
         const iconProps = typeof icon === "string" ? {
             icon: resolve(icon),
             contentImage: resolve(icon),
-        } : {
-            icon: resolve(placeholderIcon),
-            contentImage: resolve(placeholderIcon),
-        };
+        } : getDefaultIconProps();
 
 
         const { waitForResult } = getQueryParams(req);
@@ -291,6 +292,26 @@ function getQueryParams(req)
     return {
         waitForResult
     };
+}
+
+/**
+ * Returns the default icon properties of a notification.  
+ * Does checks for OS, because some notification binaries come with their own placeholders.
+ * @returns {Partial<Notification>}
+ */
+function getDefaultIconProps()
+{
+    const plat = platform();
+
+    let needsPlaceholder = true;
+
+    if(plat === "darwin") // MacOS
+        needsPlaceholder = false;
+
+    return needsPlaceholder ? {
+        icon: resolve(placeholderIcon),
+        contentImage: resolve(placeholderIcon),
+    } : {};
 }
 
 module.exports = { init };
