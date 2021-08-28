@@ -32,6 +32,10 @@ Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notif
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier)
     - Send requests to the server (see [sending requests](#sending-requests))
 
+<br>
+
+To configure Node-Notifier, open the file `config.js` in the project root directory
+
 <br><br>
 
 ## Sending Requests:

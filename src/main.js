@@ -15,7 +15,7 @@ const initDirs = [ "assets" ];
 
 async function init()
 {
-    console.log(`\n${col.blue}Node-Notifier v${packageJSON.version}${col.rst}\n`);
+    console.log(`\n[${getDateTime()}] Starting up Node-Notifier v${packageJSON.version}...\n`);
 
     try
     {
@@ -39,23 +39,10 @@ async function init()
                     message: `The HTTP server is listening on port ${cfg.server.port}`,
                     icon: resolve("./www/favicon.png"),
                     contentImage: resolve("./www/favicon.png"),
-                    requireInteraction: false
+                    requireInteraction: false,
+                    open: `http://localhost:${cfg.server.port}`,
+                    timeout: 6,
                 });
-                // const { result, meta } = await sendNotification({
-                //     icon: resolve("./www/favicon.png"),
-                //     contentImage: resolve("./www/favicon.png"),
-                //     title: "Title",
-                //     message: "Message",
-                //     closeLabel: "CloseLabel",
-                //     dropdownLabel: "DropdownLabel2",
-                //     actions: [ "Act1", "Act2" ],
-                //     subtitle: "Subtitle",
-                //     wait: true,
-                //     reply: "Reply",
-                // });
-            
-                // console.log(`Result: ${result}`);
-                // console.log(`Meta:\n${JSON.stringify(meta, undefined, 4)}`);
             }
         }
         catch(err)
@@ -67,6 +54,15 @@ async function init()
     {
         return error("General error", err, true);
     }
+}
+
+function getDateTime()
+{
+    const pad = n => n < 10 ? `0${n}` : n.toString();
+
+    const d = new Date();
+
+    return `${pad(d.getFullYear())}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 init();
