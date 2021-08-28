@@ -30,7 +30,7 @@ Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notif
 6. See if the service is online (visit http://127.0.0.1:8042/ in a browser)
 7. Do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier)
-    - Send requests to the server (see [sending requests section](#sending-requests))
+    - Send requests to the server (see [sending requests](#sending-requests))
 
 <br><br>
 
@@ -52,14 +52,15 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > **Expected request body (JSON):**  
 > This is what the request body should look like.  
-> Properties prefixed with `?` are optional.  
+> Properties inside square brackets are optional.  
 > 
 > | Property | Description |
 > | :-- | :-- |
 > | `title` | The (short) title of the notification |
 > | `message` | A more detailed message |
-> | `?icon` | An icon to show on the notification. Defaults to a placeholder icon if left empty. This image needs to be present on the system the Node-Notifier server runs on. An `assets` folder will be created at first startup, it is intended for storing these images. |
-> | `?actions` | Array of actions (buttons or dropdown) the user can select on the notification. Using this automatically enables `?waitForResult` |
+> | `[icon]` | An icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on.<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
+> | `[actions]` | Array of actions (buttons or dropdown, depending on OS) the user can select on the notification. Using this automatically enables `?waitForResult` |
+> | `[timeout]` | How many seconds to wait before closing the notification automatically. Takes precedence over `?waitForResult`. Defaults to `10` |
 > 
 > <details><summary><b>Full example (click to view)</b></summary>
 > 
@@ -71,7 +72,8 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 >     "actions": [
 >         "Sure",
 >         "Nah"
->     ]
+>     ],
+>     "timeout": 42
 > }
 > ```
 > 
@@ -89,8 +91,9 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > **Possible response bodies:**
 > 
-> <details><summary>Base response (click to view)</summary>
+> <details><summary>Base response (click to view)</summary><br>
 > 
+> HTTP status code: `200`
 > ```json
 > {
 >     "error": false,
@@ -102,8 +105,9 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > <br>
 > 
-> <details><summary>Response when waiting for result (click to view)</summary>
+> <details><summary>Response when waiting for result (click to view)</summary><br>
 > 
+> HTTP status code: `200`
 > ```json
 > {
 >     "error": false,
@@ -118,8 +122,9 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > <br>
 > 
-> <details><summary>Errored response (click to view)</summary>
+> <details><summary>Errored response (click to view)</summary><br>
 > 
+> HTTP status code: `400`
 > ```json
 > {
 >     "error": true,

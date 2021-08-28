@@ -1,12 +1,13 @@
 const express = require("express");
 const { resolve } = require("path");
-const { unused, allOfType } = require("svcorelib");
+const { unused, allOfType, colors } = require("svcorelib");
 const { platform } = require("os");
 
 const cfg = require("../config");
 const error = require("./error");
 const sendNotification = require("./sendNotification");
 
+const col = colors.fg;
 
 /** @typedef {import("./sendNotification").Notification} Notification */
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
@@ -86,7 +87,8 @@ function init()
             for(const url of postURLs)
                 app.post(url, (req, res) => incomingRequest("POST", req, res, url));
 
-            console.log(`HTTP server is listening at http://127.0.0.1:${cfg.server.port}`);
+            console.log(`HTTP server is listening on port ${cfg.server.port}`);
+            console.log(`To access the landing page, please visit ${col.green}http://localhost:${cfg.server.port}${col.rst}`);
 
             return pRes();
         });
@@ -189,12 +191,13 @@ async function sendNotificationRequest(req, res)
 {
     const invalidProps = [];
 
-    const { title, message, icon, actions } = req.body;
+    const { title, message, icon, actions, timeout } = req.body;
 
     (typeof title !== "string") && invalidProps.push("title");
     (typeof message !== "string") && invalidProps.push("message");
     (typeof icon !== "undefined" && typeof icon != "string") && invalidProps.push("icon");
     (typeof actions !== "undefined" && (!Array.isArray(actions) || !allOfType(actions, "string"))) && invalidProps.push("actions");
+    (typeof timeout !== "undefined" && (typeof timeout !== "number" || timeout < 1)) && invalidProps.push("timeout");
 
     if(invalidProps.length > 0)
     {
@@ -212,6 +215,14 @@ async function sendNotificationRequest(req, res)
         } : getDefaultIconProps();
 
 
+        let timeoutInt = typeof timeout === "number" ? parseInt(timeout) : null;
+
+        /** @type {Notification} */
+        const timeoutProps = (timeoutInt && !isNaN(timeoutInt) && timeoutInt > 0) ? {
+            timeout: timeoutInt
+        } : {};
+
+
         const { waitForResult } = getQueryParams(req);
 
 
@@ -219,7 +230,7 @@ async function sendNotificationRequest(req, res)
         const parsedActions = (Array.isArray(actions) && allOfType(actions, "string")) ? actions : undefined;
 
         /** @type {Notification} */
-        const actionProps = (parsedActions && parsedActions.length > 0) ? { actions: parsedActions } : {};
+        const actionProps = (parsedActions && parsedActions.length > 0) ? { actions: parsedActions, wait: true } : {};
 
 
         let resultProps = {};
@@ -230,6 +241,7 @@ async function sendNotificationRequest(req, res)
         const notifProps = {
             title,
             message,
+            ...timeoutProps,
             ...actionProps,
             ...iconProps,
         };
