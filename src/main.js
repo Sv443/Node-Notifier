@@ -4,24 +4,24 @@ const { resolve } = require("path");
 const server = require("./server");
 const error = require("./error");
 const sendNotification = require("./sendNotification");
+const getDateTime = require("./getDateTime");
+const { initDirs } = require("./files");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
 
 const col = colors.fg;
 
-const initDirs = [ "assets" ];
-
 
 async function init()
 {
-    console.log(`\n[${getDateTime()}] Starting up Node-Notifier v${packageJSON.version}...\n`);
+    console.log(`\n${col.blue}[${getDateTime(true)}]${col.rst} Starting up Node-Notifier v${packageJSON.version}...\n`);
 
     try
     {
         try
         {
-            await filesystem.ensureDirs(initDirs);
+            await initDirs();
 
             await server.init();
         }
@@ -54,15 +54,6 @@ async function init()
     {
         return error("General error", err, true);
     }
-}
-
-function getDateTime()
-{
-    const pad = n => n < 10 ? `0${n}` : n.toString();
-
-    const d = new Date();
-
-    return `${pad(d.getFullYear())}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
 init();

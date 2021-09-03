@@ -1,10 +1,13 @@
 # Built executables
-dist
+dist/
+
+# Process directory
+.notifier/
 
 # Asset files
-assets
+assets/
 
-# Other
+# Developer stuff
 test.js
 
 # Logs
