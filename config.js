@@ -20,7 +20,11 @@ const config = {
             enabled: true,
             /** Which origin to allow - default is "*" (allow all) - also see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin */
             allowOrigin: "*",
-        }
+        },
+        /** Whether to write all notifications to a log file at `.notifier/notifications.json` - log file will periodically be cleared */
+        logNotifications: true,
+        /** How many notifications should be kept in the log */
+        notificationLogSize: 25,
     }
 };
 

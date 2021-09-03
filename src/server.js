@@ -6,6 +6,7 @@ const { platform } = require("os");
 const cfg = require("../config");
 const error = require("./error");
 const sendNotification = require("./sendNotification");
+const logNotification = require("./logNotification");
 
 const col = colors.fg;
 
@@ -268,6 +269,18 @@ async function sendNotificationRequest(req, res)
         {
             sendNotification(notifProps).catch(unused);
             responseMessage = "Sent desktop notification";
+        }
+
+
+        // log notification
+        try
+        {
+            if(cfg.server.logNotifications)
+                await logNotification(notifProps);
+        }
+        catch(err)
+        {
+            error("Error while logging notification", err);
         }
 
 

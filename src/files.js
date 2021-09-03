@@ -1,5 +1,5 @@
 const { filesystem } = require("svcorelib");
-const { join } = require("path");
+const { join, resolve } = require("path");
 const { ensureDir, writeFile, mkdir, copyFile } = require("fs-extra");
 const { hide } = require("hidefile");
 
@@ -8,7 +8,7 @@ const packageJSON = require("../package.json");
 
 /**
  * Initializes all directories
- * @returns {Promise<void, string>}
+ * @returns {Promise<void, Error>}
  */
 function initDirs()
 {
@@ -24,7 +24,7 @@ function initDirs()
             if(!(await filesystem.exists("./.notifier")))
             {
                 stage = "creating ./notifier";
-                await mkdir("./notifier");
+                await ensureDir("./notifier");
 
                 stage = "hiding directory ./notifier"
                 const notifierDir = await hidePath("./notifier");
@@ -36,13 +36,22 @@ function initDirs()
                 await copyFile("./www/favicon.png", "./assets/example.png");
             }
 
+            stage = "checking if properties.json exists";
+            if(!(await filesystem.exists("./.notifier/properties.json")))
+            {
+                stage = "creating properties.json";
+                
+                const propJPath = resolve("./.notifier/properties.json");
+                await writeFile(propJPath, getPropJsonTemplate());
+            }
+
             stage = "(done)";
 
             return res();
         }
         catch(err)
         {
-            return rej(`[InitDirs] Error while ${stage}: ${err}`);
+            return rej(new Error(`InitDirs: Error while ${stage}: ${err}`));
         }
     });
 }
@@ -72,12 +81,13 @@ function getPropJsonTemplate()
 {
     const propJTemp = [
         `{`,
+        `"info": "Please don't modify anything in this folder, these are internal files being created and used by Node-Notifier",`,
         `"directoriesInitialized": ${Date.now()},`,
-        `"initVersion": ${packageJSON.version}`,
+        `"initVersion": "${packageJSON.version}"`,
         `}`
     ];
 
-    return JSON.stringify(JSON.parse(propJTemp.join("\n")), undefined, 4);
+    return JSON.stringify(JSON.parse(propJTemp.join("")), undefined, 4);
 }
 
 module.exports = {
