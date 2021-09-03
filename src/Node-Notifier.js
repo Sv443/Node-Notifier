@@ -2,6 +2,7 @@ const pm2 = require("pm2");
 const { colors } = require("svcorelib");
 
 const cfg = require("../config");
+const getDateTime = require("./getDateTime");
 
 const col = colors.fg;
 
@@ -25,7 +26,7 @@ function init()
             console.clear();
 
             // TODO: maybe improve this
-
+            console.log(`${getDateTime()}`);
             console.log(`\nHTTP server is listening on port ${cfg.server.port}`);
             console.log(`To access the landing page, please visit ${col.green}http://localhost:${cfg.server.port}${col.rst}\n`);
 
