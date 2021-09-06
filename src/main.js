@@ -1,4 +1,4 @@
-const { filesystem, colors } = require("svcorelib");
+const { colors } = require("svcorelib");
 const { resolve } = require("path");
 
 const server = require("./server");

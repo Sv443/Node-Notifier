@@ -59,7 +59,7 @@ function logNotification(notification)
             /** @type {LogNotification[]} */
             const parsed = JSON.parse(fileContent.toString());
 
-            if(parsed.length >= cfg.server.notificationLogSize)
+            if(parsed.length >= cfg.logging.notificationLogSize)
             {
                 action = "removing oldest log entry";
                 parsed.splice(0, 1);

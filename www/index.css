@@ -1,7 +1,12 @@
+::root {
+    --bg-color: #282c34;
+    --text-color: #fff;
+}
+
 body {
-    font-family: "Arial", "Segoe UI", sans-serif;
-    background-color: #282c34;
-    color: #fff;
+    font-family: "Roboto", "Arial", "Segoe UI", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
 a {

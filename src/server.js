@@ -275,7 +275,7 @@ async function sendNotificationRequest(req, res)
         // log notification
         try
         {
-            if(cfg.server.logNotifications)
+            if(cfg.logging.logNotifications)
                 await logNotification(notifProps);
         }
         catch(err)
