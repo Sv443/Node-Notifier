@@ -8,7 +8,8 @@ Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notif
 
 ---
 
-### [Changelog](./changelog.md#readme) &bull; [License (MIT)](./LICENSE.txt)
+## [Installation](#installation) &bull; [REST API Docs](#sending-requests)
+### [Changelog](./changelog.md#readme) &bull; [Join Discord](https://dc.sv443.net/) &bull; [License (MIT)](./LICENSE.txt)
 
 ---
 
@@ -23,18 +24,20 @@ Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notif
 
 ## Installation:
 1. Install Node.js
-2. Install [pm2](https://npmjs.com/package/pm2) if you want to enable autostart, monitoring and viewing logs (`npm i -g pm2`)
+2. Install [pm2](https://npmjs.com/package/pm2) if you want to enable autostart, monitoring, etc. (to install run `npm i -g pm2`)
 3. Clone or download and extract this repo
-4. Open a terminal in the project directory
-5. Start Node-Notifier (`npm start`)
-6. See if the service is online (visit http://127.0.0.1:8042/ in a browser)
-7. Do either of these:
+4. Edit the file `config.js` to your liking
+5. Open a terminal in the project directory
+6. Start Node-Notifier (`npm start`)
+7. See if the service is online (visit http://127.0.0.1:8042/ in a browser) or through pm2 by running `pm2 logs Node-Notifier`
+8. Do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier)
-    - Send requests to the server (see [sending requests](#sending-requests))
+    - Send requests to the server in another way (see [sending requests](#sending-requests))
 
 <br>
 
-To configure Node-Notifier, open the file `config.js` in the project root directory
+To configure Node-Notifier, open the file `config.js` in the project root directory and edit it.  
+If it's already running, make sure to restart the process by running `npm start` again.
 
 <br><br>
 
@@ -153,6 +156,7 @@ If I feel like it I might add HTTPS support in the future.
 Node-Notifier wouldn't be possible without these libraries:
 - [express](https://npmjs.com/package/express)
 - [fs-extra](https://npmjs.com/package/fs-extra)
+- [hidefile](https://npmjs.com/package/hidefile)
 - [node-notifier](https://npmjs.com/package/node-notifier)
 - [pm2](https://npmjs.com/package/pm2)
 - [svcorelib](https://npmjs.com/package/svcorelib)

@@ -323,6 +323,9 @@ function getQueryParams(req)
  */
 function getDefaultIconProps()
 {
+    if(!cfg.notifications.placeholderIconEnabled)
+        return {};
+
     const plat = platform();
 
     let needsPlaceholder = true;
