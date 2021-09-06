@@ -1,19 +1,13 @@
 const { notify } = require("node-notifier");
 
+import { Notification } from "node-notifier/notifiers/notificationcenter";
+import { NotificationResult } from "./types";
 
-/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
-/** @typedef {import("node-notifier").NotificationMetadata} NotificationMetadata */
-
-/**
- * @typedef {object} SendNotifResult
- * @prop {string} result Result string
- * @prop {NotificationMetadata} meta Notification metadata object
- */
 
 /**
  * Sends a desktop notification
  * @param {Notification} notification Notification object
- * @returns {Promise<SendNotifResult, (Error|string)>} Resolves with an object containing a result string and a meta object, rejects with an error object or string
+ * @returns {Promise<NotificationResult, (Error|string)>} Resolves with an object containing a result string and a meta object, rejects with an error object or string
  */
 function sendNotification(notification)
 {

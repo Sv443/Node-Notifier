@@ -8,14 +8,9 @@ const error = require("./error");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
 
-
-const col = colors.fg;
-
-/** @typedef {import("./sendNotification").Notification} Notification */
-/** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
-/** @typedef {import("express").Request} Request */
-/** @typedef {import("express").Response} Response */
-
+import { Notification } from "node-notifier/notifiers/notificationcenter";
+import { JSONCompatible } from "svcorelib";
+import { Request, Response } from "express";
 import { HttpMethod, QueryObj } from "./types";
 
 
@@ -47,10 +42,13 @@ function init()
         app.use((err, req, res, next) => {
             unused(req, next);
 
-            return respondJSON(res, 400, {
-                error: true,
-                message: `General error: ${err.toString()}`
-            });
+            if(typeof err === "string" || err instanceof Error)
+            {
+                return respondJSON(res, 400, {
+                    error: true,
+                    message: `General error: ${err.toString()}`
+                });
+            }
         });
 
         // CORS & OPTIONS middleware

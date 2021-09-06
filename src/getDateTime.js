@@ -35,7 +35,7 @@ function pad(n)
  * @param {number} n
  * @returns {string}
  */
- function padL(n)
+function padL(n)
 {
     if(n < 10)
         return `00${n}`;

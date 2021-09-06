@@ -4,18 +4,8 @@ const { filesystem } = require("svcorelib");
 
 const cfg = require("../config");
 
-
-/** @typedef {import("./sendNotification").Notification} Notification */
-
-/**
- * @typedef {object} LogNotification
- * @prop {string} title
- * @prop {string} message
- * @prop {string} icon
- * @prop {string[]} actions
- * @prop {boolean} wait
- * @prop {number} timestamp
- */
+import { Notification } from "node-notifier/notifiers/notificationcenter";
+import { LogNotificationObj } from "./types";
 
 
 /**
@@ -40,7 +30,7 @@ function logNotification(notification)
 
             const { actions, icon, message, title, wait } = notification;
 
-            /** @type {LogNotification} */
+            /** @type {LogNotificationObj} */
             const logNotification = {
                 title: title || null,
                 message: message || null,
@@ -56,7 +46,7 @@ function logNotification(notification)
             
             action = "parsing notification file";
             
-            /** @type {LogNotification[]} */
+            /** @type {LogNotificationObj[]} */
             const parsed = JSON.parse(fileContent.toString());
 
             if(parsed.length >= cfg.logging.notificationLogSize)
@@ -65,11 +55,9 @@ function logNotification(notification)
                 parsed.splice(0, 1);
             }
 
-            const newLogContent = [ ...parsed, logNotification ];
-
             action = "writing notification file";
 
-            await writeFile(notificationLogPath, JSON.stringify(newLogContent, undefined, 4));
+            await writeFile(notificationLogPath, JSON.stringify([ ...parsed, logNotification ], undefined, 4));
 
             action = "(done)";
 
