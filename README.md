@@ -23,14 +23,14 @@ Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notif
 <br><br>
 
 ## Installation:
-1. Install Node.js
-2. Install [pm2](https://npmjs.com/package/pm2) if you want to enable autostart, monitoring, etc. (to install run `npm i -g pm2`)
-3. Clone or download and extract this repo
-4. Edit the file `config.js` to your liking
-5. Open a terminal in the project directory
-6. Start Node-Notifier (`npm start`)
-7. See if the service is online (visit http://127.0.0.1:8042/ in a browser) or through pm2 by running `pm2 logs Node-Notifier`
-8. Do either of these:
+1. Install [Node.js](https://nodejs.org/)
+    - Optionally install [pm2](https://npmjs.com/package/pm2) if you want to enable autostart, monitoring, etc. (to install run `npm i -g pm2`)
+2. Clone or download and extract this repo
+3. Edit the file `config.js` to your liking
+4. Open a terminal in the project directory
+5. Start Node-Notifier (`npm start`)
+6. See if the service is online (visit http://127.0.0.1:8042/ in a browser) or through pm2 by running `pm2 logs Node-Notifier`
+7. Do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier)
     - Send requests to the server in another way (see [sending requests](#sending-requests))
 

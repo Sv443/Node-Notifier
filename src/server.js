@@ -8,6 +8,7 @@ const error = require("./error");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
 
+
 const col = colors.fg;
 
 /** @typedef {import("./sendNotification").Notification} Notification */
@@ -15,11 +16,7 @@ const col = colors.fg;
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
 
-/** @typedef {"GET"|"POST"} HttpMethod */
-/**
- * @typedef {object} QueryObj
- * @prop {boolean} waitForResult
- */
+import { HttpMethod, QueryObj } from "./types";
 
 
 /** Placeholder icon path - relative to project root */
@@ -102,9 +99,9 @@ function init()
 
 /**
  * Called whenever a client's request is received
- * @param {HttpMethod} method 
- * @param {Request} req 
- * @param {Response} res 
+ * @param {HttpMethod} method
+ * @param {Request} req
+ * @param {Response} res
  * @param {string} url Lowercase request URL
  */
 function incomingRequest(method, req, res, url)
@@ -132,9 +129,9 @@ function incomingRequest(method, req, res, url)
 
 /**
  * Sends a JSON object to a client
- * @param {Response} res 
- * @param {number} statusCode 
- * @param {JSONCompatible} jsonObj 
+ * @param {Response} res
+ * @param {number} statusCode
+ * @param {JSONCompatible} jsonObj
  */
 function respondJSON(res, statusCode = 500, jsonObj)
 {
@@ -151,9 +148,9 @@ function respondJSON(res, statusCode = 500, jsonObj)
 
 /**
  * Called whenever the server recieves a client request with a request body
- * @param {Request} req 
- * @param {Response} res 
- * @param {string} url 
+ * @param {Request} req
+ * @param {Response} res
+ * @param {string} url
  */
 async function parseRequest(req, res, url)
 {
@@ -182,8 +179,8 @@ async function parseRequest(req, res, url)
 
 /**
  * Called when a request to '/send' is received
- * @param {Request} req 
- * @param {Response} res 
+ * @param {Request} req
+ * @param {Response} res
  */
 async function sendNotificationRequest(req, res)
 {
@@ -294,7 +291,7 @@ async function sendNotificationRequest(req, res)
 
 /**
  * Parses query parameters of a request
- * @param {Request} req 
+ * @param {Request} req
  * @returns {QueryObj}
  */
 function getQueryParams(req)
