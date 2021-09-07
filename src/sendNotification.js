@@ -1,7 +1,7 @@
 const { notify } = require("node-notifier");
 
-import { Notification } from "node-notifier/notifiers/notificationcenter";
-import { NotificationResult } from "./types";
+/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
+/** @typedef {import("./types").NotificationResult} NotificationResult */
 
 
 /**

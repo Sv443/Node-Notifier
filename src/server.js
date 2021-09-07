@@ -8,10 +8,12 @@ const error = require("./error");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
 
-import { Notification } from "node-notifier/notifiers/notificationcenter";
-import { JSONCompatible } from "svcorelib";
-import { Request, Response } from "express";
-import { HttpMethod, QueryObj } from "./types";
+/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
+/** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
+/** @typedef {import("express").Request} Request */
+/** @typedef {import("express").Response} Response */
+/** @typedef {import("./types").HttpMethod} HttpMethod */
+/** @typedef {import("./types").QueryObj} QueryObj */
 
 
 /** Placeholder icon path - relative to project root */

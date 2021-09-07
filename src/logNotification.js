@@ -4,8 +4,8 @@ const { filesystem } = require("svcorelib");
 
 const cfg = require("../config");
 
-import { Notification } from "node-notifier/notifiers/notificationcenter";
-import { LogNotificationObj } from "./types";
+/** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
+/** @typedef {import("./types").LogNotificationObj} LogNotificationObj */
 
 
 /**
