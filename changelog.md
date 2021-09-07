@@ -10,6 +10,7 @@
 
 ### Planned Features:
 - Enable downloading images from a URL (and cache them locally)
+- Add custom pm2 meters so custom values can be displayed in `pm2 desc <id/name>` and `pm2 monit`
   
 To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/issues/new)
 
@@ -27,9 +28,11 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
     - `POST /send` to send a desktop notification
         - `?waitForResult` to make the API wait for an interaction with the notification
         - `?actions` to have a set of actions the user can select
+- Added landing page that displays Node-Notifier's status
+    <!-- - Added notification log to landing page -->
 - Added pm2 wrapper so the service runs in the background
 - Added config file at `./config.js`
-- Added video example
+<!-- - Added video example -->
 
 <br><br><br>
 
