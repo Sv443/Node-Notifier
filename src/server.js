@@ -1,6 +1,6 @@
 const express = require("express");
 const { resolve } = require("path");
-const { unused, allOfType, colors } = require("svcorelib");
+const { unused, allOfType } = require("svcorelib");
 const { platform } = require("os");
 
 const cfg = require("../config");
@@ -17,7 +17,7 @@ const logNotification = require("./logNotification");
 
 
 /** Placeholder icon path - relative to project root */
-const placeholderIcon = "./www/favicon.png";
+const placeholderIconPath = "./www/favicon.png";
 
 /** URLs that can be accessed with GET */
 const getURLs = [ "/" ];
@@ -331,8 +331,8 @@ function getDefaultIconProps()
         needsPlaceholder = false;
 
     return needsPlaceholder ? {
-        icon: resolve(placeholderIcon),
-        contentImage: resolve(placeholderIcon),
+        icon: resolve(placeholderIconPath),
+        contentImage: resolve(placeholderIconPath),
     } : {};
 }
 
