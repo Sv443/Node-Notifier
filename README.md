@@ -65,7 +65,7 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > | :-- | :-- |
 > | `title` | The (short) title of the notification |
 > | `message` | A more detailed message |
-> | `[icon]` | An icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on.<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
+> | `[icon]` | A square icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on.<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
 > | `[actions]` | Array of actions (buttons or dropdown, depending on OS) the user can select on the notification. Using this automatically enables `?waitForResult` |
 > | `[timeout]` | How many seconds to wait before closing the notification automatically. Takes precedence over `?waitForResult`. Defaults to `10` |
 > 
