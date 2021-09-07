@@ -73,12 +73,12 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > ```json
 > {
->     "title": "Pizza Time!",
->     "message": "It's pizza time, do you want me to order a pizza?",
->     "icon": "assets/pizza.png",
+>     "title": "Door Bell",
+>     "message": "Someone is at the door, should I open it?",
+>     "icon": "assets/door.png",
 >     "actions": [
->         "Sure",
->         "Nah"
+>         "Yes",
+>         "No"
 >     ],
 >     "timeout": 42
 > }
