@@ -2,7 +2,7 @@
 
 # Node-Notifier
 Open client that triggers desktop notifications through HTTP requests  
-Intended to be used with [Sv443/ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to send a desktop notification through an electrical button press
+Intended to be used with [ESP-Notifier](https://github.com/Sv443/ESP-Notifier) to send a desktop notification through an electrical button press
 
 <br>
 
