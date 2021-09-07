@@ -8,6 +8,7 @@ const getDateTime = require("./getDateTime");
 const { initDirs } = require("./files");
 
 const packageJSON = require("../package.json");
+const settings = require("./settings");
 const cfg = require("../config");
 
 const col = colors.fg;
@@ -49,6 +50,9 @@ async function init()
         {
             return error("Error while sending notification", err, true);
         }
+
+        if(settings.pm2.wait)
+            process.send("ready"); // necessary when using `wait_ready: true` in pm2 config
     }
     catch(err)
     {
