@@ -1,0 +1,8 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": [ ".notifier/notifications.json" ],
+            "url": "./.vscode/schemas/notifications.json"
+        }
+    ]
+}

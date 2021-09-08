@@ -1,0 +1,46 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Node-Notifier Notification",
+    "description": "A Node-Notifier notification in the notification log",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "title": {
+                "type": "string",
+                "description": "Notification title"
+            },
+            "message": {
+                "type": "string",
+                "description": "Notification message / body"
+            },
+            "icon": {
+                "type": [ "string", "null" ],
+                "description": "Notification icon path"
+            },
+            "actions": {
+                "type": [ "array", "null" ],
+                "description": "Actions the user can choose from",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "wait": {
+                "type": [ "boolean", "null" ],
+                "description": "Whether the server waited for a user response before the request was responded to"
+            },
+            "timestamp": {
+                "type": "integer",
+                "description": "13-character UNIX timestamp"
+            }
+        },
+        "required": [
+            "title",
+            "message",
+            "icon",
+            "actions",
+            "wait",
+            "timestamp"
+        ]
+    }
+}

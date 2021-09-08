@@ -51,7 +51,8 @@ async function init()
             return error("Error while sending notification", err, true);
         }
 
-        if(settings.pm2.wait)
+        // if wait is enabled and process is started as a fork, send "ready" signal
+        if(settings.pm2.wait && typeof process.send === "function")
             process.send("ready"); // necessary when using `wait_ready: true` in pm2 config
     }
     catch(err)
