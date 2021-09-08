@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node .",
     "debug": "node src/main",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "snyk test",
     "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
     "build-linux": "pkg -t node14-linux -o dist/NodeNotifier-Linux .",
@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node-notifier": "^8.0.1",
-    "eslint": "^7.32.0"
+    "eslint": "^7.32.0",
+    "snyk": "^1.700.0"
   }
 }
