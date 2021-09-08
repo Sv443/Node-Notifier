@@ -81,7 +81,7 @@ function getPropJsonTemplate()
 {
     const propJTemp = [
         `{`,
-        `"info": "Please don't modify anything in this folder, these are internal files being created and used by Node-Notifier",`,
+        `"info": "Please don't modify anything in this file, this is an internal file created and used by Node-Notifier",`,
         `"directoriesInitialized": ${Date.now()},`,
         `"initVersion": "${packageJSON.version}"`,
         `}`
