@@ -36,7 +36,7 @@ function logNotification(notification)
                 message: message || null,
                 icon: icon || null,
                 actions: actions || null,
-                wait: wait || null,
+                wait: wait || false,
                 timestamp: Date.now(),
             };
 
