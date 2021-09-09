@@ -8,7 +8,7 @@ import { NotificationMetadata } from "node-notifier";
 export interface QueryObj
 {
     /** Whether the server should wait for a user response before the request is responded to */
-    waitForResult: boolean = false;
+    waitForResult: boolean;
 }
 
 
