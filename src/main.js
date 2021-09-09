@@ -31,7 +31,7 @@ async function init()
         }
         catch(err)
         {
-            return error("Error while initializing express server", err, true);
+            return error("Node-Notifier encountered an internal error:", err, true);
         }
 
         try

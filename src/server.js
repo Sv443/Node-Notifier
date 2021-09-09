@@ -2,9 +2,11 @@ const express = require("express");
 const { resolve } = require("path");
 const { unused, allOfType } = require("svcorelib");
 const { platform } = require("os");
+const portUsed = require("tcp-port-used").check;
 
 const cfg = require("../config");
 const error = require("./error");
+const { getAllProperties, setProperty } = require("./files");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
 
@@ -20,9 +22,9 @@ const logNotification = require("./logNotification");
 const placeholderIconPath = "./www/favicon.png";
 
 /** URLs that can be accessed with GET */
-const getURLs = [ "/" ];
+const getURLs = [ "/", "/int/getProperties" ];
 /** URLs that can be accessed with POST */
-const postURLs = [ "/send" ];
+const postURLs = [ "/send", "/int/setProperty" ];
 
 
 const app = express();
@@ -35,6 +37,9 @@ const app = express();
 function init()
 {
     return new Promise(async (pRes, pRej) => {
+        if(await portUsed(cfg.server.port))
+            return pRej(new Error(`Error while initializing HTTP server: Port ${cfg.server.port} is already in use. Please kill the process using the port or change the port in 'config.js' to a different number`));
+
         // serve static files
         app.use(express.static("www"));
 
@@ -48,7 +53,7 @@ function init()
             {
                 return respondJSON(res, 400, {
                     error: true,
-                    message: `General error: ${err.toString()}`
+                    message: `General error in HTTP server: ${err.toString()}`
                 });
             }
         });
@@ -92,7 +97,7 @@ function init()
         // on error
         listener.on("error", err => {
             error("Error while setting up express server", err);
-            return pRej(err);
+            return pRej(err instanceof Error ? err : new Error(err));
         });
     });
 }
@@ -104,7 +109,7 @@ function init()
  * @param {Response} res
  * @param {string} url Lowercase request URL
  */
-function incomingRequest(method, req, res, url)
+async function incomingRequest(method, req, res, url)
 {
     console.log(`Incoming ${method} request to '${url}'`);
 
@@ -116,9 +121,15 @@ function incomingRequest(method, req, res, url)
         // serve dashboard
         if(url === "/")
             res.sendFile(resolve("./www/index.html"));
+
+        if(url === "/int/getproperties")
+            return respondJSON(res, 200, (await getAllProperties()));
+
         break;
+
     case "POST":
         return parseRequest(req, res, url);
+
     default:
         return respondJSON(res, 405, {
             error: true,
@@ -164,9 +175,39 @@ async function parseRequest(req, res, url)
 
     try
     {
-        // POST /send
-        if(url.startsWith("/send"))
+        if(url === "/send")
             return sendNotificationRequest(req, res);
+
+        if(url === "/int/setproperty")
+        {
+            try
+            {
+                const key = req.body["key"];
+                const value = req.body["value"];
+
+                if(typeof key === "undefined" || typeof value === "undefined")
+                {
+                    return respondJSON(res, 400, {
+                        error: true,
+                        message: "Properties 'key' and/or 'value' are missing or invalid"
+                    });
+                }
+
+                await setProperty(key, value);
+
+                return respondJSON(res, 200, {
+                    error: false,
+                    message: "Successfully set property"
+                });
+            }
+            catch(err)
+            {
+                return respondJSON(res, 500, {
+                    error: true,
+                    message: `Error while setting property: ${err}`
+                });
+            }
+        }
     }
     catch(err)
     {

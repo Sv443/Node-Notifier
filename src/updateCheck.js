@@ -13,7 +13,7 @@ const cfg = require("../config");
 
 const options = Object.freeze({
     checkInterval: (1000 * 60 * 60 * 24),
-    apiUrl: "https://api.github.com/repos/Sv443/JokeAPI/releases/latest",
+    apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
 });
 
 function init()

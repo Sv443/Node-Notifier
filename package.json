@@ -28,7 +28,8 @@
     "node-notifier": "^10.0.0",
     "open": "^8.2.1",
     "pm2": "^5.1.1",
-    "svcorelib": "^1.14.2"
+    "svcorelib": "^1.14.2",
+    "tcp-port-used": "^1.0.2"
   },
   "devDependencies": {
     "@types/node-notifier": "^8.0.1",
