@@ -3,6 +3,10 @@
         {
             "fileMatch": [ ".notifier/notifications.json" ],
             "url": "./.vscode/schemas/notifications.json"
+        },
+        {
+            "fileMatch": [ ".notifier/properties.json" ],
+            "url": "./.vscode/schemas/properties.json"
         }
     ]
 }

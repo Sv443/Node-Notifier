@@ -6,7 +6,7 @@ const { hide } = require("hidefile");
 const packageJSON = require("../package.json");
 
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
-/** @typedef {import("../.notifier/properties.json")} PropJsonFile */
+/** @typedef {import("../.notifier/properties.json")} PropJsonFile The properties.json file */
 
 
 /**
@@ -85,20 +85,20 @@ function hidePath(path)
 }
 
 /**
- * Returns the properties.json template
+ * Returns the properties.json template as a string
  * @returns {string}
  */
 function getPropJsonTemplate()
 {
-    const propJTemp = [
-        `{`,
-        `"info": "Please don't modify anything in this file, this is an internal file created and used by Node-Notifier",`,
-        `"directoriesInitialized": ${Date.now()},`,
-        `"initVersion": "${packageJSON.version}"`,
-        `}`
-    ];
+    /** @type {PropJsonFile} */
+    const propJTemp = {
+        info: "Please don't modify anything in this file, this is an internal file created and used by Node-Notifier",
+        fileCreated: Date.now(),
+        initVersion: packageJSON.version,
+        lastNotification: -1,
+    };
 
-    return JSON.stringify(JSON.parse(propJTemp.join("")), undefined, 4);
+    return JSON.stringify(propJTemp, undefined, 4);
 }
 
 /**

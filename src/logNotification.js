@@ -2,6 +2,8 @@ const { writeFile, readFile } = require("fs-extra");
 const { resolve } = require("path");
 const { filesystem } = require("svcorelib");
 
+const { setProperty } = require("./files");
+
 const cfg = require("../config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
@@ -25,7 +27,7 @@ function logNotification(notification)
             if(!(await filesystem.exists(notificationLogPath)))
             {
                 action = "creating notification file";
-                await writeFile(notificationLogPath, "[]");
+                await writeFile(notificationLogPath, JSON.stringify([], undefined, 4));
             }
 
             const { actions, icon, message, title, wait } = notification;
@@ -55,7 +57,11 @@ function logNotification(notification)
                 parsed.splice(0, 1);
             }
 
-            action = "writing notification file";
+            action = "Updating properties.json";
+
+            await setProperty("lastNotification", Date.now());
+
+            action = "writing notification to log file";
 
             await writeFile(notificationLogPath, JSON.stringify([ ...parsed, logNotification ], undefined, 4));
 
