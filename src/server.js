@@ -113,7 +113,7 @@ function incomingRequest(method, req, res, url)
     switch(method)
     {
     case "GET":
-        // serve landing page
+        // serve dashboard
         if(url === "/")
             res.sendFile(resolve("./www/index.html"));
         break;

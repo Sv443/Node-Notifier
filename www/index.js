@@ -1,3 +1,3 @@
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Node-Notifier - Landing Page");
+    console.log("Node-Notifier - Dashboard");
 });

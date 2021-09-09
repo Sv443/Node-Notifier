@@ -9,6 +9,8 @@ const config = {
         startupNotificationEnabled: false,
         /** Whether to add Node-Notifier's icon as a placeholder if no icon was provided in the request. Note that on some OSes there will be another placeholder if you disable this. */
         placeholderIconEnabled: true,
+        /** Whether to send a notification when there's an update available for Node-Notifier. Updates are checked for at startup and then on 24 hour interval. */
+        notificationOnUpdate: true,
     },
     /** HTTP server settings */
     server: {

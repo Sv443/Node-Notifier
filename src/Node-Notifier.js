@@ -1,6 +1,7 @@
 const pm2 = require("pm2");
-const { colors } = require("svcorelib");
+const { colors, pause } = require("svcorelib");
 const { resolve } = require("path");
+const open = require("open");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
@@ -24,7 +25,7 @@ function init()
             restart_delay: 500,
             wait_ready: settings.pm2.wait,
             watch: settings.pm2.watch,
-        }, (err, processes) => {
+        }, async (err, processes) => {
             if(err)
                 return console.error(`Error while starting process: ${err}`);
 
@@ -33,20 +34,23 @@ function init()
 
             console.clear();
 
-            console.log(`\nStarted up Node-Notifier v${packageJSON.version} successfully`);
+            console.log(`\n${col.green}Started up Node-Notifier v${packageJSON.version} successfully${col.rst}`);
+            console.log(`The HTTP server is listening on port ${col.blue}${cfg.server.port}${col.rst}\n`);
 
-            console.log(`The HTTP server is listening on port ${col.green}${cfg.server.port}${col.rst}`);
-            console.log(`To access the landing page, please visit ${col.blue}http://localhost:${cfg.server.port}/${col.rst}\n`);
-
-            console.log(`Created pm2 process ${col.green}${proc.name}${col.rst} with ID ${col.green}${proc.pm_id}${col.rst}`);
+            console.log(`Created pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
             console.log("    - To list all processes use the command 'pm2 list'");
-            console.log("    - To automatically start Node-Notifier after reboot, install pm2 and use 'pm2 startup' or 'pm2 save'");
+            console.log("    - To automatically start Node-Notifier after system reboot use 'pm2 startup' or 'pm2 save'");
             console.log("    - To monitor Node-Notifier use 'pm2 monit'");
-            console.log(`    - To view Node-Notifier's log use 'pm2 logs ${proc.pm_id}'\n`);
+            console.log(`    - To view Node-Notifier's log use 'pm2 logs ${proc.pm_id}'\n\n`);
 
-            console.log("This process will automatically exit after 30 seconds (or you can just press CTRL+C)");
+            const char = await pause(`> Press ${col.green}[D]${col.rst} to open the dashboard or something else to quit:`);
 
-            setTimeout(() => process.exit(0), 30000);
+            if(char.toLowerCase() === "d")
+                await open(`http://127.0.0.1:${cfg.server.port}/`);
+
+            process.stdout.write("\n");
+
+            process.exit(0);
         });
     });
 }

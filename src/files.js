@@ -96,6 +96,8 @@ function getPropJsonTemplate()
         fileCreated: Date.now(),
         initVersion: packageJSON.version,
         lastNotification: -1,
+        latestRemoteVersion: null,
+        remindUpdate: true,
     };
 
     return JSON.stringify(propJTemp, undefined, 4);
@@ -127,7 +129,7 @@ function createPropJsonFile()
  * Also creates the file if it doesn't exist yet.
  * @returns {Promise<PropJsonFile, (Error | string)>}
  */
-function getProperties()
+function getAllProperties()
 {
     return new Promise(async (res, rej) => {
         try
@@ -149,6 +151,28 @@ function getProperties()
 }
 
 /**
+ * Grabs the value at the specified `key` of the properties.json file and returns it.  
+ * Returns `undefined` if the value wasn't found
+ * @param {keyof(PropJsonFile)} key
+ * @returns {Promise<(JSONCompatible | undefined), (Error | string)>}
+ */
+function getProperty(key)
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            const props = await getAllProperties();
+
+            return res(props[key] || undefined);
+        }
+        catch(err)
+        {
+            return rej(err);
+        }
+    });
+}
+
+/**
  * Sets a property of the properties.json file with the given `key` to the given JSON-compatible `value`
  * @param {keyof(PropJsonFile)} key
  * @param {JSONCompatible} value
@@ -159,7 +183,7 @@ function setProperty(key, value)
     return new Promise(async (res, rej) => {
         try
         {
-            const oldContent = await getProperties();
+            const oldContent = await getAllProperties();
 
             const newContent = reserialize(oldContent);
             newContent[key] = value;
@@ -178,6 +202,7 @@ function setProperty(key, value)
 module.exports = {
     initDirs,
     hidePath,
-    getProperties,
+    getProperty,
     setProperty,
+    getAllProperties,
 };

@@ -1,0 +1,106 @@
+const axios = require("axios").default;
+const semver = require("semver");
+const { unused } = require("svcorelib");
+const { resolve } = require("path");
+const open = require("open");
+
+const sendNotification = require("./sendNotification");
+const { setProperty, getProperty } = require("./files");
+
+const packageJson = require("../package.json");
+const cfg = require("../config");
+
+
+const options = Object.freeze({
+    checkInterval: (1000 * 60 * 60 * 24),
+    apiUrl: "https://api.github.com/repos/Sv443/JokeAPI/releases/latest",
+});
+
+function init()
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            setInterval(() => {
+                checkUpdate().catch(unused);
+            }, options.checkInterval);
+
+            checkUpdate().catch(unused);
+
+            return res();
+        }
+        catch(err)
+        {
+            return rej(`Error while checking for an update: ${err}`);
+        }     
+    });
+}
+
+/**
+ * Checks for an update and optionally sends a notification
+ * @returns {Promise<void, (Error | string)>}
+ */
+function checkUpdate()
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            /** @type {import("axios").AxiosResponse} */
+            let result;
+
+            try
+            {
+                result = await axios.get(options.apiUrl);
+            }
+            catch(err)
+            {
+                if(err.response.status === 404)
+                    return res(); // no releases available
+            }            
+
+            if(result.status < 200 || result.status >= 300)
+                return rej(`Update check error: GitHub API returned with status ${result.status} - ${result.statusText}`);
+
+            if(!result.data || typeof result.data["tag_name"] !== "string")
+                return rej(`Update check error: Received unexpected data from GitHub API`);
+
+
+            const latestVer = semver.parse(result.data["tag_name"]);
+
+            if(semver.lt(packageJson.version, latestVer))
+            {
+                // update is available
+
+                await setProperty("latestRemoteVersion", latestVer.version);
+
+                /** @type {boolean} */
+                const remindUpdate = await getProperty("remindUpdate");
+
+                if(cfg.notifications.notificationOnUpdate && remindUpdate)
+                {
+                    const dashUrl = `http://127.0.0.1:${cfg.server.port}/`;
+
+                    const { meta } = await sendNotification({
+                        title: "Node-Notifier Update",
+                        message: `An update is available for Node-Notifier.\nClick to open the dashboard for more info.`,
+                        icon: resolve("./www/favicon.png"),
+                        contentImage: resolve("./www/favicon.png"),
+                        wait: true,
+                        timeout: 30,
+                    });
+
+                    if(meta.activationType === "contentsClicked" || meta.activationType === "actionClicked")
+                        await open(dashUrl);
+                }
+            }
+
+            return res();
+        }
+        catch(err)
+        {
+            return rej(`Update check: Error while sending request to GitHub API: ${err}`);
+        }
+    });
+}
+
+module.exports = { init };

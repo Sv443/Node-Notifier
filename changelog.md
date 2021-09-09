@@ -24,14 +24,17 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
 **The initial release**  
   
 - Added HTTP backend that listens for these requests:
-    - `GET /` to view a landing page
+    - `GET /` to view the dashboard
     - `POST /send` to send a desktop notification
         - `?waitForResult` to make the API wait for an interaction with the notification
         - `?actions` to have a set of actions the user can select
-- Added landing page that displays Node-Notifier's status
-    <!-- - Added notification log to landing page -->
+- Added dashboard page that displays Node-Notifier's status
+    <!-- - Added notification log to dashboard -->
 - Added pm2 wrapper so the service runs in the background
 - Added config file at `./config.js`
+- Added update checker
+    <!-- - Update instructions in dashboard -->
+    - Desktop notification if update available
 <!-- - Added video example -->
 
 <br><br><br>
