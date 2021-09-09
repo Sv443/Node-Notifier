@@ -14,18 +14,21 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 
 <br>
 
----
-
-## [Installation](#installation) &bull; [REST API Usage](#sending-requests) &bull; [Other Info](#other)
-
----
-
-<br>
-
 ## Video Showcase:
 [![TODO: image preview of video, click to open video in new tab](./.github/assets/video_showcase.png)](https://youtu.be/)
 
 </div>
+
+<br><br>
+
+## Table of Contents:
+- **[Installation](#installation)**
+- **[REST API Usage](#rest-api-usage)**
+    - [Sending a Notification](#sending-a-notification)
+- **[Other](#other)**
+    - [Files and Folders](#files-and-folders)
+- [Disclaimer](#disclaimer)
+- [Dependencies](#dependencies)
 
 <br><br>
 
@@ -41,11 +44,11 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 7. See if the service is online by visiting the dashboard page: http://127.0.0.1:8042/
 8. Do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier) and configure it to work together with Node-Notifier
-    - Send requests to the server in another way (see [sending requests](#sending-requests))
+    - Send requests to the server in another way (see [sending requests](#rest-api-usage))
 
 <br>
 
-#### Notes:
+### Notes:
 - To configure Node-Notifier, open the file `config.js` in the project root directory and edit it.  
 If it's already running, make sure to restart the process by running `npm start` again.  
   
@@ -53,13 +56,17 @@ If it's already running, make sure to restart the process by running `npm start`
 
 <br><br>
 
-## Sending Requests:
-The IP addresses in this section are placeholders, instead you need to use the IP of the device Node-Notifier is running on.  
-(Make sure the DHCP server in your router doesn't change this IP address).  
+## REST API Usage:
+Node-Notifier comes with a REST API that is used to send desktop notifications.  
+This section tells you how you can use it.  
   
+The IP addresses in this section are placeholders, instead you need to use the IP of the device Node-Notifier is running on.  
+(Make sure your router always assigns the same IP to your device.)  
 If the client and server are running on the same device, you can use `127.0.0.1` or `localhost`.
 
-> ### Triggering a Notification:
+<br>
+
+> ### Sending a Notification:
 > #### `POST /send`
 > 
 > <br>
@@ -152,11 +159,13 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > ```
 > 
 > </details>
+> 
+> <br>
 
 <br><br>
 
 ## Other:
-### Files:
+### Files and Folders:
 Node-Notifier generates a few files and folders:
 - `assets/`  
 This folder is intended to be used as a place to store your notifications' images and potentially other assets.  
