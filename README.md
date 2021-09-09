@@ -38,9 +38,9 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 5. Install dependencies with the command `npm i`
 6. Start Node-Notifier with `npm start`
     - To start it without being wrapped by pm2 (not recommended for normal use) you can use the command `npm run debug`
-7. See if the service is online (visit http://127.0.0.1:8042/ in a browser) or through pm2 by running `pm2 logs Node-Notifier`
+7. See if the service is online by visiting the dashboard page: http://127.0.0.1:8042/
 8. Do either of these:
-    - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier)
+    - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier) and configure it to work together with Node-Notifier
     - Send requests to the server in another way (see [sending requests](#sending-requests))
 
 <br>
