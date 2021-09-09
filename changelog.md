@@ -30,6 +30,7 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
         - `?actions` to have a set of actions the user can select
 - Added dashboard page that displays Node-Notifier's status
     <!-- - Added notification log to dashboard -->
+    <!-- - Added password protection to dashboard -->
 - Added pm2 wrapper so the service runs in the background
 - Added config file at `./config.js`
 - Added update checker

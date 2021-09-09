@@ -122,6 +122,7 @@ async function incomingRequest(method, req, res, url)
         if(url === "/")
             res.sendFile(resolve("./www/index.html"));
 
+        // TODO: add password protection
         if(url === "/int/getproperties")
             return respondJSON(res, 200, (await getAllProperties()));
 
@@ -180,6 +181,7 @@ async function parseRequest(req, res, url)
 
         if(url === "/int/setproperty")
         {
+            // TODO: add password protection
             try
             {
                 const key = req.body["key"];
