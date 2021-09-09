@@ -1,6 +1,6 @@
 {
   "name": "@sv443/node-notifier",
-  "version": "1.0.0",
+  "version": "10.0.0",
   "description": "Open client that triggers desktop notifications through HTTP requests",
   "homepage": "https://github.com/Sv443/Node-Notifier",
   "main": "src/Node-Notifier.js",
