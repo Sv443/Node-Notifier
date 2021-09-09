@@ -196,15 +196,18 @@ If I feel like it I might add HTTPS support in the future.
 
 ## Dependencies:
 Node-Notifier wouldn't be possible without these libraries:
+- [axios](https://npmjs.com/package/axios)
 - [express](https://npmjs.com/package/express)
 - [fs-extra](https://npmjs.com/package/fs-extra)
 - [hidefile](https://npmjs.com/package/hidefile)
 - [node-notifier](https://npmjs.com/package/node-notifier)
+- [open](https://npmjs.com/package/open)
 - [pm2](https://npmjs.com/package/pm2)
 - [svcorelib](https://npmjs.com/package/svcorelib)
 
 
 <br><br>
+
 <div style="text-align:center;" align="center">
 
 Made with ❤️ by [Sv443](https://github.com/Sv443)  
