@@ -1,6 +1,8 @@
 /**
  * Internal settings of Node-Notifier  
- * It's usually not necessary to change these settings, but feel free to do so
+ *   
+ * It's usually not necessary to change these settings, but I can't stop you so go ahead  
+ * (Note that you can easily break something though)
  * @readonly
  */
 const internalSettings = {
@@ -12,6 +14,13 @@ const internalSettings = {
         wait: true,
         /** Whether Node-Notifier's script files should be watched for changes to immediately restart the process so it can use the new files */
         watch: false,
+    },
+    /** Settings regarding the update checker */
+    updateChecker: {
+        /** Update check interval in milliseconds */
+        interval: (1000 * 60 * 60 * 24),
+        /** GitHub API URL for latest release */
+        apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
     }
 };
 

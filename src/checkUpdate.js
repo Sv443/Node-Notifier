@@ -8,14 +8,14 @@ const sendNotification = require("./sendNotification");
 const { setProperty, getProperty } = require("./files");
 
 const packageJson = require("../package.json");
+const settings = require("./settings");
 const cfg = require("../config");
 
 
-const options = Object.freeze({
-    checkInterval: (1000 * 60 * 60 * 24),
-    apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
-});
-
+/**
+ * Initializes the update checker
+ * @returns {Promise<void, (Error | string)>}
+ */
 function init()
 {
     return new Promise(async (res, rej) => {
@@ -23,7 +23,7 @@ function init()
         {
             setInterval(() => {
                 checkUpdate().catch(unused);
-            }, options.checkInterval);
+            }, settings.updateChecker.interval);
 
             checkUpdate().catch(unused);
 
@@ -50,7 +50,7 @@ function checkUpdate()
 
             try
             {
-                result = await axios.get(options.apiUrl);
+                result = await axios.get(settings.updateChecker.apiUrl);
             }
             catch(err)
             {

@@ -6,7 +6,7 @@ const error = require("./error");
 const sendNotification = require("./sendNotification");
 const getDateTime = require("./getDateTime");
 const { initDirs } = require("./files");
-const updateCheck = require("./updateCheck");
+const checkUpdate = require("./checkUpdate");
 
 const packageJSON = require("../package.json");
 const settings = require("./settings");
@@ -27,7 +27,7 @@ async function init()
 
             await server.init();
 
-            await updateCheck.init();
+            await checkUpdate.init();
         }
         catch(err)
         {
