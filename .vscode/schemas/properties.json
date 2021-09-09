@@ -19,12 +19,22 @@
         "lastNotification": {
             "type": "number",
             "description": "Timestamp of when the last notification was sent. Is set to `-1` if no notification was sent yet."
+        },
+        "latestRemoteVersion": {
+            "type": [ "string", "null" ],
+            "description": "The latest version on the remote (GitHub). Is set to `null` if no version check was done yet or no release info is available."
+        },
+        "remindUpdate": {
+            "type": "boolean",
+            "description": "Whether Node-Notifier should send a notification reminder when an update is available"
         }
     },
     "required": [
         "info",
         "fileCreated",
         "initVersion",
-        "lastNotification"
+        "lastNotification",
+        "latestRemoteVersion",
+        "remindUpdate"
     ]
 }
