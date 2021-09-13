@@ -27,6 +27,12 @@ function initDirs()
     return new Promise(async (res, rej) => {
         let stage = "ensuring ./assets exists";
 
+        // TODO: either
+        // - regenerate properties.json if initVersion is out of date
+        // or
+        // - set remindUpdate based on update version
+        // so that after an update the reminder can be sent again, unless disabled in the internal settings
+
         try
         {
             await ensureDir("./assets");

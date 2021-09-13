@@ -18,7 +18,7 @@ async function init()
 {
     await loadProps();
 
-    checkUpdate();
+    setTimeout(checkUpdate, 800); // artificial timeout - see https://ux.stackexchange.com/a/83917
 }
 
 /**
@@ -102,14 +102,18 @@ function checkUpdate()
 
         updElem.innerHTML = lines.join("<br>") + "<br>";
 
+        const dismissContainer = document.createElement("div"); // TODO
+        dismissContainer.id = "dismissUpdateContainer";
+
         const dismissElem = document.createElement("button");
-        dismissElem.innerText = "Dismiss";
+        dismissElem.innerText = "Mute Update Reminder";
         dismissElem.id = "dismissUpdate";
         dismissElem.onclick = async () => {
             try
             {
-                await setProp("remindUpdate", false);
-                dismissElem.innerHTML = "";
+                await setProp("remindUpdate", false); // TODO: set this for each version
+                updElem.innerHTML = "";
+                document.querySelector("#updateMessage").classList.add("hidden");
             }
             catch(err)
             {
@@ -117,8 +121,13 @@ function checkUpdate()
                 alert(`Error while dismissing update: ${e}`);
             }
         };
-        updElem.appendChild(dismissElem);
+
+        dismissContainer.appendChild(dismissElem);
+        updElem.appendChild(dismissContainer);
     }
     else
-        updElem.innerText = "";
+    {
+        updElem.innerHTML = "";
+        document.querySelector("#updateMessage").classList.add("hidden");
+    }
 }
