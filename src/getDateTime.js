@@ -21,7 +21,7 @@ function getDateTime(milliseconds)
 /**
  * Adds leading 0 to numbers that are smaller than 10
  * @example pad(1); // returns "01"
- * @example pad(11); // returns "11"
+ * @example pad(12); // returns "12"
  * @param {number} n
  * @returns {string}
  */
@@ -32,9 +32,9 @@ function pad(n)
 
 /**
  * Adds leading 00 to numbers that are smaller than 100 and adds leading 0 to numbers < 10.  
- * @example pad(1);   // returns "001"
- * @example pad(11);  // returns "011"
- * @example pad(111); // returns "111"
+ * @example padL(1);   // returns "001"
+ * @example padL(12);  // returns "012"
+ * @example padL(123); // returns "123"
  * @param {number} n
  * @returns {string}
  */

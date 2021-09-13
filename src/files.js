@@ -18,6 +18,8 @@ const paths = Object.freeze({
 });
 
 
+// #MARKER other
+
 /**
  * Initializes all directories
  * @returns {Promise<void, Error>}
@@ -89,26 +91,7 @@ function hidePath(path)
     });
 }
 
-/**
- * Returns the properties.json template as a string
- * @returns {string}
- */
-function getPropJsonTemplate()
-{
-    /** @type {PropJsonFile} */
-    const propJTemp = {
-        info: "Please don't modify anything in this file, this is an internal file created and used by Node-Notifier",
-        fileCreated: Date.now(),
-        initVersion: packageJSON.version,
-        lastNotification: -1,
-        version: null,
-        latestRemoteVersion: null,
-        needsUpdate: false,
-        remindUpdate: true,
-    };
-
-    return JSON.stringify(propJTemp, undefined, 4);
-}
+// #MARKER properties.json
 
 /**
  * Creates the properties.json file
@@ -128,10 +111,12 @@ function createPropJsonFile()
         }
         catch(err)
         {
-            return rej(err);
+            return rej(new Error(`Error while creating properties.json file: ${err}`));
         }
     });
 }
+
+// #SECTION get/set props
 
 /**
  * Reads the properties.json file and returns it.  
@@ -206,6 +191,29 @@ function setProperty(key, value)
             return rej(new Error(`Error while setting properties.json property with key '${key}' to value '${value}': ${err}`));
         }
     });
+}
+
+// #SECTION template
+
+/**
+ * Returns the properties.json template as a string
+ * @returns {string}
+ */
+ function getPropJsonTemplate()
+{
+    /** @type {PropJsonFile} */
+    const propJTemp = {
+        info: "Please don't modify anything in this file, this is an internal file created and managed by Node-Notifier. You shouldn't modify this file unless you really know what you're doing!",
+        fileCreated: Date.now(),
+        initVersion: packageJSON.version,
+        lastNotification: -1,
+        version: null,
+        latestRemoteVersion: null,
+        needsUpdate: false,
+        remindUpdate: true,
+    };
+
+    return JSON.stringify(propJTemp, undefined, 4);
 }
 
 module.exports = {

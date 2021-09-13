@@ -52,6 +52,13 @@ main {
     text-align: center;
 }
 
+kbd {
+    font-family: "Consolas", "Courier New", monospace;
+    background-color: rgba(25, 27, 32, 0.8);
+    padding: 2px 6px;
+    border-radius: 5px;
+}
+
 #statusMessage {
     display: inline-block;
     padding: 10px 20px;
@@ -70,7 +77,7 @@ main {
     font-size: 120%;
     text-align: left;
 
-    background-color: #5e4d16;
+    background-color: #4d3f11;
     border: 2px solid #999;
     border-radius: 15px;
 }

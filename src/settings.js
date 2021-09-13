@@ -22,7 +22,7 @@ const internalSettings = {
         /** Update check interval in milliseconds */
         interval: (1000 * 60 * 60 * 24),
         /** GitHub API URL for latest release */
-        apiUrl: "https://api.github.com/repos/Sv443/JokeAPI/releases/latest",
+        apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
     }
 };
 

@@ -102,7 +102,7 @@ function checkUpdate()
 
         updElem.innerHTML = lines.join("<br>") + "<br>";
 
-        const dismissContainer = document.createElement("div"); // TODO
+        const dismissContainer = document.createElement("div");
         dismissContainer.id = "dismissUpdateContainer";
 
         const dismissElem = document.createElement("button");
@@ -112,8 +112,12 @@ function checkUpdate()
             try
             {
                 await setProp("remindUpdate", false); // TODO: set this for each version
-                updElem.innerHTML = "";
-                document.querySelector("#updateMessage").classList.add("hidden");
+                updElem.innerHTML = "(Muted update reminder until the next version)";
+
+                setTimeout(() => {
+                    updElem.innerHTML = "";
+                    document.querySelector("#updateMessage").classList.add("hidden");
+                }, 5000);
             }
             catch(err)
             {
