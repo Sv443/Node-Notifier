@@ -17,6 +17,8 @@ const internalSettings = {
     },
     /** Settings regarding the update checker */
     updateChecker: {
+        /** Force disable update checker */
+        enabled: true,
         /** Update check interval in milliseconds */
         interval: (1000 * 60 * 60 * 24),
         /** GitHub API URL for latest release */

@@ -21,11 +21,14 @@ function init()
     return new Promise(async (res, rej) => {
         try
         {
-            setInterval(() => {
-                checkUpdate().catch(unused);
-            }, settings.updateChecker.interval);
+            if(settings.updateChecker.enabled)
+            {
+                setInterval(() => {
+                    checkUpdate().catch(unused);
+                }, settings.updateChecker.interval);
 
-            checkUpdate().catch(unused);
+                checkUpdate().catch(unused);
+            }
 
             return res();
         }
