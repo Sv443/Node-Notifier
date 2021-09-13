@@ -11,6 +11,9 @@ let props;
 document.addEventListener("DOMContentLoaded", init);
 
 
+/**
+ * Entrypoint, called after "DOMContentLoaded"
+ */
 async function init()
 {
     await loadProps();
@@ -18,6 +21,10 @@ async function init()
     checkUpdate();
 }
 
+/**
+ * Loads the properties.json file from the server and puts them into the global var `props`
+ * @returns {Promise<void, Error>}
+ */
 function loadProps()
 {
     return new Promise(async (res, rej) => {
@@ -39,7 +46,7 @@ function loadProps()
 }
 
 /**
- * Sets a property of the properties.json file with the given `key` to the given JSON-compatible `value`
+ * Sets a property of the properties.json file on the server with the given `key` to the given JSON-compatible `value`
  * @param {keyof(PropJsonFile)} key
  * @param {JSONCompatible} value
  * @returns {Promise<void, Error>}
@@ -50,8 +57,6 @@ function setProp(key, value)
         try
         {
             const body = JSON.stringify({ key, value });
-
-            console.log(body);
 
             const setPropF = await fetch(`http://127.0.0.1:${port}/int/setProperty`, {
                 method: "POST",
@@ -75,6 +80,10 @@ function setProp(key, value)
     });
 }
 
+/**
+ * Checks if there's an update to Node-Notifier.  
+ * Also handles the update instructions and dismiss button.
+ */
 function checkUpdate()
 {
     const updElem = document.querySelector("#updateMessage");
@@ -97,7 +106,16 @@ function checkUpdate()
         dismissElem.innerText = "Dismiss";
         dismissElem.id = "dismissUpdate";
         dismissElem.onclick = async () => {
-            await setProp("remindUpdate", false);
+            try
+            {
+                await setProp("remindUpdate", false);
+                dismissElem.innerHTML = "";
+            }
+            catch(err)
+            {
+                const e = (err instanceof Error) ? `${err.message}${err.stack ? `\n${err.stack}` : ""}` : err.toString();
+                alert(`Error while dismissing update: ${e}`);
+            }
         };
         updElem.appendChild(dismissElem);
     }
