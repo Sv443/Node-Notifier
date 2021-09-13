@@ -63,11 +63,8 @@ function init()
             const allowedHeaders = "GET,POST,HEAD,OPTIONS";
             
             // CORS
-            if(cfg.server.cors.enabled)
-            {
-                res.setHeader("Access-Control-Allow-Origin", cfg.server.cors.allowOrigin);
-                res.setHeader("Access-Control-Allow-Methods", allowedHeaders);
-            }
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", allowedHeaders);
 
             // OPTIONS
             if(req.method === "OPTIONS")
@@ -111,7 +108,7 @@ function init()
  */
 async function incomingRequest(method, req, res, url)
 {
-    console.log(`Incoming ${method} request to '${url}'`);
+    console.log(`Incoming ${method} request to ${url}`);
 
     url = url.toLowerCase();
 

@@ -20,9 +20,17 @@
             "type": "number",
             "description": "Timestamp of when the last notification was sent. Is set to `-1` if no notification was sent yet."
         },
+        "version": {
+            "type": [ "string", "null" ],
+            "description": "The current version of Node-Notifier. This is set on every startup."
+        },
         "latestRemoteVersion": {
             "type": [ "string", "null" ],
             "description": "The latest version on the remote (GitHub). Is set to `null` if no version check was done yet or no release info is available."
+        },
+        "needsUpdate": {
+            "type": "boolean",
+            "description": "Whether Node-Notifier needs an update"
         },
         "remindUpdate": {
             "type": "boolean",
@@ -34,7 +42,9 @@
         "fileCreated",
         "initVersion",
         "lastNotification",
+        "version",
         "latestRemoteVersion",
+        "needsUpdate",
         "remindUpdate"
     ]
 }

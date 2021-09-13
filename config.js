@@ -18,13 +18,15 @@ const config = {
         port: 8042,
         /** Duration in seconds after which a request will be timed out - default is 15 */
         timeout: 15,
-        /** Cross Origin Resource Sharing - only needed if a notification is triggered from a website - also see https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS */
-        cors: {
-            /** Whether CORS should be enabled - default is false */
-            enabled: false,
-            /** Which origin to allow - default is "*" (allow all) - also see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin */
-            allowOrigin: "*",
-        },
+        /** If you are in a network that requires special proxy configuration, you can set it up here */
+        proxy: {
+            /** Whether your network requires special proxy configuration */
+            enabled: true,
+            /** Host / IP of the proxy server */
+            host: "proxy.its-stuttgart.de",
+            /** Port of the proxy server */
+            port: 3128
+        }
     },
     /** Settings regarding logging stuff to files */
     logging: {

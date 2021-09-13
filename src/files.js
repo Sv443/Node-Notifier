@@ -42,7 +42,7 @@ function initDirs()
                 await hidePath("./notifier");
 
                 stage = `creating ${paths.propJson} from template`;
-                await writeFile(paths.propJson, getPropJsonTemplate());
+                await createPropJsonFile();
 
                 stage = "copying ./www/favicon.png to ./assets/example.png";
                 await copyFile("./www/favicon.png", "./assets/example.png");
@@ -52,8 +52,7 @@ function initDirs()
             if(!(await filesystem.exists(paths.propJson)))
             {
                 stage = "creating properties.json";
-                
-                createPropJsonFile();
+                await createPropJsonFile();
             }
 
             stage = "(done)";
@@ -96,7 +95,9 @@ function getPropJsonTemplate()
         fileCreated: Date.now(),
         initVersion: packageJSON.version,
         lastNotification: -1,
+        version: null,
         latestRemoteVersion: null,
+        needsUpdate: false,
         remindUpdate: true,
     };
 
@@ -113,7 +114,9 @@ function createPropJsonFile()
         try
         {
             const propJPath = resolve("./.notifier/properties.json");
-            await writeFile(propJPath, getPropJsonTemplate());
+            const template = getPropJsonTemplate();
+
+            await writeFile(propJPath, template);
 
             return res();
         }

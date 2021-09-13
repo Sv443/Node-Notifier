@@ -53,7 +53,15 @@ function checkUpdate()
 
             try
             {
-                result = await axios.get(settings.updateChecker.apiUrl);
+                /** @type {import("axios").AxiosRequestConfig} */
+                const axCfg = cfg.server.proxy.enabled ? {
+                    proxy: {
+                        host: cfg.server.proxy.host,
+                        port: cfg.server.proxy.port,
+                    }
+                } : undefined;
+                
+                result = await axios.get(settings.updateChecker.apiUrl, axCfg);
             }
             catch(err)
             {
@@ -75,6 +83,7 @@ function checkUpdate()
                 // update is available
 
                 await setProperty("latestRemoteVersion", latestVer.version);
+                await setProperty("needsUpdate", true);
 
                 /** @type {boolean} */
                 const remindUpdate = await getProperty("remindUpdate");
@@ -95,6 +104,11 @@ function checkUpdate()
                     if(meta.activationType === "contentsClicked" || meta.activationType === "actionClicked")
                         await open(dashUrl);
                 }
+            }
+            else if(semver.eq(packageJson.version, latestVer))
+            {
+                await setProperty("latestRemoteVersion", latestVer.version);
+                await setProperty("needsUpdate", false);
             }
 
             return res();

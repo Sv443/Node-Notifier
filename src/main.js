@@ -5,7 +5,7 @@ const server = require("./server");
 const error = require("./error");
 const sendNotification = require("./sendNotification");
 const getDateTime = require("./getDateTime");
-const { initDirs } = require("./files");
+const { initDirs, setProperty } = require("./files");
 const checkUpdate = require("./checkUpdate");
 
 const packageJSON = require("../package.json");
@@ -28,6 +28,8 @@ async function init()
             await server.init();
 
             await checkUpdate.init();
+
+            await setProperty("version", packageJSON.version);
         }
         catch(err)
         {

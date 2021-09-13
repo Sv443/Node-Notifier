@@ -4,9 +4,22 @@
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+
+    margin: 0;
+
     font-family: "Roboto", "Arial", "Segoe UI", sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
+}
+
+body > header, body > main, body > footer {
+    display: inline-block;
+
+    margin: 10px;
 }
 
 a {
@@ -32,18 +45,22 @@ h2 {
 
 main {
     text-align: center;
-    padding-top: 25px;
 }
 
 #statusMessage {
     display: inline-block;
-    padding: 15px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
     font-size: 120%;
 
     background-color: #1a4e1a;
     border: 2px solid #999;
-    border-radius: 20px;
+    border-radius: 15px;
 }
+
+/* #dismissUpdate {
+    
+} */
 
 footer {
     display: flex;
