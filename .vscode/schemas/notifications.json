@@ -27,7 +27,7 @@
             },
             "wait": {
                 "type": [ "boolean" ],
-                "description": "Whether the server waited for a user response before the request was responded to"
+                "description": "Whether the server waited for a user response before the request is responded to"
             },
             "timestamp": {
                 "type": "integer",
