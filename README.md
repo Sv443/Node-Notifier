@@ -24,10 +24,11 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 
 ## Table of Contents:
 - **[Installation](#installation)**
-- **[REST API Usage](#rest-api-usage)**
-    - [Sending a Notification](#sending-a-notification)
+- **[REST API usage](#rest-api-usage)**
+    - [Sending a notification](#sending-a-notification)
 - **[Other](#other)**
-    - [Files and Folders](#files-and-folders)
+    - [Files and folders](#files-and-folders)
+    - [Advanced configuration](#advanced-configuration)
 - [Disclaimer](#disclaimer)
 - [Dependencies](#dependencies)
 
@@ -46,6 +47,8 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 8. Do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier) and configure it to work together with Node-Notifier
     - Send requests to the server in another way (see [sending requests](#rest-api-usage))
+  
+I recommend you look at the rest of this document to familiarize yourself with Node-Notifier.
 
 <br>
 
@@ -54,10 +57,12 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 If it's already running, make sure to restart the process by running `npm start` again.  
   
 - If you need help with anything or just want to chat you can [join my Discord server.](https://dc.sv443.net/)
+  
+- If you need to change or delete your password, use the command `npm run password` to open the command line password manager tool.
 
 <br><br>
 
-## REST API Usage:
+## REST API usage:
 Node-Notifier comes with a REST API that is used to send desktop notifications.  
 This section tells you how you can use it.  
   
@@ -67,7 +72,7 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 
 <br>
 
-> ### Sending a Notification:
+> ### Sending a notification:
 > #### `POST /send`
 > 
 > <br>
@@ -166,23 +171,33 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 <br><br>
 
 ## Other:
-### Files and Folders:
+### Files and folders:
 Node-Notifier generates a few files and folders:
 - `assets/`  
-This folder is intended to be used as a place to store your notifications' images and potentially other assets.  
-It is generated and filled with an example image when Node-Notifier first starts up.  
+  This folder is intended to be used as a place to store your notifications' images and potentially other assets.  
+  It is generated and filled with an example image when Node-Notifier first starts up.  
   
 - `.notifier/`  
-This folder contains all internal files of Node-Notifier.  
-Usually you shouldn't need to edit anything in here, but the program is open and I can't *really* stop you so go wild.  
+  This folder contains all internal files of Node-Notifier.  
+  Usually you shouldn't need to edit anything in here, but the program is open and I can't *really* stop you so go wild.  
   
 - `.notifier/properties.json`  
-This file contains internal values of Node-Notifier and I really can't recommend editing anything in here as you can very easily break something.  
+  This file contains internal values of Node-Notifier and I really can't recommend editing anything in here as you can very easily break something.  
   
 - `.notifier/notifications.json`  
-This file will be created when a notification was sent.  
-It is a log file that contains the last *n* notifications, where *n* is defined by `logging.notificationLogSize` in the file `config.js`  
-Feel free to use the contents of this file for your own projects. You can find the JSON schema in `.vscode/schemas/notifications.json`
+  This file will be created when a notification was sent.  
+  It is a log file that contains the last *n* notifications, where *n* is defined by `logging.notificationLogSize` in the file `config.js`  
+  Feel free to use the contents of this file for your own projects. You can find the JSON schema in `.vscode/schemas/notifications.json`
+  
+- `.env`  
+  This file contains your dashboard login data and possibly soon other private data.  
+  Make sure to not give out this file and to otherwise protect it adequately.
+
+<br>
+
+### Advanced configuration:
+Node-Notifier contains an internal settings file which can be used to change core functionality of the program.  
+You can find this file at [`src/settings.js`](./src/settings.js) and you can use it to have even finer control over Node-Notifier.
 
 <br><br>
 
@@ -198,6 +213,7 @@ If I feel like it I might add HTTPS support in the future.
 ## Dependencies:
 Node-Notifier wouldn't be possible without these libraries:
 - [axios](https://npmjs.com/package/axios)
+- [dotenv](https://npmjs.com/package/dotenv)
 - [express](https://npmjs.com/package/express)
 - [fs-extra](https://npmjs.com/package/fs-extra)
 - [hidefile](https://npmjs.com/package/hidefile)

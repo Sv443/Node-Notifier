@@ -1,5 +1,6 @@
 const { colors } = require("svcorelib");
 const { resolve } = require("path");
+const dotenv = require("dotenv");
 
 const server = require("./server");
 const error = require("./error");
@@ -7,6 +8,7 @@ const sendNotification = require("./sendNotification");
 const getDateTime = require("./getDateTime");
 const { initDirs, setProperty } = require("./files");
 const checkUpdate = require("./checkUpdate");
+const auth = require("./auth");
 
 const packageJSON = require("../package.json");
 const settings = require("./settings");
@@ -17,6 +19,8 @@ const col = colors.fg;
 
 async function init()
 {
+    dotenv.config();
+
     console.log(`\n${col.blue}[${getDateTime(true)}]${col.rst} Starting up Node-Notifier v${packageJSON.version}...\n`);
 
     try
@@ -25,11 +29,13 @@ async function init()
         {
             await initDirs();
 
+            await setProperty("version", packageJSON.version);
+
+            await auth.init();
+
             await server.init();
 
             await checkUpdate.init();
-
-            await setProperty("version", packageJSON.version);
         }
         catch(err)
         {

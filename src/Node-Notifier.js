@@ -12,6 +12,10 @@ const col = colors.fg;
 
 function init()
 {
+    // TODO:
+    // - ask to create password here, then write it to .env file
+    // - regenerate .env file if it doesn't exist or is invalid
+
     pm2.connect((err) => {
         if(err)
             return console.error(`Error while connecting to pm2: ${err}`);

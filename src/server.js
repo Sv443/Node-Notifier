@@ -4,11 +4,13 @@ const { unused, allOfType } = require("svcorelib");
 const { platform } = require("os");
 const portUsed = require("tcp-port-used").check;
 
-const cfg = require("../config");
 const error = require("./error");
+const auth, { hasAuth, respondRequireAuth } = require("./auth");
 const { getAllProperties, setProperty } = require("./files");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
+
+const cfg = require("../config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
 /** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
@@ -115,13 +117,18 @@ async function incomingRequest(method, req, res, url)
     switch(method)
     {
     case "GET":
-        // serve dashboard
-        if(url === "/")
-            res.sendFile(resolve("./www/index.html"));
+        // TODO: verify password protection
+        if(hasAuth(req))
+        {
+            // serve dashboard
+            if(url === "/")
+                return res.sendFile(resolve("./www/index.html"));
 
-        // TODO: add password protection
-        if(url === "/int/getproperties")
-            return respondJSON(res, 200, (await getAllProperties()));
+            if(url === "/int/getproperties")
+                return respondJSON(res, 200, (await getAllProperties()));
+        }
+        else
+            return respondRequireAuth(res);
 
         break;
 

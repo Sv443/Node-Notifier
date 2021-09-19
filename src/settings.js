@@ -21,8 +21,13 @@ const internalSettings = {
         enabled: true,
         /** Update check interval in milliseconds */
         interval: (1000 * 60 * 60 * 24),
-        /** GitHub API URL for latest release */
+        /** GitHub API URL for fetching latest release */
         apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
+    },
+    /** Settings regarding the dashboard at http://127.0.0.1:8042/ */
+    dashboard: {
+        /** Whether the dashboard needs authentication to be accessed */
+        needsAuth: true,
     }
 };
 
