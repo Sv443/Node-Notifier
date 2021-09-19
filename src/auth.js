@@ -58,7 +58,7 @@ function getLocalAuth()
 /**
  * Checks if a user has valid authorization
  * @param {Request} req
- * @returns {boolean, Error}
+ * @returns {boolean}
  */
 function hasAuth(req)
 {
@@ -80,7 +80,7 @@ function hasAuth(req)
     }
     catch(err)
     {
-        return rej(new Error(`Error while validating login: ${err}`));
+        throw new Error(`Error while checking login: ${err}`);
     }
 }
 
