@@ -39,7 +39,7 @@ async function init()
         }
         catch(err)
         {
-            return error("Node-Notifier encountered an internal error:", err, true);
+            return error("Node-Notifier encountered an internal error", err, true);
         }
 
         try
