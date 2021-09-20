@@ -5,7 +5,7 @@ const { platform } = require("os");
 const portUsed = require("tcp-port-used").check;
 
 const error = require("./error");
-const auth, { hasAuth, respondRequireAuth } = require("./auth");
+const { hasAuth, respondRequireAuth } = require("./auth");
 const { getAllProperties, setProperty } = require("./files");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
@@ -114,21 +114,25 @@ async function incomingRequest(method, req, res, url)
 
     url = url.toLowerCase();
 
+    const isAuthenticated = cfg.server.requireAuthentication ? hasAuth(req) : true;
+
+    if(!isAuthenticated)
+        return respondRequireAuth(res);
+
+    // TODO: verify password protection
     switch(method)
     {
     case "GET":
-        // TODO: verify password protection
-        if(hasAuth(req))
+        // dashboard always requires auth
+        if((cfg.server.requireAuthentication && isAuthenticated) || (!cfg.server.requireAuthentication && hasAuth(req)))
         {
             // serve dashboard
             if(url === "/")
                 return res.sendFile(resolve("./www/index.html"));
-
-            if(url === "/int/getproperties")
-                return respondJSON(res, 200, (await getAllProperties()));
         }
-        else
-            return respondRequireAuth(res);
+
+        if(url === "/int/getproperties")
+            return respondJSON(res, 200, (await getAllProperties()));
 
         break;
 

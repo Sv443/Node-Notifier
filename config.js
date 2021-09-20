@@ -26,7 +26,9 @@ const config = {
             host: "proxy.its-stuttgart.de",
             /** Port of the proxy server */
             port: 3128
-        }
+        },
+        /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
+        requireAuthentication: false,
     },
     /** Settings regarding logging stuff to files */
     logging: {
