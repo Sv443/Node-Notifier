@@ -1,13 +1,13 @@
-const { allOfType, isEmpty, isArrayEmpty, unused, reserialize } = require("svcorelib");
+const { allOfType, isEmpty, isArrayEmpty, unused, reserialize, filesystem } = require("svcorelib");
 const dotenv = require("dotenv");
 const { createHash } = require("crypto");
 const watch = require("node-watch").default;
-const { Readable } = require("stream");
 
 const error = require("./error");
 
 const packageJson = require("../package.json");
-const settings = require("./settings");
+const { writeFile } = require("fs-extra");
+// const settings = require("./settings");
 
 
 /** @typedef {import("svcorelib").Stringifiable} Stringifiable */
@@ -29,10 +29,15 @@ let auth = [];
 function init()
 {
     return new Promise(async (res, rej) => {
-        let stage = "reading locally stored auth file";
+        let stage = "ensuring './.notifier/.env' exists";
 
         try
         {
+            if(!(await filesystem.exists("./.notifier/.env")))
+                await writeFile("./.notifier/.env", "");
+
+            stage = "reading locally stored auth file"
+
             const [ user, pass ] = getLocalAuth();
 
             if(allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
@@ -41,7 +46,7 @@ function init()
 
                 stage = "setting up daemon";
 
-                watch("./.env", (e, name) => {
+                watch("./.notifier/.env", (e, name) => {
                     unused(e, name);
                     reloadAuth();
                 });
@@ -49,7 +54,7 @@ function init()
                 return res();
             }
             else
-                return rej(new Error(`Error while initializing auth module, local auth is not available. Please run 'npm run password' to generate a new password in the password manager`));
+                return rej(new Error(`Error while initializing auth module, local auth is not available. Please run 'npm run password-manager' to generate a new password in the password manager`));
         }
         catch(err)
         {
@@ -77,12 +82,19 @@ function getLocalAuth()
  */
 function reloadAuth()
 {
-    dotenv.config();
+    try
+    {
+        dotenv.config({ path: "./.notifier/.env" });
 
-    const user = process.env["ADMIN_USER"] || undefined;
-    const pass = process.env["ADMIN_PASS"] || undefined;
+        const user = process.env["ADMIN_USER"] || null;
+        const pass = process.env["ADMIN_PASS"] || null;
 
-    auth = reserialize([ user, pass ]);
+        auth = reserialize([ user, pass ]);
+    }
+    catch(err)
+    {
+        throw new Error(`Couldn't reload local authentication: ${err}`);
+    }
 }
 
 //#SECTION server stuff

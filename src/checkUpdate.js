@@ -73,7 +73,7 @@ function checkUpdate()
                 return rej(`Update check error: GitHub API returned with status ${result.status} - ${result.statusText}`);
 
             if(!result.data || typeof result.data["tag_name"] !== "string")
-                return rej(`Update check error: Received unexpected data from GitHub API`);
+                return rej("Update check error: Received unexpected data from GitHub API");
 
 
             const latestVer = semver.parse(result.data["tag_name"]);
@@ -94,7 +94,7 @@ function checkUpdate()
 
                     const { meta } = await sendNotification({
                         title: "Node-Notifier Update",
-                        message: `An update is available for Node-Notifier.\nClick to open the dashboard for more info.`,
+                        message: "An update is available for Node-Notifier.\nClick to open the dashboard for more info.",
                         icon: resolve("./www/favicon.png"),
                         contentImage: resolve("./www/favicon.png"),
                         wait: true,

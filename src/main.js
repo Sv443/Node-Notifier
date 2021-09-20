@@ -19,7 +19,7 @@ const col = colors.fg;
 
 async function init()
 {
-    dotenv.config();
+    dotenv.config({ path: "./.notifier/.env" });
 
     console.log(`\n${col.blue}[${getDateTime(true)}]${col.rst} Starting up Node-Notifier v${packageJSON.version}...\n`);
 

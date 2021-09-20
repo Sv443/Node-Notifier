@@ -58,7 +58,7 @@ If it's already running, make sure to restart the process by running `npm start`
   
 - If you need help with anything or just want to chat you can [join my Discord server.](https://dc.sv443.net/)
   
-- If you need to change or delete your password, use the command `npm run password` to open the command line password manager tool.
+- If you need to change or delete your password, use the command `npm run password-manager` to open the command line password manager tool.
 
 <br><br>
 
@@ -189,9 +189,10 @@ Node-Notifier generates a few files and folders:
   It is a log file that contains the last *n* notifications, where *n* is defined by `logging.notificationLogSize` in the file `config.js`  
   Feel free to use the contents of this file for your own projects. You can find the JSON schema in `.vscode/schemas/notifications.json`
   
-- `.env`  
+- `.notifier/.env`  
   This file contains your dashboard login data and possibly soon other private data.  
-  Make sure to not give out this file and to otherwise protect it adequately.
+  Make sure to not give out this file and to otherwise protect it adequately.  
+  If environment variables are implemented later on, this file can be used for that too.
 
 <br>
 

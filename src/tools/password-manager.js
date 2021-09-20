@@ -1,16 +1,17 @@
-// TODO: write tool to manage password
+
+const { parseEnvFile, writeEnvFile } = require("../password");
 
 const dotenv = require("dotenv");
-const { readFile, writeFile } = require("fs-extra");
-const { filesystem, allOfType, isArrayEmpty, isEmpty, Errors, colors } = require("svcorelib");
+const { allOfType, isArrayEmpty, isEmpty, Errors, colors } = require("svcorelib");
 const prompt = require("prompts");
+const { resolve } = require("path");
 
 const { hashPass } = require("../auth");
 
 const col = colors.fg;
 
 
-dotenv.config();
+dotenv.config({ path: resolve("./.notifier/.env") });
 
 const { exit } = process;
 
@@ -55,24 +56,25 @@ async function menu()
     // TODO:
     switch(option)
     {
-        case 0: // set new
-            console.log("Setting a new login");
-            console.log("Your new login data will be required to log into Node-Notifier's dashboard");
-            console.log("It will be saved to the hidden file '.env', make sure to adequately protect this file!");
-            console.log();
+    case 0: // set new
+        console.log("Setting a new login");
+        console.log("Your new login data will be required to log into Node-Notifier's dashboard");
+        console.log("It will be saved to the hidden file '.notifier/.env', make sure to adequately protect this file!");
+        console.log();
 
-            await setNewLogin();
+        await setNewLogin();
         break;
-        case 1: // delete current
-            console.log("Deleting your current login");
-            console.log("Your login data is required to log into Node-Notifier's dashboard");
-            console.log("If you delete it, you won't be able to access the dashboard anymore until you generate new login data");
-            console.log();
-            await deleteLogin();
+    case 1: // delete current
+        console.log("Deleting your current login");
+        console.log("Your login data is required to log into Node-Notifier's dashboard");
+        console.log("If you delete it, you won't be able to access the dashboard anymore until you generate new login data");
+        console.log();
+
+        await deleteLogin();
         break;
-        default:
-        case 2: // exit
-            return exit(0);
+    default:
+    case 2: // exit
+        return exit(0);
     }
 
     return menu();
@@ -108,11 +110,11 @@ function setNewLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Couldn't set new password: ${err}`))
+            return rej(new Error(`Couldn't set new password: ${err}`));
         }
     });
 }
-
+ 
 /**
  * Prompts the user to input new login data
  * @returns {string[]} First item is username, second item is unhashed password
@@ -169,11 +171,11 @@ function promptNewLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Couldn't prompt for a new login: ${err}`))
+            return rej(new Error(`Couldn't prompt for a new login: ${err}`));
         }
     });
 }
-
+ 
 /**
  * Prompts the user to delete the current password
  * @returns {Promise<void, Error>}
@@ -210,86 +212,9 @@ function deleteLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Couldn't delete password: ${err}`))
+            return rej(new Error(`Couldn't delete password: ${err}`));
         }
     });
 }
-
-/**
- * Reads and parses the env file and returns it as an object representation  
- * Returns empty object if .env not present
- * @returns {Promise<object, Error>} .env represented as a JS object, example: `KEY=VALUE` => `{ "KEY": "VALUE" }`
- */
-function parseEnvFile()
-{
-    return new Promise(async (res, rej) => {
-        try
-        {
-            if(!(await filesystem.exists("./.env")))
-                return res({});
-
-            const buf = await readFile("./.env");
-
-            const env = dotenv.parse(buf);
-    
-            return res(env);
-        }
-        catch(err)
-        {
-            return rej(new Error(`Couldn't parse .env file: ${err}`))
-        }
-    });
-}
-
-/**
- * Builds a .env file
- * @param {object} envFile An object representation of a .env file, example: `KEY=VALUE` => `{ "KEY": "VALUE" }`
- * @returns {Promise<string, Error>}
- */
-function buildEnvFile(envFile)
-{
-    return new Promise(async (res, rej) => {
-        try
-        {
-            const lines = [];
-
-            Object.keys(envFile).forEach(key => {
-                const val = envFile[key];
-
-                lines.push(`${key}="${val}"`);
-            });
-
-            return res(`${lines.join("\n")}${lines.length > 0 ? "\n" : ""}`);
-        }
-        catch(err)
-        {
-            return rej(new Error(`Couldn't create .env file: ${err}`))
-        }
-    });
-}
-
-/**
- * Writes an object representation of an env file to the local .env file
- * @param {object} envFile An object representation of a .env file, example: `KEY=VALUE` => `{ "KEY": "VALUE" }`
- * @returns {Promise<void, Error>}
- */
-function writeEnvFile(envFile)
-{
-    return new Promise(async (res, rej) => {
-        try
-        {
-            const content = await buildEnvFile(envFile);
-
-            await writeFile("./.env", content);
-
-            return res();
-        }
-        catch(err)
-        {
-            return rej(new Error(`Couldn't write .env file: ${err}`))
-        }
-    });
-}
-
 
 init();

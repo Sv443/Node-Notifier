@@ -199,7 +199,7 @@ function setProperty(key, value)
  * Returns the properties.json template as a string
  * @returns {string}
  */
- function getPropJsonTemplate()
+function getPropJsonTemplate()
 {
     /** @type {PropJsonFile} */
     const propJTemp = {
