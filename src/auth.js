@@ -65,14 +65,16 @@ function init()
 
 /**
  * Returns the local auth, either from the loaded environment on the process object, or through dotenv
- * @returns {Readonly<AuthObj>} First item is the user, second item the password hash
+ * @returns {string[]} First item is the user, second item the password hash
  */
 function getLocalAuth()
 {
     if(!allOfType([ !process.env["DASHBOARD_USER"], !process.env["DASHBOARD_PASS"] ], "string"))
         reloadAuth();
 
-    return reserialize(auth, true);
+    const { user, pass } = auth;
+
+    return [ user, pass ];
 }
 
 /**
@@ -82,7 +84,7 @@ function reloadAuth()
 {
     dotenv.config();
 
-    const [ user, pass ] = getLocalAuth();
+    const [ user, pass ] = [ process.env["DASHBOARD_USER"], process.env["DASHBOARD_PASS"] ];
 
     auth = Object.freeze({ user, pass });
 }

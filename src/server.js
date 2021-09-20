@@ -124,11 +124,17 @@ async function incomingRequest(method, req, res, url)
     {
     case "GET":
         // dashboard always requires auth
-        if((cfg.server.requireAuthentication && isAuthenticated) || (!cfg.server.requireAuthentication && hasAuth(req)))
+        // TODO: this is served through static middleware so manual auth doesn't work, see https://stackoverflow.com/q/31524804/8602926
+        if(url === "/")
         {
-            // serve dashboard
-            if(url === "/")
+            if((cfg.server.requireAuthentication && isAuthenticated) || (!cfg.server.requireAuthentication && hasAuth(req)))
+            {
+                // serve dashboard
+
                 return res.sendFile(resolve("./www/index.html"));
+            }
+            else
+                return respondRequireAuth(res);
         }
 
         if(url === "/int/getproperties")
