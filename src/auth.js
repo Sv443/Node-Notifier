@@ -1,6 +1,8 @@
-const { allOfType, isEmpty, isArrayEmpty } = require("svcorelib");
+const { allOfType, isEmpty, isArrayEmpty, FolderDaemon, unused, reserialize } = require("svcorelib");
 const dotenv = require("dotenv");
 const { createHash } = require("crypto");
+
+const error = require("./error");
 
 const packageJson = require("../package.json");
 const settings = require("./settings");
@@ -8,10 +10,14 @@ const settings = require("./settings");
 
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
+/** @typedef {import("./types").AuthObj} AuthObj */
 
 
+/** @type {AuthObj} Stores the local auth of the user - instantiated after init & reloaded automatically */
 let auth = {};
 
+
+//#SECTION init & other
 
 /**
  * Initializes the auth module
@@ -20,19 +26,30 @@ let auth = {};
 function init()
 {
     return new Promise(async (res, rej) => {
-        let stage = "checking if locally stored auth file exists";
+        let stage = "reading locally stored auth file";
 
         try
         {
-            dotenv.config();
-
             const [ user, pass ] = getLocalAuth();
 
             if(allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
             {
-                stage = "reading authentication";
 
                 auth = Object.freeze({ user, pass });
+
+                stage = "setting up daemon";
+
+                const fd = new FolderDaemon("./", {
+                    whitelist: [ ".env" ],
+                    updateInterval: 2000,
+                });
+
+                fd.onChanged((err) => {
+                    if(err)
+                        return error("Error while detecting changes in FolderDaemon", err, false);
+
+                    reloadAuth();
+                });
 
                 return res();
             }
@@ -47,13 +64,30 @@ function init()
 }
 
 /**
- * Returns the local auth
- * @returns {string[]} First item is the user, second item the password hash
+ * Returns the local auth, either from the loaded environment on the process object, or through dotenv
+ * @returns {Readonly<AuthObj>} First item is the user, second item the password hash
  */
 function getLocalAuth()
 {
-    return [ process.env["DASHBOARD_USER"], process.env["DASHBOARD_PASS"] ];
+    if(!allOfType([ !process.env["DASHBOARD_USER"], !process.env["DASHBOARD_PASS"] ], "string"))
+        reloadAuth();
+
+    return reserialize(auth, true);
 }
+
+/**
+ * Reloads the current local authorization (.env file)
+ */
+function reloadAuth()
+{
+    dotenv.config();
+
+    const [ user, pass ] = getLocalAuth();
+
+    auth = Object.freeze({ user, pass });
+}
+
+//#SECTION server stuff
 
 /**
  * Checks if a user has valid authorization
@@ -93,6 +127,8 @@ function respondRequireAuth(res)
     res.set("WWW-Authenticate", "Basic realm=\"Node-Notifier Dashboard\"");
     res.status(401).send(`Node-Notifier v${packageJson.version} - Authentication required.`);
 }
+
+//#SECTION password stuff
 
 /**
  * Hashes a password with sha512 and returns a base64 string

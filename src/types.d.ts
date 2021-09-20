@@ -47,3 +47,14 @@ export interface LogNotificationObj
     /** 13-character UNIX timestamp */
     timestamp: number;
 }
+
+/**
+ * Describes the auth information of a user
+ */
+export interface AuthObj
+{
+    /** Username */
+    user: string;
+    /** Hashed password */
+    pass: string;
+}
