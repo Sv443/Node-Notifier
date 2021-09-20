@@ -1,8 +1,11 @@
 // TODO: write tool to manage password
 
 const { readFile, writeFile } = require("fs-extra");
-const { filesystem } = require("svcorelib");
+const { filesystem, isEmpty, allOfType, isArrayEmpty } = require("svcorelib");
 const dotenv = require("dotenv");
+const prompt = require("prompts");
+
+const { hashPass } = require("./auth");
 
 
 /**
@@ -70,7 +73,7 @@ function writeEnvFile(envFile)
         {
             const content = await buildEnvFile(envFile);
 
-            await writeFile("./.env", content);
+            await writeFile("./.notifier/.env", content);
 
             return res();
         }
@@ -81,8 +84,69 @@ function writeEnvFile(envFile)
     });
 }
 
+/**
+ * Prompts the user to input new login data
+ * @returns {Promise<(string[]|null), Error>} First item is username, second item is unhashed password - resolves null if user canceled
+ */
+function promptNewLogin()
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            const validate = (val) => !isEmpty(val);
+
+            const { user } = await prompt({
+                type: "text",
+                name: "user",
+                message: "Set your username",
+                validate
+            });
+
+            const getPass = () => new Promise(async res => {
+                const passRaw = await prompt({
+                    type: "password",
+                    name: "pass",
+                    message: "Set your password",
+                    validate
+                });
+    
+                return res(hashPass(passRaw));
+            });
+
+            /** @type {string} password hash */
+            const pass = await getPass();
+
+            if(!allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
+            {
+                console.log("\nUsername or password aren't valid");
+
+                const { tryAgain } = await prompt({
+                    type: "confirm",
+                    name: "tryAgain",
+                    message: "Do you want to enter them again?"
+                });
+
+                if(tryAgain)
+                {
+                    console.clear();
+
+                    return res(await promptNewLogin());
+                }
+                else
+                    return res(null);
+            }
+
+            return res([ user, pass ]);
+        }
+        catch(err)
+        {
+            return rej(new Error(`Couldn't prompt for a new login: ${err}`));
+        }
+    });
+}
+
 module.exports = {
     parseEnvFile,
-    buildEnvFile,
     writeEnvFile,
+    promptNewLogin,
 };

@@ -13,7 +13,7 @@
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
     "build-linux": "pkg -t node14-linux -o dist/NodeNotifier-Linux .",
     "build-mac": "pkg -t node14-macos -o dist/NodeNotifier-MacOS .",
-    "password-manager": "node src/tools/password-manager.js"
+    "login-manager": "node src/tools/login-manager.js"
   },
   "author": {
     "name": "Sv443",

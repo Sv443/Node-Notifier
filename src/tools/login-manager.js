@@ -1,12 +1,10 @@
 
-const { parseEnvFile, writeEnvFile } = require("../password");
+const { parseEnvFile, writeEnvFile, promptNewLogin } = require("../login");
 
 const dotenv = require("dotenv");
-const { allOfType, isArrayEmpty, isEmpty, Errors, colors } = require("svcorelib");
+const { Errors, colors } = require("svcorelib");
 const prompt = require("prompts");
 const { resolve } = require("path");
-
-const { hashPass } = require("../auth");
 
 const col = colors.fg;
 
@@ -67,7 +65,8 @@ async function menu()
     case 1: // delete current
         console.log("Deleting your current login");
         console.log("Your login data is required to log into Node-Notifier's dashboard");
-        console.log("If you delete it, you won't be able to access the dashboard anymore until you generate new login data");
+        console.log("If you delete it, you won't be able to access the dashboard anymore until you generate");
+        console.log("a new login in the login manager or if Node-Notifier is restarted");
         console.log();
 
         await deleteLogin();
@@ -111,67 +110,6 @@ function setNewLogin()
         catch(err)
         {
             return rej(new Error(`Couldn't set new password: ${err}`));
-        }
-    });
-}
- 
-/**
- * Prompts the user to input new login data
- * @returns {string[]} First item is username, second item is unhashed password
- */
-function promptNewLogin()
-{
-    return new Promise(async (res, rej) => {
-        try
-        {
-            const validate = (val) => !isEmpty(val);
-
-            const { user } = await prompt({
-                type: "text",
-                name: "user",
-                message: "Set your username",
-                validate
-            });
-
-            const getPass = () => new Promise(async res => {
-                const passRaw = await prompt({
-                    type: "password",
-                    name: "pass",
-                    message: "Set your password",
-                    validate
-                });
-    
-                return res(hashPass(passRaw));
-            });
-
-            /** @type {string} password hash */
-            const pass = await getPass();
-
-            if(!allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]))
-            {
-                console.log("\nUsername or password aren't valid");
-
-                const { tryAgain } = await prompt({
-                    type: "confirm",
-                    name: "tryAgain",
-                    message: "Do you want to enter them again?"
-                });
-
-                if(tryAgain)
-                {
-                    console.clear();
-
-                    return res(await promptNewLogin());
-                }
-                else
-                    return menu();
-            }
-
-            return res([ user, pass ]);
-        }
-        catch(err)
-        {
-            return rej(new Error(`Couldn't prompt for a new login: ${err}`));
         }
     });
 }

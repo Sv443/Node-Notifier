@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const { createHash } = require("crypto");
 const watch = require("node-watch").default;
 
-const error = require("./error");
+// const error = require("./error");
 
 const packageJson = require("../package.json");
 const { writeFile } = require("fs-extra");
@@ -36,7 +36,7 @@ function init()
             if(!(await filesystem.exists("./.notifier/.env")))
                 await writeFile("./.notifier/.env", "");
 
-            stage = "reading locally stored auth file"
+            stage = "reading locally stored auth file";
 
             const [ user, pass ] = getLocalAuth();
 
@@ -54,7 +54,7 @@ function init()
                 return res();
             }
             else
-                return rej(new Error(`Error while initializing auth module, local auth is not available. Please run 'npm run password-manager' to generate a new password in the password manager`));
+                return rej(new Error("Error while initializing auth module, local auth is not available. Please run 'npm run login-manager' to generate a new password in the login manager"));
         }
         catch(err)
         {
@@ -166,8 +166,8 @@ function hashPass(pass)
     catch(err)
     {
         // to prevent password leaks through error messages
-        err = (err.toString().includes(pass) ? "! (error hidden because it contained the password) !" : err);
-        throw new Error(`Error while ${stage}: ${err}`);
+        const err2 = (err.toString().includes(pass) ? "! (error hidden because it contained the password) !" : err);
+        throw new Error(`Error while ${stage}: ${err2}`);
     }
 }
 

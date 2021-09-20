@@ -58,7 +58,7 @@ If it's already running, make sure to restart the process by running `npm start`
   
 - If you need help with anything or just want to chat you can [join my Discord server.](https://dc.sv443.net/)
   
-- If you need to change or delete your password, use the command `npm run password-manager` to open the command line password manager tool.
+- If you need to change or delete your password, use the command `npm run login-manager` to open the command line login manager tool.
 
 <br><br>
 
