@@ -5,6 +5,8 @@ const { readFile, writeFile } = require("fs-extra");
 const { filesystem, allOfType, isArrayEmpty, isEmpty, Errors, colors } = require("svcorelib");
 const prompt = require("prompts");
 
+const { hashPass } = require("../auth");
+
 const col = colors.fg;
 
 
@@ -89,8 +91,8 @@ function setNewLogin()
 
             const [ user, pass ] = await promptNewLogin();
 
-            localEnv["DASHBOARD_USER"] = user;
-            localEnv["DASHBOARD_PASS"] = pass;
+            localEnv["ADMIN_USER"] = user;
+            localEnv["ADMIN_PASS"] = pass;
 
             const { saveChar } = await prompt({
                 type: "confirm",
@@ -106,7 +108,7 @@ function setNewLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Error while setting new password: ${err}`))
+            return rej(new Error(`Couldn't set new password: ${err}`))
         }
     });
 }
@@ -129,12 +131,19 @@ function promptNewLogin()
                 validate
             });
 
-            const { pass } = await prompt({
-                type: "password",
-                name: "pass",
-                message: "Set your password",
-                validate
+            const getPass = () => new Promise(async res => {
+                const passRaw = await prompt({
+                    type: "password",
+                    name: "pass",
+                    message: "Set your password",
+                    validate
+                });
+    
+                return res(hashPass(passRaw));
             });
+
+            /** @type {string} password hash */
+            const pass = await getPass();
 
             if(!allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]))
             {
@@ -160,7 +169,7 @@ function promptNewLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Error while prompting for a new login: ${err}`))
+            return rej(new Error(`Couldn't prompt for a new login: ${err}`))
         }
     });
 }
@@ -189,11 +198,11 @@ function deleteLogin()
 
             const localEnv = await parseEnvFile();
 
-            if(localEnv["DASHBOARD_USER"])
-                delete localEnv["DASHBOARD_USER"];
+            if(localEnv["ADMIN_USER"])
+                delete localEnv["ADMIN_USER"];
 
-            if(localEnv["DASHBOARD_PASS"])
-                delete localEnv["DASHBOARD_PASS"];
+            if(localEnv["ADMIN_PASS"])
+                delete localEnv["ADMIN_PASS"];
 
             await writeEnvFile(localEnv);
 
@@ -201,7 +210,7 @@ function deleteLogin()
         }
         catch(err)
         {
-            return rej(new Error(`Error while deleting password: ${err}`))
+            return rej(new Error(`Couldn't delete password: ${err}`))
         }
     });
 }
@@ -227,7 +236,7 @@ function parseEnvFile()
         }
         catch(err)
         {
-            return rej(new Error(`Error while parsing env file: ${err}`))
+            return rej(new Error(`Couldn't parse .env file: ${err}`))
         }
     });
 }
@@ -247,14 +256,14 @@ function buildEnvFile(envFile)
             Object.keys(envFile).forEach(key => {
                 const val = envFile[key];
 
-                lines.push(`${key}=${val}`);
+                lines.push(`${key}="${val}"`);
             });
 
             return res(`${lines.join("\n")}${lines.length > 0 ? "\n" : ""}`);
         }
         catch(err)
         {
-            return rej(new Error(`Error while building env file: ${err}`))
+            return rej(new Error(`Couldn't create .env file: ${err}`))
         }
     });
 }
@@ -277,7 +286,7 @@ function writeEnvFile(envFile)
         }
         catch(err)
         {
-            return rej(new Error(`Error while writing env file: ${err}`))
+            return rej(new Error(`Couldn't write .env file: ${err}`))
         }
     });
 }

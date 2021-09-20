@@ -28,6 +28,7 @@
     "fs-extra": "^10.0.0",
     "hidefile": "^3.0.0",
     "node-notifier": "^10.0.0",
+    "node-watch": "^0.7.2",
     "open": "^8.2.1",
     "pm2": "^5.1.1",
     "prompts": "^2.4.1",

@@ -1,6 +1,8 @@
-const { allOfType, isEmpty, isArrayEmpty, FolderDaemon, unused, reserialize } = require("svcorelib");
+const { allOfType, isEmpty, isArrayEmpty, unused, reserialize } = require("svcorelib");
 const dotenv = require("dotenv");
 const { createHash } = require("crypto");
+const watch = require("node-watch").default;
+const { Readable } = require("stream");
 
 const error = require("./error");
 
@@ -8,13 +10,14 @@ const packageJson = require("../package.json");
 const settings = require("./settings");
 
 
+/** @typedef {import("svcorelib").Stringifiable} Stringifiable */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
 /** @typedef {import("./types").AuthObj} AuthObj */
 
 
-/** @type {AuthObj} Stores the local auth of the user - instantiated after init & reloaded automatically */
-let auth = {};
+/** @type {string[]} Stores the local auth of the user (item 0 = username, item 1 = password hash) - instantiated after init & reloaded automatically */
+let auth = [];
 
 
 //#SECTION init & other
@@ -34,28 +37,19 @@ function init()
 
             if(allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
             {
-
-                auth = Object.freeze({ user, pass });
+                auth = Object.freeze([ user, pass ]);
 
                 stage = "setting up daemon";
 
-                // TODO: fix
-                const fd = new FolderDaemon("./", {
-                    whitelist: [ "*.env" ],
-                    updateInterval: 1000,
-                });
-
-                fd.onChanged((err) => {
-                    if(err)
-                        return error("Error while detecting changes in FolderDaemon", err, false);
-
+                watch("./.env", (e, name) => {
+                    unused(e, name);
                     reloadAuth();
                 });
 
                 return res();
             }
             else
-                return rej(new Error(`Error while initializing auth module, local auth is not available. Please run 'npm start' again to create the '.env' file`));
+                return rej(new Error(`Error while initializing auth module, local auth is not available. Please run 'npm run password' to generate a new password in the password manager`));
         }
         catch(err)
         {
@@ -73,9 +67,9 @@ function getLocalAuth()
     if(Object.keys(auth).length == 0)
         reloadAuth();
 
-    const { user, pass } = auth;
+    const resAuth = reserialize(auth); // new reference
 
-    return [ user, pass ];
+    return [ ...resAuth ];
 }
 
 /**
@@ -85,10 +79,10 @@ function reloadAuth()
 {
     dotenv.config();
 
-    const user = process.env["DASHBOARD_USER"] || undefined;
-    const pass = process.env["DASHBOARD_PASS"] || undefined;
+    const user = process.env["ADMIN_USER"] || undefined;
+    const pass = process.env["ADMIN_PASS"] || undefined;
 
-    auth = Object.freeze({ user, pass });
+    auth = reserialize([ user, pass ]);
 }
 
 //#SECTION server stuff
@@ -133,22 +127,35 @@ function respondRequireAuth(res)
 
 /**
  * Hashes a password with sha512 and returns a base64 string
- * @param {string} pass
- * @returns {string} Base64 encoded string, to decode use `Buffer.from(B64_STRING, "base64").toString("utf8")`
+ * @param {Stringifiable} pass
+ * @returns {string} Base64 encoded string, to convert to hex string use `Buffer.from("B64_STRING", "base64").toString("hex")`
  */
 function hashPass(pass)
 {
+    let stage = "creating password hash";
+
     try
     {
-        const hash = createHash("sha512");
-        hash.update(Buffer.from(pass));
-        return hash.digest("base64");
+        const hash = createHash("sha256");
+        hash.setEncoding("base64");
+
+        stage = "writing to password hash";
+
+        hash.write(pass.toString());
+
+        stage = "reading password hash";
+
+        hash.end();
+
+        const result = hash.read().toString();
+
+        return result;
     }
     catch(err)
     {
         // to prevent password leaks through error messages
-        err = (err.toString().includes(pass) ? "" : err);
-        throw new Error(`Error while hashing password: ${err}`);
+        err = (err.toString().includes(pass) ? "! (error hidden because it contained the password) !" : err);
+        throw new Error(`Error while ${stage}: ${err}`);
     }
 }
 

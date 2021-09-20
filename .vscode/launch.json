@@ -42,6 +42,19 @@
                 "${workspaceFolder}/**/*.js"
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "type": "pwa-node",
+            "request": "launch",
+            "name": "PW Mgr",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/tools/password.js",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ],
+            "console": "integratedTerminal"
         }
     ]
 }
