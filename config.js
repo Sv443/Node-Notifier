@@ -28,7 +28,7 @@ const config = {
             port: 3128
         },
         /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
-        requireAuthentication: false,
+        requireAuthentication: true,
     },
     /** Settings regarding logging stuff to files */
     logging: {

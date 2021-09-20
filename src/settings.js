@@ -26,7 +26,7 @@ const internalSettings = {
     },
     /** Settings regarding the dashboard at http://127.0.0.1:8042/ */
     dashboard: {
-        /** Whether the dashboard needs authentication to be accessed */
+        /** TODO: reimplement: Whether the dashboard needs authentication to be accessed */
         needsAuth: true,
     }
 };

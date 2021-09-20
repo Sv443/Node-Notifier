@@ -39,6 +39,7 @@ function init()
 
                 stage = "setting up daemon";
 
+                // TODO: fix this
                 const fd = new FolderDaemon("./", {
                     whitelist: [ ".env" ],
                     updateInterval: 2000,
@@ -69,7 +70,7 @@ function init()
  */
 function getLocalAuth()
 {
-    if(!allOfType([ !process.env["DASHBOARD_USER"], !process.env["DASHBOARD_PASS"] ], "string"))
+    if(Object.keys(auth).length == 0)
         reloadAuth();
 
     const { user, pass } = auth;
@@ -84,7 +85,8 @@ function reloadAuth()
 {
     dotenv.config();
 
-    const [ user, pass ] = [ process.env["DASHBOARD_USER"], process.env["DASHBOARD_PASS"] ];
+    const user = process.env["DASHBOARD_USER"] || undefined;
+    const pass = process.env["DASHBOARD_PASS"] || undefined;
 
     auth = Object.freeze({ user, pass });
 }
@@ -100,9 +102,6 @@ function hasAuth(req)
 {
     try
     {
-        if(!settings.dashboard.needsAuth)
-            return true;
-
         const authB64 = (req.headers.authorization || "").split(" ")[1] || "";
 
         if(isEmpty(authB64))
