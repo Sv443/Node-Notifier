@@ -39,10 +39,10 @@ function init()
 
                 stage = "setting up daemon";
 
-                // TODO: fix this
+                // TODO: fix
                 const fd = new FolderDaemon("./", {
-                    whitelist: [ ".env" ],
-                    updateInterval: 2000,
+                    whitelist: [ "*.env" ],
+                    updateInterval: 1000,
                 });
 
                 fd.onChanged((err) => {
