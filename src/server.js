@@ -116,7 +116,7 @@ async function incomingRequest(method, req, res, url)
 
     const clientHasAuth = hasAuth(req);
 
-    // TODO: verify password protection
+    // TODO: password protection doesn't work correctly
     switch(method)
     {
     case "GET":
