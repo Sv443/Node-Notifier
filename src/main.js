@@ -1,10 +1,8 @@
 const { colors } = require("svcorelib");
-const { resolve } = require("path");
 const dotenv = require("dotenv");
 
 const server = require("./server");
 const error = require("./error");
-const sendNotification = require("./sendNotification");
 const getDateTime = require("./getDateTime");
 const { initDirs, setProperty } = require("./files");
 const checkUpdate = require("./checkUpdate");
@@ -12,7 +10,6 @@ const auth = require("./auth");
 
 const packageJSON = require("../package.json");
 const settings = require("./settings");
-const cfg = require("../config");
 
 const col = colors.fg;
 
@@ -40,26 +37,6 @@ async function init()
         catch(err)
         {
             return error("Node-Notifier encountered an internal error", err, true);
-        }
-
-        try
-        {
-            if(cfg.notifications.startupNotificationEnabled)
-            {
-                await sendNotification({
-                    title: "Node-Notifier is running",
-                    message: `The HTTP server is listening on port ${cfg.server.port}`,
-                    icon: resolve("./www/favicon.png"),
-                    contentImage: resolve("./www/favicon.png"),
-                    requireInteraction: false,
-                    open: `http://localhost:${cfg.server.port}`,
-                    timeout: 6,
-                });
-            }
-        }
-        catch(err)
-        {
-            return error("Error while sending notification", err, true);
         }
 
         // if wait is enabled and process is started as a fork, send "ready" signal
