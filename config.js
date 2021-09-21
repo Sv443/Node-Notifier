@@ -19,7 +19,7 @@ const config = {
         /** If you are in a network that requires special proxy configuration, you can set it up here */
         proxy: {
             /** Whether your network requires special proxy configuration */
-            enabled: true,
+            enabled: false,
             /** Host / IP of the proxy server */
             host: "proxy.its-stuttgart.de",
             /** Port of the proxy server */
