@@ -93,6 +93,7 @@ function promptNewLogin()
     return new Promise(async (res, rej) => {
         try
         {
+            /** Filter function used to deny empty prompts */
             const validate = (val) => !isEmpty(val);
 
             const { user } = await prompt({
@@ -118,7 +119,7 @@ function promptNewLogin()
 
             if(!allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
             {
-                console.log("\nUsername or password aren't valid");
+                console.log("\nUsername and/or password are invalid");
 
                 const { tryAgain } = await prompt({
                     type: "confirm",
