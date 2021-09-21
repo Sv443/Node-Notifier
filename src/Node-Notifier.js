@@ -164,8 +164,12 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 2
             },
             {
+                title: "About Node-Notifier",
+                value: 3,
+            },
+            {
                 title: "Finish",
-                value: 3
+                value: 4
             },
         ]
     });
@@ -223,7 +227,42 @@ async function afterPm2Connected(startupType, err, processes)
         }
         break;
     }
-    case 3: // exit
+    case 3: // about
+    {
+        console.clear();
+
+        console.log(`Node-Notifier - ${packageJSON.description}`);
+        console.log(`Version: ${packageJSON.version}\n`);
+
+        console.log(`GitHub: ${packageJSON.homepage}`);
+        console.log(`Submit an issue: ${packageJSON.homepage}/issues/new\n`);
+
+        console.log(`Made by ${packageJSON.author.name}`);
+        console.log(`${packageJSON.author.url}`);
+
+        console.log("\n");
+
+        const { idx } = await prompt({
+            type: "select",
+            name: "idx",
+            message: "Choose what to do",
+            choices: [
+                {
+                    title: "Back to main menu",
+                    value: 0
+                }
+            ]
+        });
+
+        switch(idx)
+        {
+        case 0: // back
+            return afterPm2Connected(startupType, err, processes);
+        }
+
+        break;
+    }
+    case 4: // exit
     default:
         exit(0);
     }
