@@ -13,7 +13,6 @@ const { writeFile } = require("fs-extra");
 /** @typedef {import("svcorelib").Stringifiable} Stringifiable */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
-/** @typedef {import("./types").AuthObj} AuthObj */
 
 
 /** @type {string[]} Stores the local auth of the user (item 0 = username, item 1 = password hash) - instantiated after init & reloaded automatically */
