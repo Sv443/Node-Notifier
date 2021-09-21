@@ -114,10 +114,7 @@ async function incomingRequest(method, req, res, url)
 
     url = url.toLowerCase();
 
-    const isAuthenticated = cfg.server.requireAuthentication ? hasAuth(req) : true;
-
-    if(!isAuthenticated)
-        return respondRequireAuth(res);
+    const clientHasAuth = hasAuth(req);
 
     // TODO: verify password protection
     switch(method)
@@ -127,18 +124,17 @@ async function incomingRequest(method, req, res, url)
         // TODO: this is served through static middleware so manual auth doesn't work, see https://stackoverflow.com/q/31524804/8602926
         if(url === "/")
         {
-            if((cfg.server.requireAuthentication && isAuthenticated) || (!cfg.server.requireAuthentication && hasAuth(req)))
-            {
-                // serve dashboard
-
+            // dashboard always requires auth
+            if(clientHasAuth)
                 return res.sendFile(resolve("./www/index.html"));
-            }
             else
                 return respondRequireAuth(res);
         }
 
-        if(url === "/int/getproperties")
+        if(clientHasAuth && url === "/int/getproperties")
             return respondJSON(res, 200, (await getAllProperties()));
+        else if(!clientHasAuth)
+            return respondRequireAuth(res);
 
         break;
 
@@ -150,7 +146,7 @@ async function incomingRequest(method, req, res, url)
             error: true,
             message: `Method '${method}' is not allowed - use GET or POST`
         });
-    }    
+    }
 }
 
 /**
@@ -180,6 +176,10 @@ function respondJSON(res, statusCode = 500, jsonObj)
  */
 async function parseRequest(req, res, url)
 {
+    const clientHasAuth = hasAuth(req);
+
+    const isAuthenticated = cfg.server.requireAuthentication ? clientHasAuth : true;
+
     if(req.body === undefined || (req.body && req.body.length < 1))
     {
         return respondJSON(res, 400, {
@@ -190,10 +190,12 @@ async function parseRequest(req, res, url)
 
     try
     {
-        if(url === "/send")
+        if(isAuthenticated && url === "/send")
             return sendNotificationRequest(req, res);
+        else if(!isAuthenticated)
+            return respondRequireAuth(res);
 
-        if(url === "/int/setproperty")
+        if(clientHasAuth && url === "/int/setproperty")
         {
             // TODO: add password protection
             try
@@ -224,6 +226,8 @@ async function parseRequest(req, res, url)
                 });
             }
         }
+        else if(!clientHasAuth)
+            return respondRequireAuth(res);
     }
     catch(err)
     {
