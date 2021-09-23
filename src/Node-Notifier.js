@@ -13,6 +13,7 @@ const cfg = require("../config");
 const settings = require("./settings");
 
 /** @typedef {import("pm2").Proc} Proc */
+/** @typedef {import("./types").StartupType} StartupType */
 
 const { exit } = process;
 
@@ -21,6 +22,8 @@ const col = colors.fg;
 
 async function init()
 {
+    console.log("\nStarting up Node-Notifier...");
+
     // TODO:
     // - ask to create password here, then write it to .env file
     // - regenerate .env file if it doesn't exist or is invalid
@@ -100,7 +103,7 @@ function startProc()
 
 /**
  * Gets called after the pm2 process has been created
- * @param {"new"|"restart"|"stopped"|"idle"} startupType
+ * @param {StartupType} startupType
  * @param {Error} err
  * @param {Proc} processes
  */
@@ -152,7 +155,7 @@ async function afterPm2Connected(startupType, err, processes)
         name: "index",
         choices: [
             {
-                title: "Open dashboard",
+                title: "Open dashboard ⧉ ",
                 value: 0
             },
             {
@@ -160,11 +163,11 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 1
             },
             {
-                title: "Manage background process",
+                title: "Manage background process >",
                 value: 2
             },
             {
-                title: "About Node-Notifier",
+                title: "About Node-Notifier >",
                 value: 3,
             },
             {
@@ -229,43 +232,82 @@ async function afterPm2Connected(startupType, err, processes)
     }
     case 3: // about
     {
-        console.clear();
-
-        console.log(`Node-Notifier - ${packageJSON.description}`);
-        console.log(`Version: ${packageJSON.version}\n`);
-
-        console.log(`GitHub: ${packageJSON.homepage}`);
-        console.log(`Submit an issue: ${packageJSON.homepage}/issues/new\n`);
-
-        console.log(`Made by ${packageJSON.author.name}`);
-        console.log(`${packageJSON.author.url}`);
-
-        console.log("\n");
-
-        const { idx } = await prompt({
-            type: "select",
-            name: "idx",
-            message: "Choose what to do",
-            choices: [
-                {
-                    title: "Back to main menu",
-                    value: 0
-                }
-            ]
-        });
-
-        switch(idx)
-        {
-        case 0: // back
-            return afterPm2Connected(startupType, err, processes);
-        }
-
+        printAbout(processes);
         break;
     }
     case 4: // exit
     default:
         exit(0);
     }
+}
+
+/**
+ * Prints the "About Node-Notifier" dialog
+ * @param {Proc} processes
+ */
+async function printAbout(processes)
+{
+    console.clear();
+
+    console.log(`Node-Notifier - ${packageJSON.description}`);
+    console.log(`Version: ${packageJSON.version}\n`);
+
+    console.log(`GitHub repo:     ${packageJSON.homepage}`);
+    console.log(`Submit an issue: ${packageJSON.bugs.url}/new\n`);
+
+    
+    console.log(`Made by ${packageJSON.author.name}`);
+    console.log(`${packageJSON.author.url}\n`);
+
+    console.log(`If you enjoy Node-Notifier, please consider supporting me: ${packageJSON.funding}`);
+
+    console.log("\n");
+
+    prompt({
+        type: "select",
+        name: "idx",
+        message: "Choose what to do",
+        choices: [
+            {
+                title: "Open GitHub repo ⧉ ",
+                value: 0
+            },
+            {
+                title: "Submit an issue ⧉ ",
+                value: 1
+            },
+            {
+                title: "Support me ⧉ ",
+                value: 2
+            },
+            {
+                title: "Back to main menu",
+                value: 3
+            }
+        ]
+    }).then(({ idx }) => {
+        switch(idx)
+        {
+        case 0: // GH repo
+            open(packageJSON.homepage);
+    
+            return printAbout(processes);
+    
+        case 1: // GH issue
+            open(`${packageJSON.bugs.url}/new`);
+    
+            return printAbout(processes);
+
+        case 2: // GH sponsor
+            open(packageJSON.funding);
+    
+            return printAbout(processes);
+    
+        case 3: // back
+        default:
+            return afterPm2Connected("idle", undefined, processes);
+        }
+    });
 }
 
 /**
@@ -345,6 +387,7 @@ function manageProcessPrompt(proc)
                 }
                 break;
             case 2: // main menu
+            default:
                 return afterPm2Connected("idle", undefined, [proc]);
             }
 

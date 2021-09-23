@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Open client that triggers desktop notifications through HTTP requests",
   "homepage": "https://github.com/Sv443/Node-Notifier",
+  "funding": "https://github.com/sponsors/Sv443",
+  "bugs": {
+    "url": "https://github.com/Sv443/Node-Notifier/issues"
+  },
   "main": "src/Node-Notifier.js",
   "bin": "src/Node-Notifier.js",
   "scripts": {

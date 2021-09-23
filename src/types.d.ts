@@ -47,3 +47,8 @@ export interface LogNotificationObj
     /** 13-character UNIX timestamp */
     timestamp: number;
 }
+
+/**
+ * The type of startup used in ./Node-Notifier.js
+ */
+export type StartupType = "new" | "restart" | "stopped" | "idle";
