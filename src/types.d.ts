@@ -1,6 +1,8 @@
 import { NotificationMetadata } from "node-notifier";
 
 
+export { Stringifiable } from "svcorelib";
+
 
 /**
  * Describes query parameters sent by a client

@@ -9,8 +9,6 @@ const packageJson = require("../package.json");
 const { writeFile } = require("fs-extra");
 // const settings = require("./settings");
 
-
-/** @typedef {import("svcorelib").Stringifiable} Stringifiable */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
 

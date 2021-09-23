@@ -3,6 +3,7 @@ const { colors, allOfType, isArrayEmpty, unused } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
+const readline = require("readline");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -14,10 +15,11 @@ const settings = require("./settings");
 
 /** @typedef {import("pm2").Proc} Proc */
 /** @typedef {import("./types").StartupType} StartupType */
-
-const { exit } = process;
+/** @typedef {import("./types").Stringifiable} Stringifiable */
 
 const col = colors.fg;
+
+const { exit } = process;
 
 
 async function init()
@@ -195,7 +197,7 @@ async function afterPm2Connected(startupType, err, processes)
     {
         console.clear();
 
-        console.log("\nSending notification and waiting for response (close or click it)");
+        console.log(`\n${col.cyan}Sending notification and waiting for response (close or click it)\n${col.rst}`);
 
         const { meta } = await sendNotification({
             title: "Node-Notifier works!",
@@ -207,16 +209,18 @@ async function afterPm2Connected(startupType, err, processes)
             timeout: 10,
         });
 
-        let timeout = 500;
-
         if(meta.action === "timedout")
         {
-            console.log("Notification timed out. Your OS might have blocked the notification (or you just ignored it).");
-            timeout = 10000;
+            console.log(`${col.yellow}Notification timed out. Your OS might have blocked the notification (or you just ignored it).${col.rst}\n`);
+            console.log("On Windows, check no app is in full screen and focus assist is turned off");
+            console.log("On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n");
         }
+        else
+            console.log(`${col.green}Successfully sent desktop notification.${col.rst}\n`);
 
-        setTimeout(() => afterPm2Connected("idle", err, processes), timeout);
-        break;
+        await pause("Press any key to continue...");
+
+        return afterPm2Connected("idle", err, processes);
     }
     case 2: // manage pm2 process
     {
@@ -242,6 +246,34 @@ async function afterPm2Connected(startupType, err, processes)
 }
 
 /**
+ * Pauses the stdin stream until the user presses any key
+ * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
+ * @returns {Promise<number>} Resolves with key code - resolves -1 if there was an error extracting the key code
+ */
+function pause(message)
+{
+    process.stdout.write(`${message.toString()} `);
+
+    return new Promise(res => {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.once("data", key => {
+            process.stdin.pause();
+            process.stdin.setRawMode(false);
+            process.stdout.write("\n");
+            try
+            {
+                return res(parseInt(key[0]));
+            }
+            catch(err)
+            {
+                return res(-1);
+            }
+        });
+    });
+}
+
+/**
  * Prints the "About Node-Notifier" dialog
  * @param {Proc} processes
  */
@@ -255,7 +287,6 @@ async function printAbout(processes)
     console.log(`GitHub repo:     ${packageJSON.homepage}`);
     console.log(`Submit an issue: ${packageJSON.bugs.url}/new\n`);
 
-    
     console.log(`Made by ${packageJSON.author.name}`);
     console.log(`${packageJSON.author.url}\n`);
 
