@@ -53,7 +53,7 @@ function checkUpdate()
 
             try
             {
-                /** @type {import("axios").AxiosRequestConfig} */
+                /** @type {import("axios").AxiosRequestConfig|undefined} */
                 const axCfg = cfg.server.proxy.enabled ? {
                     proxy: {
                         host: cfg.server.proxy.host,

@@ -3,7 +3,6 @@ const { colors, allOfType, isArrayEmpty, unused } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
-const readline = require("readline");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -13,9 +12,11 @@ const packageJSON = require("../package.json");
 const cfg = require("../config");
 const settings = require("./settings");
 
+
 /** @typedef {import("pm2").Proc} Proc */
 /** @typedef {import("./types").StartupType} StartupType */
 /** @typedef {import("./types").Stringifiable} Stringifiable */
+
 
 const col = colors.fg;
 

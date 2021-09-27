@@ -24,9 +24,9 @@ const cfg = require("../config");
 const placeholderIconPath = "./www/favicon.png";
 
 /** URLs that can be accessed with GET */
-const getURLs = [ "/", "/int/getProperties" ];
+const getURLs = [ "/", "/int/getproperties" ];
 /** URLs that can be accessed with POST */
-const postURLs = [ "/send", "/int/setProperty" ];
+const postURLs = [ "/send", "/int/setproperty" ];
 
 
 const app = express();

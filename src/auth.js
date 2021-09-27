@@ -35,11 +35,11 @@ function init()
 
             stage = "reading locally stored auth file";
 
-            const [ user, pass ] = getLocalAuth();
+            const login = [...getLocalAuth()];
 
-            if(allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
+            if(allOfType(login, "string") && isArrayEmpty(login) === false)
             {
-                auth = Object.freeze([ user, pass ]);
+                auth = reserialize(login);
 
                 stage = "setting up daemon";
 
