@@ -1,7 +1,7 @@
 import { NotificationMetadata } from "node-notifier";
 
 
-export { Stringifiable } from "svcorelib";
+export { Stringifiable, JSONCompatible } from "svcorelib";
 
 
 /**

@@ -5,7 +5,7 @@ const { hide } = require("hidefile");
 
 const packageJSON = require("../package.json");
 
-/** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
+/** @typedef {import("./types").JSONCompatible} JSONCompatible */
 /** @typedef {import("../.notifier/properties.json")} PropJsonFile The properties.json file */
 
 
