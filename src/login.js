@@ -86,7 +86,7 @@ function writeEnvFile(envFile)
 
 /**
  * Prompts the user to input new login data
- * @returns {Promise<(string[]|null), Error>} First item is username, second item is unhashed password - resolves null if user canceled
+ * @returns {Promise<(string[]|null[])>} Resolves with a string tuple: First item is username, second item is unhashed password - both values null if user canceled
  */
 function promptNewLogin()
 {
@@ -134,7 +134,7 @@ function promptNewLogin()
                     return res(await promptNewLogin());
                 }
                 else
-                    return res(null);
+                    return res([ null, null ]);
             }
 
             return res([ user, pass ]);

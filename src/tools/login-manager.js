@@ -51,32 +51,54 @@ async function menu()
 
     console.clear();
 
-    // TODO:
     switch(option)
     {
     case 0: // set new
-        console.log("Setting a new login");
-        console.log("Your new login data will be required to log into Node-Notifier's dashboard");
-        console.log("It will be saved to the hidden file '.notifier/.env', make sure to adequately protect this file!");
+        printLines([
+            "Setting a new login",
+            "Your new login data will be required to log into Node-Notifier's dashboard",
+            "It will be saved to the hidden file '.notifier/.env', make sure to adequately protect this file!",
+        ], 1);
         console.log();
 
         await setNewLogin();
         break;
     case 1: // delete current
-        console.log("Deleting your current login");
-        console.log("Your login data is required to log into Node-Notifier's dashboard");
-        console.log("If you delete it, you won't be able to access the dashboard anymore until you generate");
-        console.log("a new login in the login manager or if Node-Notifier is restarted");
-        console.log();
+        printLines([
+            "Deleting your current login",
+            "Your login data is required to log into Node-Notifier's dashboard",
+            "If you delete it, you won't be able to access the dashboard anymore until you generate",
+            "a new login in the login manager or if Node-Notifier is restarted",
+        ], 1);
 
         await deleteLogin();
         break;
     default:
     case 2: // exit
-        return exit(0);
+        console.log("\nExiting.\n");
+        setTimeout(() => exit(0), 500);
+        return;
     }
 
     return menu();
+}
+
+/**
+ * Prints an array of lines to the console
+ * @param {string[]} lines
+ * @param {number} [extraNewlines]
+ */
+function printLines(lines, extraNewlines = 0)
+{
+    if(typeof extraNewlines != "number" || extraNewlines < 0)
+        extraNewlines = 0;
+
+    let finalNLs = "\n";
+
+    for(let i = 0; i < extraNewlines; i++)
+        finalNLs += "\n";
+
+    process.stdout.write(`${lines.join("\n")}${finalNLs}`);
 }
 
 /**
@@ -91,6 +113,9 @@ function setNewLogin()
             const localEnv = await parseEnvFile();
 
             const [ user, pass ] = await promptNewLogin();
+
+            if(!user || !pass)
+                throw new Error("No login provided in \"new login\" prompt");
 
             localEnv["ADMIN_USER"] = user;
             localEnv["ADMIN_PASS"] = pass;
