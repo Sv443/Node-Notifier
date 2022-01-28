@@ -1,11 +1,14 @@
 const port = 8042;
 
 
-/** @typedef {import("../src/files").JSONCompatible} JSONCompatible */
+/** @typedef {import("../src/types").JSONCompatible} JSONCompatible */
 /** @typedef {import("../src/files").PropJsonFile} PropJsonFile The properties.json file */
 
-/** @type {import("../.notifier/properties.json")} */
-let props;
+/**
+ * @type {PropJsonFile} Current local state of the properties.json on the server (can be outdated).  
+ * Should be refreshed with `loadProps()` and should update the props on the server with `setProp()` once modified.
+ */
+var props;
 
 
 document.addEventListener("DOMContentLoaded", init);
@@ -18,7 +21,7 @@ async function init()
 {
     await loadProps();
 
-    setTimeout(checkUpdate, 800); // artificial timeout - see https://ux.stackexchange.com/a/83917
+    setTimeout(checkUpdate, (Math.round(Math.random() * 4) * 150) + 500); // artificial timeout - see https://ux.stackexchange.com/a/83917
 }
 
 /**
@@ -31,10 +34,12 @@ function loadProps()
         try
         {
             const f = await fetch(`http://127.0.0.1:${port}/int/getProperties`);
-            props = await f.json();
+            const respProps = await f.json();
 
-            if(props["error"] === true)
-                return rej(props["message"] || "Unknown error");
+            if(respProps["error"] === true)
+                return rej(respProps["message"] || "Unknown error");
+
+            props = respProps;
 
             return res();
         }
@@ -58,7 +63,7 @@ function setProp(key, value)
         {
             const body = JSON.stringify({ key, value });
 
-            const setPropF = await fetch(`http://127.0.0.1:${port}/int/setProperty`, {
+            const setPropRes = await fetch(`http://127.0.0.1:${port}/int/setProperty`, {
                 method: "POST",
                 body,
                 headers: [
@@ -66,10 +71,10 @@ function setProp(key, value)
                 ]
             });
 
-            const j = await setPropF.json();
+            const resp = await setPropRes.json();
 
-            if(j["error"] === true)
-                return rej(new Error(`Error while setting property with key '${key}': ${j["message"]}`));
+            if(resp["error"] === true)
+                return rej(new Error(`Error while setting property with key '${key}': ${resp["message"]}`));
 
             return res();
         }
@@ -106,7 +111,7 @@ function checkUpdate()
         dismissContainer.id = "dismissUpdateContainer";
 
         const dismissElem = document.createElement("button");
-        dismissElem.innerText = "Mute Update Reminder";
+        dismissElem.innerText = "Mute until next version";
         dismissElem.id = "dismissUpdate";
         dismissElem.onclick = async () => {
             try

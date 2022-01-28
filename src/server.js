@@ -13,9 +13,9 @@ const logNotification = require("./logNotification");
 const cfg = require("../config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
-/** @typedef {import("svcorelib").JSONCompatible} JSONCompatible */
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
+/** @typedef {import("./types").JSONCompatible} JSONCompatible */
 /** @typedef {import("./types").HttpMethod} HttpMethod */
 /** @typedef {import("./types").QueryObj} QueryObj */
 
