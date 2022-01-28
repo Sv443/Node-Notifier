@@ -27,7 +27,7 @@ const paths = Object.freeze({
 function initDirs()
 {
     return new Promise(async (res, rej) => {
-        let stage = "ensuring ./assets exists";
+        let currentAction = "ensuring ./assets exists";
 
         // TODO: either
         // - regenerate properties.json if initVersion is out of date
@@ -39,37 +39,34 @@ function initDirs()
         {
             await ensureDir("./assets");
 
-            stage = "checking if ./.notifier exists";
+            currentAction = "checking if ./.notifier exists";
 
             if(!(await filesystem.exists("./.notifier")))
             {
-                stage = "creating ./notifier";
+                currentAction = "creating ./notifier";
                 await ensureDir("./notifier");
 
-                stage = "hiding directory ./notifier";
+                currentAction = "hiding directory ./notifier";
                 await hidePath("./notifier");
 
-                stage = `creating ${paths.propJson} from template`;
-                await createPropJsonFile();
-
-                stage = "copying ./www/favicon.png to ./assets/example.png";
+                currentAction = "copying ./www/favicon.png to ./assets/example.png";
                 await copyFile("./www/favicon.png", "./assets/example.png");
             }
 
-            stage = "checking if properties.json exists";
+            currentAction = "checking if properties.json exists";
             if(!(await filesystem.exists(paths.propJson)))
             {
-                stage = "creating properties.json";
+                currentAction = "creating properties.json";
                 await createPropJsonFile();
             }
 
-            stage = "(done)";
+            currentAction = "<done>";
 
             return res();
         }
         catch(err)
         {
-            return rej(new Error(`InitDirs: Error while ${stage}: ${err}`));
+            return rej(new Error(`InitDirs: Error while ${currentAction}: ${err}`));
         }
     });
 }
@@ -129,7 +126,7 @@ function getAllProperties()
         try
         {
             if(!(await filesystem.exists("./.notifier/properties.json")))
-                createPropJsonFile();
+                await createPropJsonFile();
 
             const fileContent = await readFile(paths.propJson);
 
