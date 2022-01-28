@@ -1,5 +1,4 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "Node-Notifier Notification",
     "description": "A Node-Notifier notification in the notification log",
     "type": "array",

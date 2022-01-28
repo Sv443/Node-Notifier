@@ -1,5 +1,4 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "Node-Notifier internal properties",
     "description": "Some internal properties created and managed by Node-Notifier. You shouldn't modify this file unless you really know what you're doing!",
     "type": "object",
