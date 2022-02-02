@@ -8,10 +8,12 @@ const importFresh = require("import-fresh");
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
+const { printTitle, printLines, pause } = require("./cli");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
 const settings = require("./settings");
+
 
 
 /** @typedef {import("pm2").Proc} Proc */
@@ -38,9 +40,11 @@ async function init()
     {
         console.clear();
 
-        console.log("Node-Notifier needs to create an admin user, so you can access the dashboard and possibly enable HTTP authentication");
-        console.log("Please register the admin user below\n");
-        console.log("To edit or delete this data, choose \"manage login data\" in the main menu\n");
+        printLines([
+            "Node-Notifier needs to create an admin user, so you can access the dashboard and possibly enable HTTP authentication",
+            "Please register the admin user below\n",
+            "To edit or delete this data, choose \"manage login data\" in the main menu\n",
+        ]);
 
         const [ user, pass ] = await promptNewLogin();
 
@@ -102,65 +106,31 @@ function startProc()
             watch: settings.pm2.watch,
         }, (err, proc) => {
             afterPm2Connected("new", err, proc);
-            res(proc);
+            return res(proc);
         });
     });
 }
 
 /**
- * Gets called after the pm2 process has been created
+ * Gets called after the pm2 process has been created. It is also the main menu of the control panel.
  * @param {StartupType} startupType
  * @param {Error} err
  * @param {Proc} processes
  */
 async function afterPm2Connected(startupType, err, processes)
 {
+    console.clear();
+
     if(err)
         return console.error(`Error while starting process: ${typeof err === "object" ? JSON.stringify(err) : (typeof err.toString === "function" ? err.toString() : err )}`);
 
     const fProc = processes[0];
     const proc = fProc.pm2_env || fProc;
 
-    console.log("\n\n\n\n\n\n");
+    // console.log(`\n[${new Date().toLocaleString()}]\n\n`);
+    // console.log(`Node-Notifier v${packageJSON.version} is ${startupType !== "stopped" ? `${col.green}running` : `${col.red}stopped`}${col.rst}\n\n`);
 
-    console.log(`[${new Date().toLocaleString()}]`);
-
-    if(startupType === "new")
-        console.log(`\n${col.green}Successfully started up${col.rst} Node-Notifier v${packageJSON.version} in the background`);
-    else if(startupType === "restart")
-        console.log(`\n${col.green}Successfully restarted${col.rst} the background process of Node-Notifier v${packageJSON.version}`);
-    else if(startupType === "stopped")
-        console.log(`\nThe background process of Node-Notifier v${packageJSON.version} ${col.yellow}is stopped${col.rst}`);
-    else if(startupType === "idle")
-        console.log(`\nThe background process of Node-Notifier v${packageJSON.version} ${col.green}is running${col.rst}`);
-
-
-
-    if(startupType !== "stopped")
-    {
-        console.log(`\nThe HTTP server is listening on port ${col.blue}${cfg.server.port}${col.rst}`);
-        console.log(`Dashboard is available at http://127.0.0.1:${cfg.server.port}/\n`);
-    }
-
-    if(startupType !== "stopped")
-    {
-        const startupTypeText = (startupType === "new" ? "Created" : (startupType === "restart" ? "Restarted" : "<idle>"));
-
-        if(startupType === "idle")
-            console.log(`pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst} is idling`);
-        else
-            console.log(`${startupTypeText} pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
-
-        console.log("  - To list all processes use the command 'pm2 list'");
-        console.log("  - To automatically start Node-Notifier after system reboot use 'pm2 startup' or 'pm2 save'");
-        console.log("  - To monitor Node-Notifier use 'pm2 monit'");
-        console.log(`  - To view Node-Notifier's log use 'pm2 logs ${proc.pm_id}'`);
-    }
-
-    console.log("\n\n\n");
-
-    console.log(`${col.green}Node-Notifier - Control Panel${col.rst}`);
-    console.log("Use this menu to manage Node-Notifier\n");
+    printTitle("Control Panel", "Use this menu to manage Node-Notifier");
 
     const { optIndex } = await prompt({
         type: "select",
@@ -188,13 +158,11 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 4,
             },
             {
-                title: "Finish",
+                title: `${col.yellow}Exit control panel${col.rst}`,
                 value: 5,
             },
         ]
     });
-
-    process.stdout.write("\n");
 
     switch(optIndex)
     {
@@ -203,7 +171,7 @@ async function afterPm2Connected(startupType, err, processes)
 
         console.clear();
 
-        console.log("\nOpening dashboard...");
+        console.log("\nOpening dashboard in your browser...");
 
         setTimeout(() => afterPm2Connected("idle", err, processes), 2000);
         break;
@@ -212,7 +180,7 @@ async function afterPm2Connected(startupType, err, processes)
     {
         console.clear();
 
-        console.log(`\n${col.cyan}Sending notification and waiting for response (close or click it)\n${col.rst}`);
+        console.log(`\n${col.cyan}Sending notification and waiting for response (close or otherwise interact with it)\n${col.rst}`);
 
         let testNotifD = new Date().getTime();
 
@@ -228,14 +196,18 @@ async function afterPm2Connected(startupType, err, processes)
 
         if(meta.action === "timedout")
         {
-            console.log(`${col.yellow}Notification timed out. Your OS might have blocked the notification or you just ignored it.${col.rst}\n`);
-            console.log("On Windows, check no app is in full screen and focus assist is turned off");
-            console.log("On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n");
+            printLines([
+                `${col.yellow}Notification timed out. Your OS might have blocked the notification or you just ignored it.${col.rst}\n`,
+                "On Windows, check no app is in full screen and focus assist is turned off",
+                "On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n",
+            ]);
         }
         else
         {
-            console.log(`${col.green}Successfully sent desktop notification.${col.rst}`);
-            console.log(`(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)\n`);
+            printLines([
+                `${col.green}Successfully sent desktop notification.${col.rst}`,
+                `(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)\n`,
+            ]);
         }
 
         await pause("Press any key to continue...");
@@ -246,6 +218,8 @@ async function afterPm2Connected(startupType, err, processes)
     {
         try
         {
+            console.clear();
+
             await manageProcessPrompt(proc);
         }
         catch(err)
@@ -256,6 +230,8 @@ async function afterPm2Connected(startupType, err, processes)
     }
     case 3: // login mgr
     {
+        process.stdout.write("\n");
+    
         const { openMgr } = await prompt({
             type: "confirm",
             name: "openMgr",
@@ -264,7 +240,10 @@ async function afterPm2Connected(startupType, err, processes)
         });
 
         if(openMgr)
-            openLoginMgr();
+        {
+            console.clear();
+            return openLoginMgr(); // leaves prompt chain!
+        }
         else
             afterPm2Connected("idle", undefined, processes);
 
@@ -272,6 +251,8 @@ async function afterPm2Connected(startupType, err, processes)
     }
     case 4: // about
     {
+        console.clear();
+
         printAbout(processes);
         break;
     }
@@ -282,34 +263,6 @@ async function afterPm2Connected(startupType, err, processes)
 }
 
 /**
- * Pauses the stdin stream until the user presses any key
- * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
- * @returns {Promise<number>} Resolves with key code - resolves -1 if there was an error extracting the key code
- */
-function pause(message)
-{
-    process.stdout.write(`${message.toString()} `);
-
-    return new Promise(res => {
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-        process.stdin.once("data", key => {
-            process.stdin.pause();
-            process.stdin.setRawMode(false);
-            process.stdout.write("\n");
-            try
-            {
-                return res(parseInt(key[0]));
-            }
-            catch(err)
-            {
-                return res(-1);
-            }
-        });
-    });
-}
-
-/**
  * Prints the "About Node-Notifier" dialog
  * @param {Proc} processes
  */
@@ -317,18 +270,18 @@ async function printAbout(processes)
 {
     console.clear();
 
-    console.log(`Node-Notifier - ${packageJSON.description}`);
-    console.log(`Version: ${packageJSON.version}\n`);
+    printTitle("About", packageJSON.description);
 
-    console.log(`GitHub repo:     ${packageJSON.homepage}`);
-    console.log(`Submit an issue: ${packageJSON.bugs.url}/new\n`);
-
-    console.log(`Made by ${packageJSON.author.name}`);
-    console.log(`${packageJSON.author.url}\n`);
-
-    console.log(`If you enjoy Node-Notifier, please consider supporting me: ${packageJSON.funding}`);
-
-    console.log("\n");
+    printLines([
+        `Version:      ${packageJSON.version}`,
+        `GitHub repo:  ${packageJSON.homepage}`,
+        `Submit issue: ${packageJSON.bugs.url}/new/choose`,
+        "",
+        `Made by ${packageJSON.author.name} - ${packageJSON.author.url}`,
+        "",
+        `If you enjoy Node-Notifier, please consider supporting me: ${packageJSON.funding}`,
+        "\n",
+    ]);
 
     prompt({
         type: "select",
@@ -344,11 +297,11 @@ async function printAbout(processes)
                 value: 1
             },
             {
-                title: "Support me ⧉ ",
+                title: "Support development ⧉ ",
                 value: 2
             },
             {
-                title: "Back to main menu",
+                title: `${col.yellow}Back to main menu${col.rst}`,
                 value: 3
             }
         ]
@@ -361,7 +314,7 @@ async function printAbout(processes)
             return printAbout(processes);
     
         case 1: // GH issue
-            open(`${packageJSON.bugs.url}/new`);
+            open(`${packageJSON.bugs.url}/new/choose`);
     
             return printAbout(processes);
 
@@ -395,6 +348,23 @@ function manageProcessPrompt(proc)
     return new Promise(async (res, rej) => {
         try
         {
+            printTitle("Manage Process", "This menu is used to manage Node-Notifier's background process");
+
+            printLines([
+                `${col.blue}Background process info:${col.rst}`,
+                `  - Name:   ${proc.name}`,
+                `  - Status: ${proc.status}`,
+                `  - ID:     ${proc.pm_id}`,
+            ]);
+
+            printLines([
+                `\n${col.blue}External commands:${col.rst}`,
+                "  - To list all processes use the command 'pm2 list'",
+                "  - To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
+                "  - To monitor Node-Notifier use 'pm2 monit'",
+                `  - To view the background process' console output use 'pm2 logs ${proc.name}'\n\n`,
+            ]);
+
             const { index } = await prompt({
                 type: "select",
                 message: "Choose what to do",
@@ -409,7 +379,7 @@ function manageProcessPrompt(proc)
                         value: 1
                     },
                     {
-                        title: "Back to main menu",
+                        title: `${col.yellow}Back to main menu${col.rst}`,
                         value: 2
                     },
                 ]

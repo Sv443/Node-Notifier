@@ -10,6 +10,10 @@
             "type": "number",
             "description": "Timestamp of when this file was created"
         },
+        "lastStartup": {
+            "type": "number",
+            "description": "Timestamp of when Node-Notifier was last started up"
+        },
         "initVersion": {
             "type": "string",
             "pattern": "^\\d+\\.\\d+\\.\\d+$",

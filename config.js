@@ -1,34 +1,35 @@
 /**
- * Configuration for Node-Notifier
- * @readonly This object can't be modified at runtime
+ * This is the user configuration for Node-Notifier.  
+ *   
+ * Contrary to the internal settings at `./src/settings.js`, this config file is supposed to be more user oriented (that doesn't mean user friendly lol).
  */
 const config = {
     /** Notification settings */
     notifications: {
         /** Whether to add Node-Notifier's icon as a placeholder if no icon was provided in the request. Note that on some OSes there will be another placeholder if you disable this. */
         placeholderIconEnabled: true,
-        /** Whether to send a notification when there's an update available for Node-Notifier. Updates are checked for at startup and then on 24 hour interval. */
+        /** Whether to send a notification when there's an update available. Updates are checked for at startup and then on 24 hour interval (by default - change in internal settings). */
         notificationOnUpdate: true,
     },
-    /** HTTP server settings */
+    /** HTTP server / REST API settings */
     server: {
         /** TCP port to listen for requests on - default is 8042 */
         port: 8042,
-        /** Duration in seconds after which a request will be timed out - default is 15 */
+        /** Duration in seconds after which a request will time out - default is 15 */
         timeout: 15,
         /** If you are in a network that requires special proxy configuration, you can set it up here */
         proxy: {
-            /** Whether your network requires special proxy configuration */
+            /** Whether your network requires special proxy configuration or not */
             enabled: false,
-            /** Host / IP of the proxy server */
-            host: "proxy.its-stuttgart.de",
+            /** Host or IP address of the proxy server */
+            host: "proxy.mydomain.com",
             /** Port of the proxy server */
             port: 3128
         },
         /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
         requireAuthentication: true,
     },
-    /** Settings regarding logging stuff to files */
+    /** Settings regarding logging */
     logging: {
         /** Whether to write all notifications to a log file at `.notifier/notifications.json` - log file will periodically be cleared */
         logNotifications: true,

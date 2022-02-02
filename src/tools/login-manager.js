@@ -2,10 +2,12 @@
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("../login");
 
 const dotenv = require("dotenv");
-const { Errors, colors, pause } = require("svcorelib");
+const { Errors, colors } = require("svcorelib");
 const prompt = require("prompts");
 const { resolve } = require("path");
 const open = require("open");
+
+const { printTitle, printLines, pause } = require("../cli");
 
 const col = colors.fg;
 const { exit } = process;
@@ -34,8 +36,7 @@ async function menu()
 {
     console.clear();
 
-    console.log(`${col.green}Node-Notifier - Password Manager${col.rst}`);
-    console.log("Use this tool for changing your login data\n\n");
+    printTitle("Password Manager", "Use this tool for managing your login data");
 
     const { option } = await prompt({
         type: "select",
@@ -55,21 +56,21 @@ async function menu()
                 value: 2
             },
             {
-                title: "Exit",
+                title: `${col.yellow}Exit${col.rst}`,
                 value: 3
             }
         ]
     });
 
-    console.clear();
-
     switch(option)
     {
     case 0: // set new
+        console.clear();
+
         printLines([
             "Setting a new login:",
             "",
-            "│ Your new login data will be required to log into Node-Notifier's dashboard or even to send notifications.",
+            "│ Your new login data will be required to log into Node-Notifier's dashboard and potentially for HTTP authentication.",
             `│ It will be saved to the hidden file at ${col.yellow}.notifier/.env${col.rst}`,
             "│ Even though the password is saved as a hash, make sure to adequately protect this file and not leak it!",
         ], 1);
@@ -77,22 +78,26 @@ async function menu()
         await setNewLogin();
         break;
     case 1: // delete current
+        console.clear();
+
         printLines([
             "Deleting your current login:",
             "",
-            "│ Your login data is required to log into Node-Notifier's dashboard.",
-            "│ If you delete it, you won't be able to access the dashboard anymore until you generate.",
-            "│ a new login in the login manager or if Node-Notifier is restarted.",
+            "│ Your login data is required to log into Node-Notifier's dashboard and potentially for HTTP authentication.",
+            "│ If you delete it, you won't be able to access the dashboard anymore until you generate",
+            "│ a new login in the login manager or if Node-Notifier is restarted (it prompts for new login data).",
         ], 1);
 
         await deleteLogin();
         break;
     case 2: // open path
     {
+        process.stdout.write("\n");
+
         const { confirmOpen } = await prompt({
             type: "confirm",
             name: "confirmOpen",
-            message: "Opening this file will expose your Node-Notifier username.\nAre you sure you want to continue?",
+            message: `Opening this file will expose sensitive information. ${col.yellow}Are you sure you want to continue?${col.rst}`,
         });
 
         if(confirmOpen)
@@ -108,24 +113,6 @@ async function menu()
     }
 
     return menu();
-}
-
-/**
- * Prints an array of lines to the console
- * @param {string[]} lines
- * @param {number} [extraNewlines]
- */
-function printLines(lines, extraNewlines = 0)
-{
-    if(typeof extraNewlines != "number" || extraNewlines < 0)
-        extraNewlines = 0;
-
-    let finalNLs = "\n";
-
-    for(let i = 0; i < extraNewlines; i++)
-        finalNLs += "\n";
-
-    process.stdout.write(`${lines.join("\n")}${finalNLs}`);
 }
 
 /**

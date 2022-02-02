@@ -181,6 +181,7 @@ function getPropJsonTemplate()
     const propJTemp = {
         info: "Please don't modify anything in this file, this is an internal file created and managed by Node-Notifier. You shouldn't modify this file unless you really know what you're doing!",
         fileCreated: Date.now(),
+        lastStartup: -1,
         initVersion: packageJSON.version,
         lastNotification: -1,
         version: null,

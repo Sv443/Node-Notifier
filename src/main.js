@@ -14,6 +14,9 @@ const settings = require("./settings");
 const col = colors.fg;
 
 
+/**
+ * Starts the internal process of Node-Notifier
+ */
 async function init()
 {
     dotenv.config({ path: "./.notifier/.env" });
@@ -26,7 +29,7 @@ async function init()
         {
             await initDirs();
 
-            await setProperty("version", packageJSON.version);
+            await setProps();
 
             await auth.init();
 
@@ -47,6 +50,12 @@ async function init()
     {
         return error("General error", err, true);
     }
+}
+
+async function setProps()
+{
+    await setProperty("version", packageJSON.version);
+    await setProperty("lastStartup", new Date().getTime());
 }
 
 init();

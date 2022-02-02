@@ -1,9 +1,8 @@
 /**
- * Internal settings of Node-Notifier  
+ * These are the internal settings of Node-Notifier.  
  *   
- * It's usually not necessary to change these settings, but I can't stop you so go ahead  
+ * It's usually not necessary to change these settings, but I can't stop you so go ahead.  
  * (Note that you can easily break something though)
- * @readonly
  */
 const internalSettings = {
     /** pm2 settings - these settings need a deletion of the currently running pm2 process if changed ( pm2 del <id or name> ) */
@@ -19,7 +18,7 @@ const internalSettings = {
     updateChecker: {
         /** Can be used to force disable the update checker */
         enabled: true,
-        /** Update check interval in milliseconds */
+        /** Update check interval in milliseconds, default is 24 hours - represented as (1000ms * 60s * 60m * 24h) */
         interval: (1000 * 60 * 60 * 24),
         /** GitHub API URL for fetching latest release */
         apiUrl: "https://api.github.com/repos/Sv443/Node-Notifier/releases/latest",
