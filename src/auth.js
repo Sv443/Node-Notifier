@@ -3,11 +3,7 @@ const dotenv = require("dotenv");
 const { createHash } = require("crypto");
 const watch = require("node-watch").default;
 
-// const error = require("./error");
-
-const packageJson = require("../package.json");
 const { writeFile } = require("fs-extra");
-// const settings = require("./settings");
 
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
@@ -128,8 +124,11 @@ function hasAuth(req)
  */
 function respondRequireAuth(res)
 {
-    res.set("WWW-Authenticate", "Basic realm=\"Node-Notifier Dashboard\"");
-    res.status(401).send(`Node-Notifier v${packageJson.version} - Authentication required.`);
+    res.set("WWW-Authenticate", "Basic realm=\"Node-Notifier\"");
+    res.status(401).send(JSON.stringify({
+        error: true,
+        message: "Node-Notifier requires you to authenticate before accessing this resource"
+    }, undefined, 4));
 }
 
 //#SECTION password stuff
