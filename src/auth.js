@@ -125,10 +125,10 @@ function hasAuth(req)
 function respondRequireAuth(res)
 {
     res.set("WWW-Authenticate", "Basic realm=\"Node-Notifier\"");
-    res.status(401).send(JSON.stringify({
+    res.status(401).send({
         error: true,
         message: "Node-Notifier requires you to authenticate before accessing this resource"
-    }, undefined, 4));
+    });
 }
 
 //#SECTION password stuff
