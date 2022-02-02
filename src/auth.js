@@ -145,7 +145,7 @@ function hashPass(pass)
 
     try
     {
-        const hash = createHash("sha256");
+        const hash = createHash("sha512");
         hash.setEncoding("base64");
 
         stage = "writing to password hash";
@@ -162,8 +162,8 @@ function hashPass(pass)
     }
     catch(err)
     {
-        // to prevent password leaks through error messages
-        const err2 = (err.toString().includes(pass) ? "! (error hidden because it contained the password) !" : err);
+        // to prevent possible password leaks through error messages
+        const err2 = (err.toString().includes(pass) ? "(error hidden because it contained the password, ref: 'auth.js:hashPass()')" : err);
         throw new Error(`Error while ${stage}: ${err2}`);
     }
 }
