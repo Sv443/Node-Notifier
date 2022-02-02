@@ -1,3 +1,5 @@
+// Main internal / background process entrypoint
+
 const { colors } = require("svcorelib");
 const dotenv = require("dotenv");
 

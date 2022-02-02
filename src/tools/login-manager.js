@@ -1,3 +1,4 @@
+// Login manager CLI tool
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("../login");
 

@@ -1,3 +1,5 @@
+// Main wrapped entrypoint & control panel
+
 const pm2 = require("pm2");
 const { colors, allOfType, isArrayEmpty } = require("svcorelib");
 const { resolve } = require("path");
