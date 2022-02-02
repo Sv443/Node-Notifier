@@ -15,12 +15,15 @@ const { printTitle, printLines, pause } = require("./cli");
 const packageJSON = require("../package.json");
 const cfg = require("../config");
 const settings = require("./settings");
+const { readFile, rm } = require("fs-extra");
 
 
 
 /** @typedef {import("pm2").Proc} Proc */
 /** @typedef {import("./types").StartupType} StartupType */
 /** @typedef {import("./types").Stringifiable} Stringifiable */
+/** @typedef {import("./types").LogNotificationObj} LogNotificationObj */
+/** @typedef {LogNotificationObj[]} NotificationLog */
 
 
 const col = colors.fg;
@@ -116,7 +119,7 @@ function startProc()
  * Gets called after the pm2 process has been created. It is also the main menu of the control panel.
  * @param {StartupType} startupType
  * @param {Error} err
- * @param {Proc} processes
+ * @param {Proc[]|Proc} processes
  */
 async function afterPm2Connected(startupType, err, processes)
 {
@@ -125,7 +128,7 @@ async function afterPm2Connected(startupType, err, processes)
     if(err)
         return console.error(`Error while starting process: ${typeof err === "object" ? JSON.stringify(err) : (typeof err.toString === "function" ? err.toString() : err )}`);
 
-    const fProc = processes[0];
+    const fProc = Array.isArray(processes) ? processes[0] : processes;
     const proc = fProc.pm2_env || fProc;
 
     // console.log(`\n[${new Date().toLocaleString()}]\n\n`);
@@ -151,7 +154,7 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 2
             },
             {
-                title: "Manage login data >",
+                title: "Open notification log >",
                 value: 3,
             },
             {
@@ -159,8 +162,12 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 4,
             },
             {
-                title: `${col.yellow}Exit control panel${col.rst}`,
+                title: "Manage login data >",
                 value: 5,
+            },
+            {
+                title: `${col.yellow}Exit control panel${col.rst}`,
+                value: 6,
             },
         ]
     });
@@ -229,7 +236,21 @@ async function afterPm2Connected(startupType, err, processes)
         }
         break;
     }
-    case 3: // login mgr
+    case 3: // notification log
+    {
+        console.clear();
+
+        notificationLog(processes);
+        break;
+    }
+    case 4: // about
+    {
+        console.clear();
+
+        printAbout(processes);
+        break;
+    }
+    case 5: // login mgr
     {
         process.stdout.write("\n");
     
@@ -250,14 +271,7 @@ async function afterPm2Connected(startupType, err, processes)
 
         break;
     }
-    case 4: // about
-    {
-        console.clear();
-
-        printAbout(processes);
-        break;
-    }
-    case 5: // exit
+    case 6: // exit
     default:
         exit(0);
     }
@@ -457,6 +471,146 @@ function manageProcessPrompt(proc)
             return rej(new Error(`Error in process manager: ${err}`));
         }
     });
+}
+
+const notifLogPath = resolve("./.notifier/notifications.json");
+
+/**
+ * Shows the notification log
+ * @param {Proc[]} procs
+ * @param {number} [page]
+ * @param {number} [notifsPerPage]
+ */
+async function notificationLog(procs, page, notifsPerPage)
+{
+    notifsPerPage = parseInt(notifsPerPage);
+    if(isNaN(notifsPerPage))
+        notifsPerPage = 5;
+
+    page = parseInt(page);
+    if(isNaN(page))
+        page = 0;
+
+    const notificationsRaw = await readFile(notifLogPath);
+    /** @type {NotificationLog} */
+    const notifications = JSON.parse(notificationsRaw.toString());
+
+    // sort latest first
+    notifications.sort((a, b) => b.timestamp - a.timestamp);
+
+
+    const idxPad = (idx) => idx > 9 ? "" : " ";
+
+    /**
+     * @param {LogNotificationObj} notif
+     * @param {number} idx
+     */
+    const getFormattedNotification = (notif, idx) => {
+        const notifLines = [
+            `${col.blue}#${idx + 1}${col.rst}${idxPad(idx + 1)} [${new Date(notif.timestamp).toLocaleString()}]`,
+            `│ Title:   ${notif.title}`,
+            `│ Message: ${notif.message}`,
+            `│ Icon:    ${notif.icon}`,
+        ];
+
+        if(Array.isArray(notif.actions))
+            notifLines.push(`│ Actions: ${Array.isArray(notif.actions) ? notif.actions.join(", ") : "(none)"}`);
+        if(notif.wait === true)
+            notifLines.push("│ Waited for interaction: yes");
+
+        return notifLines.join("\n");
+    };
+
+    const maxPage = Math.max(Math.ceil(notifications.length / notifsPerPage) - 1, 0);
+
+    if(page > maxPage)
+        return notificationLog(procs, maxPage, notifsPerPage);
+
+    const printPageLine = (short) => {
+        const pageTxt = `${page + 1} of ${maxPage + 1}`;
+        if(short)
+            console.log(`Page ${pageTxt}\n`);
+        else
+            console.log(`${col.green}Page ${pageTxt}${col.rst} - showing ${col.green}${notifsPerPage} per page${col.rst} - sorted latest first\n`);
+    };
+
+    let printNotifs = "";
+
+    const pageFact = page === 0 ? 0 : page * notifsPerPage;
+
+    for(let i = pageFact; i < pageFact + notifsPerPage; i++)
+    {
+        if(i >= notifications.length)
+            break;
+
+        printNotifs += `${getFormattedNotification(notifications[i], i)}\n\n`;
+    }
+
+
+    console.clear();
+
+    printTitle("Notification Log", "This is a log of the last notifications that have been sent.\nUse the keys at the bottom to navigate.");
+
+    printPageLine();
+
+    console.log(printNotifs);
+
+    printPageLine(true);
+
+
+    const key = await pause(`${col.cyan}[← →]${col.rst} Navigate Pages - ${col.cyan}[+ -]${col.rst} Adjust Page Size - ${col.cyan}[c]${col.rst} Clear - ${col.cyan}[Return / x]${col.rst} Exit`);
+
+    switch(key.name || key.sequence)
+    {
+    case "+":
+        if(maxPage > 0)
+            notifsPerPage++;
+        if(notifsPerPage > 30)
+            notifsPerPage = 30;
+        break;
+    case "-":
+        notifsPerPage--;
+        if(notifsPerPage < 1)
+            notifsPerPage = 1;
+        break;
+    case "left":
+        page--;
+        if(page < 0)
+            page = 0;
+        break;
+    case "right":
+        page++;
+        if(page >= maxPage)
+            page = maxPage;
+        break;
+    case "c":
+    {
+        if(key.ctrl)
+            return afterPm2Connected("idle", undefined, procs);
+
+        const { confirm } = await prompt({
+            type: "confirm",
+            name: "confirm",
+            message: `Do you really want to delete all ${notifications.length} logged notifications?`,
+            initial: false,
+        });
+
+        if(confirm)
+            await rm(notifLogPath);
+
+        console.log(`\n${col.yellow}Successfully deleted all notifications.${col.rst}`);
+        await pause("Press any key to return to the menu...");
+
+        return afterPm2Connected("idle", undefined, procs);
+    }
+    case "return":
+    case "x":
+        return afterPm2Connected("idle", undefined, procs);
+    default:
+        return notificationLog(procs, page, notifsPerPage);
+    }
+
+    return notificationLog(procs, page, notifsPerPage);
 }
 
 init();

@@ -63,3 +63,21 @@ export type LoginTuple = [
     username: string,
     password: string,
 ];
+
+/**
+ * Describes a keypress object, as emitted by readline's `keypress` event
+ */
+export interface KeypressObj {
+    /** Whether CTRL was being held */
+    ctrl: boolean;
+    /** Whether Shift was being held */
+    shift: boolean;
+    /** Whether Meta / ALT was being held */
+    meta: boolean;
+    /** The name of this key */
+    name: string;
+    /** The final sequence of chars / key codes */
+    sequence: string;
+    /** Key code for special keys */
+    code?: string;
+}

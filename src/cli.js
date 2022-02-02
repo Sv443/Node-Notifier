@@ -1,11 +1,21 @@
+const readline = require("readline");
+
 const { colors } = require("svcorelib");
 
 const col = colors.fg;
 
+
+/** @typedef {import("./types").KeypressObj} KeypressObj */
+
+
+// I really hope this doesn't break something
+readline.emitKeypressEvents(process.stdin);
+
+
 /**
  * Prints a title and optionally subtitle
  * @param {string} title
- * @param {string} subtitle
+ * @param {string} [subtitle]
  */
 function printTitle(title, subtitle)
 {
@@ -35,31 +45,60 @@ function printLines(lines, extraNewlines = 0)
     process.stdout.write(`${lines.join("\n")}${finalNLs}`);
 }
 
+// /**
+//  * Pauses the stdin stream until the user presses any key
+//  * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
+//  * @returns {Promise<number>} Resolves with key code - resolves -1 if there was an error extracting the key code
+//  */
+// function pause(message)
+// {
+//     process.stdout.write(`${message.toString()} `);
+
+//     return new Promise(res => {
+//         process.stdin.setRawMode(true);
+//         process.stdin.resume();
+//         process.stdin.on("keypress", (key, ch) => {
+//             process.stdin.pause();
+//             process.stdin.setRawMode(false);
+//             process.stdout.write("\n");
+//             try
+//             {
+//                 return res(parseInt(key[0]));
+//             }
+//             catch(err)
+//             {
+//                 return res(-1);
+//             }
+//         });
+//     });
+// }
+
 /**
  * Pauses the stdin stream until the user presses any key
  * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
- * @returns {Promise<number>} Resolves with key code - resolves -1 if there was an error extracting the key code
+ * @returns {Promise<KeypressObj>}
  */
 function pause(message)
 {
     process.stdout.write(`${message.toString()} `);
 
+    const wasRaw = process.stdin.isRaw;
+
     return new Promise(res => {
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-        process.stdin.once("data", key => {
+        const onKeypress = (ch, key) => {
             process.stdin.pause();
-            process.stdin.setRawMode(false);
+            !wasRaw && process.stdin.setRawMode(false);
+
+            process.stdin.removeListener("keypress", onKeypress);
             process.stdout.write("\n");
-            try
-            {
-                return res(parseInt(key[0]));
-            }
-            catch(err)
-            {
-                return res(-1);
-            }
-        });
+
+            return res(key);
+        };
+
+        !wasRaw && process.stdin.setRawMode(true);
+        process.stdin.resume();
+
+        process.stdin.on("keypress", onKeypress);
     });
 }
 
