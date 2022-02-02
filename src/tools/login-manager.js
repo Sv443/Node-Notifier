@@ -37,7 +37,7 @@ async function menu()
 {
     console.clear();
 
-    printTitle("Password Manager", "Use this tool for managing your login data");
+    printTitle("Login Manager", "Use this tool for managing your login data");
 
     const { option } = await prompt({
         type: "select",
