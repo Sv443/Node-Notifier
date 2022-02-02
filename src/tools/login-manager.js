@@ -8,6 +8,8 @@ const { resolve } = require("path");
 const open = require("open");
 
 const col = colors.fg;
+const { exit } = process;
+
 
 const paths = Object.freeze({
     notifierDir: resolve("./.notifier"),
@@ -15,8 +17,6 @@ const paths = Object.freeze({
 });
 
 dotenv.config({ path: paths.localEnvPath });
-
-const { exit } = process;
 
 
 function init()

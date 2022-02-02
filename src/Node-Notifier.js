@@ -1,8 +1,9 @@
 const pm2 = require("pm2");
-const { colors, allOfType, isArrayEmpty, unused } = require("svcorelib");
+const { colors, allOfType, isArrayEmpty } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
+const importFresh = require("import-fresh");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -39,12 +40,14 @@ async function init()
 
         console.log("Node-Notifier needs to create an admin user, so you can access the dashboard and possibly enable HTTP authentication");
         console.log("Please register the admin user below\n");
-        console.log("Note: to edit or delete your login run the command 'npm run login-manager'\n");
+        console.log("To edit or delete this data, choose \"manage login data\" in the main menu\n");
 
         const [ user, pass ] = await promptNewLogin();
 
         localEnv["ADMIN_USER"] = user;
         localEnv["ADMIN_PASS"] = pass;
+
+        process.stdout.write("\n");
 
         const { saveChar } = await prompt({
             type: "confirm",
@@ -58,7 +61,7 @@ async function init()
         else
         {
             console.log(`\n${col.red}Can't continue without admin user, exiting.${col.rst}\n`);
-            exit(0);
+            return exit(0);
         }
     }
 
@@ -120,42 +123,49 @@ async function afterPm2Connected(startupType, err, processes)
 
     console.log("\n\n\n\n\n\n");
 
+    console.log(`[${new Date().toLocaleString()}]`);
+
     if(startupType === "new")
-        console.log(`\n${col.green}Successfully started up Node-Notifier v${packageJSON.version} in the background${col.rst}`);
+        console.log(`\n${col.green}Successfully started up${col.rst} Node-Notifier v${packageJSON.version} in the background`);
     else if(startupType === "restart")
-        console.log(`\n${col.green}Successfully restarted the background process of Node-Notifier v${packageJSON.version}${col.rst}`);
+        console.log(`\n${col.green}Successfully restarted${col.rst} the background process of Node-Notifier v${packageJSON.version}`);
     else if(startupType === "stopped")
-        console.log(`\n${col.yellow}The background process of Node-Notifier v${packageJSON.version} is stopped${col.rst}`);
+        console.log(`\nThe background process of Node-Notifier v${packageJSON.version} ${col.yellow}is stopped${col.rst}`);
     else if(startupType === "idle")
-        console.log(`\n${col.green}The background process of Node-Notifier v${packageJSON.version} is running${col.rst}`);
+        console.log(`\nThe background process of Node-Notifier v${packageJSON.version} ${col.green}is running${col.rst}`);
 
 
 
     if(startupType !== "stopped")
     {
-        console.log(`The HTTP server is listening on port ${col.blue}${cfg.server.port}${col.rst}`);
+        console.log(`\nThe HTTP server is listening on port ${col.blue}${cfg.server.port}${col.rst}`);
         console.log(`Dashboard is available at http://127.0.0.1:${cfg.server.port}/\n`);
     }
 
     if(startupType !== "stopped")
     {
-        if(startupType === "new")
-            console.log(`Created pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
-        else if(startupType === "restart")
-            console.log(`Restarted pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
-        else if(startupType === "idle")
-            console.log(`Background pm2 process: ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
+        const startupTypeText = (startupType === "new" ? "Created" : (startupType === "restart" ? "Restarted" : "<idle>"));
 
-        console.log("    - To list all processes use the command 'pm2 list'");
-        console.log("    - To automatically start Node-Notifier after system reboot use 'pm2 startup' or 'pm2 save'");
-        console.log("    - To monitor Node-Notifier use 'pm2 monit'");
-        console.log(`    - To view Node-Notifier's log use 'pm2 logs ${proc.pm_id}'\n\n`);
+        if(startupType === "idle")
+            console.log(`pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst} is idling`);
+        else
+            console.log(`${startupTypeText} pm2 process ${col.blue}${proc.name}${col.rst} with ID ${col.blue}${proc.pm_id}${col.rst}`);
+
+        console.log("  - To list all processes use the command 'pm2 list'");
+        console.log("  - To automatically start Node-Notifier after system reboot use 'pm2 startup' or 'pm2 save'");
+        console.log("  - To monitor Node-Notifier use 'pm2 monit'");
+        console.log(`  - To view Node-Notifier's log use 'pm2 logs ${proc.pm_id}'`);
     }
 
-    const { index } = await prompt({
+    console.log("\n\n\n");
+
+    console.log(`${col.green}Node-Notifier - Control Panel${col.rst}`);
+    console.log("Use this menu to manage Node-Notifier\n");
+
+    const { optIndex } = await prompt({
         type: "select",
         message: "Choose what to do",
-        name: "index",
+        name: "optIndex",
         choices: [
             {
                 title: "Open dashboard ⧉ ",
@@ -170,19 +180,23 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 2
             },
             {
-                title: "About Node-Notifier >",
+                title: "Manage login data >",
                 value: 3,
             },
             {
+                title: "About Node-Notifier >",
+                value: 4,
+            },
+            {
                 title: "Finish",
-                value: 4
+                value: 5,
             },
         ]
     });
 
     process.stdout.write("\n");
 
-    switch(index)
+    switch(optIndex)
     {
     case 0: // dashboard
         await open(`http://127.0.0.1:${cfg.server.port}/`);
@@ -200,9 +214,11 @@ async function afterPm2Connected(startupType, err, processes)
 
         console.log(`\n${col.cyan}Sending notification and waiting for response (close or click it)\n${col.rst}`);
 
+        let testNotifD = new Date().getTime();
+
         const { meta } = await sendNotification({
             title: "Node-Notifier works!",
-            message: `It is now running in the background.\nThe API listens on port ${cfg.server.port}.`,
+            message: `It's running in the background, waiting for requests on port ${cfg.server.port}`,
             icon: resolve("./www/favicon.png"),
             contentImage: resolve("./www/favicon.png"),
             requireInteraction: false,
@@ -212,12 +228,15 @@ async function afterPm2Connected(startupType, err, processes)
 
         if(meta.action === "timedout")
         {
-            console.log(`${col.yellow}Notification timed out. Your OS might have blocked the notification (or you just ignored it).${col.rst}\n`);
+            console.log(`${col.yellow}Notification timed out. Your OS might have blocked the notification or you just ignored it.${col.rst}\n`);
             console.log("On Windows, check no app is in full screen and focus assist is turned off");
             console.log("On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n");
         }
         else
-            console.log(`${col.green}Successfully sent desktop notification.${col.rst}\n`);
+        {
+            console.log(`${col.green}Successfully sent desktop notification.${col.rst}`);
+            console.log(`(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)\n`);
+        }
 
         await pause("Press any key to continue...");
 
@@ -235,12 +254,28 @@ async function afterPm2Connected(startupType, err, processes)
         }
         break;
     }
-    case 3: // about
+    case 3: // login mgr
+    {
+        const { openMgr } = await prompt({
+            type: "confirm",
+            name: "openMgr",
+            message: "Do you want to open the login manager? Doing so will close this process.",
+            initial: true,
+        });
+
+        if(openMgr)
+            openLoginMgr();
+        else
+            afterPm2Connected("idle", undefined, processes);
+
+        break;
+    }
+    case 4: // about
     {
         printAbout(processes);
         break;
     }
-    case 4: // exit
+    case 5: // exit
     default:
         exit(0);
     }
@@ -343,6 +378,14 @@ async function printAbout(processes)
 }
 
 /**
+ * Opens the login manager
+ */
+function openLoginMgr()
+{
+    importFresh("./tools/login-manager");
+}
+
+/**
  * The prompt that manages the pm2 process
  * @param {Proc} proc
  * @returns {Promise<void, Error>}
@@ -382,39 +425,47 @@ function manageProcessPrompt(proc)
                     if(Array.isArray(newProc))
                         newProc = newProc[0];
 
-                    console.log(`Successfully restarted process '${newProc.name}'\n`);
+                    console.log(`\n${col.green}Successfully restarted process '${newProc.name}'${col.rst}\n`);
 
                     setTimeout(() => {
-                        manageProcessPrompt(newProc || proc).catch(err => unused(err));
+                        afterPm2Connected("restart", undefined, [newProc || proc]);
                     }, 2000);
                 });
                 break;
             case 1: // delete
                 {
-                    console.log("\nIf you delete your pm2 process, Node-Notifier will no longer run in the background");
-                    console.log("Note that when starting up Node-Notifier, the background process will be launched again\n");
+                    console.log("\nIf you delete the pm2 process, Node-Notifier will no longer run in the background.");
+                    console.log("Note that when starting up Node-Notifier, the background process will automatically be launched again.\n");
 
                     const { delProc } = await prompt({
                         type: "confirm",
-                        message: "Are you sure you want to delete the pm2 process and exit Node-Notifier?",
+                        message: "Are you sure you want to delete the process and exit?",
                         name: "delProc"
                     });
 
                     if(delProc)
                     {
-                        pm2.delete(proc.pm_id, (err, newProc) => {
+                        pm2.delete(proc.pm_id, async (err, newProc) => {
                             if(err)
                                 return rej(new Error(`Error while deleting process: ${err}`));
 
                             if(Array.isArray(newProc))
                                 newProc = newProc[0];
 
-                            console.log("Successfully deleted the process. Exiting.\n");
+                            console.log(`\n${col.red}Successfully deleted the process.${col.rst}\n`);
 
-                            setTimeout(() => {
-                                exit(0);
-                            }, 2000);
+                            await pause("Press any key to exit...");
+
+                            exit(0);
                         });
+                    }
+                    else
+                    {
+                        console.log(`\n\n${col.yellow}Canceled deletion.${col.rst}\n`);
+
+                        await pause("Press any key to go back to the main menu...");
+
+                        return afterPm2Connected("idle", undefined, [proc]);
                     }
                 }
                 break;

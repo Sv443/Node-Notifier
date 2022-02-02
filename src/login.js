@@ -1,4 +1,4 @@
-const { readFile, writeFile } = require("fs-extra");
+const { readFile, writeFile, ensureDir } = require("fs-extra");
 const { filesystem, allOfType, colors } = require("svcorelib");
 const dotenv = require("dotenv");
 const prompt = require("prompts");
@@ -74,6 +74,8 @@ function writeEnvFile(envFile)
     return new Promise(async (res, rej) => {
         try
         {
+            await ensureDir("./.notifier");
+
             const content = await buildEnvFile(envFile);
 
             await writeFile("./.notifier/.env", content);
