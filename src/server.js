@@ -62,18 +62,18 @@ function init()
 
         // CORS & OPTIONS middleware
         app.use((req, res, next) => {
-            const allowedHeaders = "GET,POST,HEAD,OPTIONS";
+            const allowedMethods = "GET,POST";
             
             // CORS
             res.setHeader("Access-Control-Allow-Origin", "*");
-            res.setHeader("Access-Control-Allow-Methods", allowedHeaders);
+            res.setHeader("Access-Control-Allow-Methods", allowedMethods);
 
             // OPTIONS
             if(req.method === "OPTIONS")
             {
-                res.setHeader("Allow", allowedHeaders);
+                res.setHeader("Allow", allowedMethods);
                 res.writeHead(200, { "Content-Type": "text/plain; charset=UTF-8" });
-                res.end(allowedHeaders);
+                res.end(allowedMethods);
 
                 return;
             }
