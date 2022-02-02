@@ -31,7 +31,6 @@ async function init()
     console.log("\nStarting up Node-Notifier...");
 
     // TODO:
-    // - ask to create password here, then write it to .env file
     // - regenerate .env file if it doesn't exist or is invalid
 
     const localEnv = await parseEnvFile();
