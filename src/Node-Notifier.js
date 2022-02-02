@@ -307,26 +307,31 @@ async function printAbout(processes)
             }
         ]
     }).then(({ idx }) => {
+        let openLink;
+
         switch(idx)
         {
         case 0: // GH repo
-            open(packageJSON.homepage);
-    
-            return printAbout(processes);
-    
+            openLink = packageJSON.homepage;
+            break;
         case 1: // GH issue
-            open(`${packageJSON.bugs.url}/new/choose`);
-    
-            return printAbout(processes);
-
+            openLink = `${packageJSON.bugs.url}/new/choose`;
+            break;
         case 2: // GH sponsor
-            open(packageJSON.funding);
-    
-            return printAbout(processes);
-    
-        case 3: // back
+            openLink = packageJSON.funding;
+            break;
         default:
+        case 3: // back
             return afterPm2Connected("idle", undefined, processes);
+        }
+
+        if(openLink)
+        {
+            open(openLink);
+
+            console.log(`\n${col.green}Opened the link in your browser.${col.rst}`);
+
+            setTimeout(() => printAbout(processes), 3000);
         }
     });
 }
