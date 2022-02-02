@@ -2,7 +2,7 @@
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("../login");
 
 const dotenv = require("dotenv");
-const { Errors, colors } = require("svcorelib");
+const { Errors, colors, pause } = require("svcorelib");
 const prompt = require("prompts");
 const { resolve } = require("path");
 const open = require("open");
@@ -27,12 +27,15 @@ function init()
     return menu();
 }
 
+/**
+ * Main menu of the login manager
+ */
 async function menu()
 {
     console.clear();
 
     console.log(`${col.green}Node-Notifier - Password Manager${col.rst}`);
-    console.log("Use this tool to change your dashboard password\n\n");
+    console.log("Use this tool for changing your login data\n\n");
 
     const { option } = await prompt({
         type: "select",
@@ -58,26 +61,28 @@ async function menu()
         ]
     });
 
-    console.log("\n\n\n");
+    console.clear();
 
     switch(option)
     {
     case 0: // set new
         printLines([
-            "Setting a new login",
-            "Your new login data will be required to log into Node-Notifier's dashboard",
-            "It will be saved to the hidden file '.notifier/.env', make sure to adequately protect this file!",
+            "Setting a new login:",
+            "",
+            "│ Your new login data will be required to log into Node-Notifier's dashboard or even to send notifications.",
+            `│ It will be saved to the hidden file at ${col.yellow}.notifier/.env${col.rst}`,
+            "│ Even though the password is saved as a hash, make sure to adequately protect this file and not leak it!",
         ], 1);
-        console.log();
 
         await setNewLogin();
         break;
     case 1: // delete current
         printLines([
-            "Deleting your current login",
-            "Your login data is required to log into Node-Notifier's dashboard",
-            "If you delete it, you won't be able to access the dashboard anymore until you generate",
-            "a new login in the login manager or if Node-Notifier is restarted",
+            "Deleting your current login:",
+            "",
+            "│ Your login data is required to log into Node-Notifier's dashboard.",
+            "│ If you delete it, you won't be able to access the dashboard anymore until you generate.",
+            "│ a new login in the login manager or if Node-Notifier is restarted.",
         ], 1);
 
         await deleteLogin();
@@ -87,7 +92,7 @@ async function menu()
         const { confirmOpen } = await prompt({
             type: "confirm",
             name: "confirmOpen",
-            message: "Opening this file will expose your Node-Notifier login data.\nAre you sure you want to continue?",
+            message: "Opening this file will expose your Node-Notifier username.\nAre you sure you want to continue?",
         });
 
         if(confirmOpen)
@@ -101,8 +106,6 @@ async function menu()
         setTimeout(() => exit(0), 250);
         return;
     }
-
-    console.clear();
 
     return menu();
 }
@@ -139,20 +142,42 @@ function setNewLogin()
             const [ user, pass ] = await promptNewLogin();
 
             if(!user || !pass)
-                throw new Error("No login provided in \"new login\" prompt");
+            {
+                let to = setTimeout(() => res(), 5000);
+
+                console.log("\n\n");
+                console.log(`${col.red}Login data was not provided or is invalid.${col.rst}`);
+                await pause("Press any key (or wait 5s) to return to the menu...");
+
+                clearTimeout(to);
+
+                return res();
+            }
 
             localEnv["ADMIN_USER"] = user;
             localEnv["ADMIN_PASS"] = pass;
 
+            process.stdout.write("\n");
+
             const { saveChar } = await prompt({
                 type: "confirm",
                 name: "saveChar",
-                message: "Do you want to save these changes?",
+                message: "Do you want to save this new login data?",
                 initial: true,
             });
 
             if(saveChar)
+            {
                 await writeEnvFile(localEnv);
+
+                console.log(`\n\n\n${col.green}Successfully saved the new login data${col.rst}\n`);
+
+                let to = setTimeout(() => res(), 10000);
+
+                await pause("Press any key (or wait 10s) to return to the menu...");
+
+                clearTimeout(to);
+            }
 
             return res();
         }

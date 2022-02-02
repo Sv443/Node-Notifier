@@ -54,3 +54,12 @@ export interface LogNotificationObj
  * The type of startup used in ./Node-Notifier.js
  */
 export type StartupType = "new" | "restart" | "stopped" | "idle";
+
+/**
+ * String tuple array representation of login data.  
+ * First item is the username, second item is the hashed password.
+ */
+export type LoginTuple = [
+    username: string,
+    password: string,
+];

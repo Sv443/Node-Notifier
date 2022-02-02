@@ -1,11 +1,14 @@
-// TODO: write tool to manage password
-
 const { readFile, writeFile } = require("fs-extra");
-const { filesystem, isEmpty, allOfType, isArrayEmpty } = require("svcorelib");
+const { filesystem, allOfType, colors } = require("svcorelib");
 const dotenv = require("dotenv");
 const prompt = require("prompts");
 
 const { hashPass } = require("./auth");
+
+const col = colors.fg;
+
+
+/** @typedef {import("./types").LoginTuple} LoginTuple */
 
 
 /**
@@ -86,7 +89,7 @@ function writeEnvFile(envFile)
 
 /**
  * Prompts the user to input new login data
- * @returns {Promise<(string[]|null[])>} Resolves with a string tuple: First item is username, second item is unhashed password - both values null if user canceled
+ * @returns {Promise<(LoginTuple|null[])>} Resolves with a string tuple: First item is username, second item is hashed password - both values null if user canceled
  */
 function promptNewLogin()
 {
@@ -94,32 +97,65 @@ function promptNewLogin()
         try
         {
             /** Filter function used to deny empty prompts */
-            const validate = (val) => !isEmpty(val);
+            const validate = (val) => val != "";
 
             const { user } = await prompt({
                 type: "text",
                 name: "user",
                 message: "Set your username",
-                validate
+                validate,
             });
 
             const getPass = () => new Promise(async res => {
-                const passRaw = await prompt({
+                const { passRaw } = await prompt({
                     type: "password",
-                    name: "pass",
+                    name: "passRaw",
                     message: "Set your password",
-                    validate
+                    validate,
                 });
-    
-                return res(hashPass(passRaw));
+
+                const { passConf } = await prompt({
+                    type: "password",
+                    name: "passConf",
+                    message: "Confirm the password",
+                    validate,
+                });
+
+                if(passRaw == undefined || passConf == undefined)
+                    return res(undefined);
+                else if(passRaw != passConf)
+                {
+                    console.log(`\n\n${col.yellow}The password and its confirmation don't match${col.rst}\n`);
+
+                    const { tryAgain } = await prompt({
+                        type: "confirm",
+                        name: "tryAgain",
+                        message: "Do you want to try again?"
+                    });
+
+                    if(tryAgain)
+                    {
+                        console.log("\n\n");
+
+                        return res(await getPass());
+                    }
+                    else
+                        return res(undefined);
+                }
+                else
+                    return res(hashPass(passRaw));
             });
 
-            /** @type {string} password hash */
+            /** @type {string|undefined} password hash */
             const pass = await getPass();
 
-            if(!allOfType([ user, pass ], "string") || isArrayEmpty([ user, pass ]) === true)
+            if(
+                (!user || !pass) ||
+                !allOfType([ user, pass ], "string") ||
+                (user.length == 0 || user.length == 0)
+            )
             {
-                console.log("\nUsername and/or password are invalid");
+                console.log(`\n\n${col.yellow}Username and/or password are invalid${col.rst}\n`);
 
                 const { tryAgain } = await prompt({
                     type: "confirm",
@@ -129,7 +165,7 @@ function promptNewLogin()
 
                 if(tryAgain)
                 {
-                    console.clear();
+                    console.log("\n\n");
 
                     return res(await promptNewLogin());
                 }
