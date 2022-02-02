@@ -59,27 +59,22 @@ kbd {
     border-radius: 5px;
 }
 
-#statusMessage {
+.textCard {
     display: inline-block;
     padding: 10px 20px;
     margin-bottom: 20px;
     font-size: 120%;
-
-    background-color: #1a4e1a;
     border: 2px solid #999;
-    border-radius: 15px;
+    border-radius: 10px;
+}
+
+#statusMessage {
+    background-color: #1a4e1a;
 }
 
 #updateMessage:not(.hidden) {
-    display: inline-block;
-    padding: 10px 20px;
-    margin-bottom: 20px;
-    font-size: 120%;
     text-align: left;
-
     background-color: #4d3f11;
-    border: 2px solid #999;
-    border-radius: 15px;
 }
 
 #dismissUpdateContainer {
