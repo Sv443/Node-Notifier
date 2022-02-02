@@ -50,7 +50,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/tools/password.js",
+            "program": "${workspaceFolder}/src/tools/login-manager.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ],
