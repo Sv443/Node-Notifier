@@ -1,7 +1,6 @@
 const { filesystem, reserialize } = require("svcorelib");
 const { resolve } = require("path");
 const { ensureDir, writeFile, copyFile, readFile } = require("fs-extra");
-const { hide } = require("hidefile");
 
 const packageJSON = require("../package.json");
 
@@ -43,11 +42,8 @@ function initDirs()
 
             if(!(await filesystem.exists("./.notifier")))
             {
-                currentAction = "creating ./notifier";
-                await ensureDir("./notifier");
-
-                currentAction = "hiding directory ./notifier";
-                await hidePath("./notifier");
+                currentAction = "creating ./.notifier";
+                await ensureDir("./.notifier");
 
                 currentAction = "copying ./www/favicon.png to ./assets/example.png";
                 await copyFile("./www/favicon.png", "./assets/example.png");
@@ -68,23 +64,6 @@ function initDirs()
         {
             return rej(new Error(`InitDirs: Error while ${currentAction}: ${err}`));
         }
-    });
-}
-
-/**
- * Hides a folder or file at the given path and returns its new path
- * @param {string} path
- * @returns {Promise<string, string>} Resolves with new path after hiding, rejects with Error instance
- */
-function hidePath(path)
-{
-    return new Promise((res, rej) => {
-        hide(path, (err, newPath) => {
-            if(err)
-                return rej(err);
-
-            return res(newPath);
-        });
     });
 }
 
@@ -210,12 +189,11 @@ function getPropJsonTemplate()
         remindUpdate: true,
     };
 
-    return JSON.stringify(propJTemp, undefined, 4);
+    return JSON.stringify(propJTemp, undefined, 4).replace(/\n/, "\n    \"$schema\": \"https://raw.githubusercontent.com/Sv443/Node-Notifier/main/.vscode/schemas/properties.json\",\n");
 }
 
 module.exports = {
     initDirs,
-    hidePath,
     getProperty,
     setProperty,
     getAllProperties,
