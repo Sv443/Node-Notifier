@@ -59,7 +59,7 @@ kbd {
     border-radius: 5px;
 }
 
-.textCard {
+.textCard:not(.hidden) {
     display: inline-block;
     padding: 10px 20px;
     margin-bottom: 20px;
