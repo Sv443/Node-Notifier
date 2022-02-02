@@ -257,7 +257,7 @@ async function afterPm2Connected(startupType, err, processes)
         const { openMgr } = await prompt({
             type: "confirm",
             name: "openMgr",
-            message: "Do you want to open the login manager? Doing so will close this process.",
+            message: "Do you want to open the login manager? Doing so will close the control panel.",
             initial: true,
         });
 
