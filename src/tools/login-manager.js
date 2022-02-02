@@ -5,11 +5,16 @@ const dotenv = require("dotenv");
 const { Errors, colors } = require("svcorelib");
 const prompt = require("prompts");
 const { resolve } = require("path");
+const open = require("open");
 
 const col = colors.fg;
 
+const paths = Object.freeze({
+    notifierDir: resolve("./.notifier"),
+    localEnvPath: resolve("./.notifier/.env"),
+});
 
-dotenv.config({ path: resolve("./.notifier/.env") });
+dotenv.config({ path: paths.localEnvPath });
 
 const { exit } = process;
 
@@ -43,13 +48,17 @@ async function menu()
                 value: 1
             },
             {
-                title: "Exit",
+                title: "Open login data file ⧉ ",
                 value: 2
+            },
+            {
+                title: "Exit",
+                value: 3
             }
         ]
     });
 
-    console.clear();
+    console.log("\n\n\n");
 
     switch(option)
     {
@@ -73,12 +82,27 @@ async function menu()
 
         await deleteLogin();
         break;
+    case 2: // open path
+    {
+        const { confirmOpen } = await prompt({
+            type: "confirm",
+            name: "confirmOpen",
+            message: "Opening this file will expose your Node-Notifier login data.\nAre you sure you want to continue?",
+        });
+
+        if(confirmOpen)
+            await open(paths.localEnvPath);
+
+        break;
+    }
     default:
-    case 2: // exit
+    case 3: // exit
         console.log("\nExiting.\n");
-        setTimeout(() => exit(0), 500);
+        setTimeout(() => exit(0), 250);
         return;
     }
+
+    console.clear();
 
     return menu();
 }

@@ -33,7 +33,7 @@
     "hidefile": "^3.0.0",
     "node-notifier": "^10.0.0",
     "node-watch": "^0.7.2",
-    "open": "^8.2.1",
+    "open": "^8.4.0",
     "pm2": "^5.1.1",
     "prompts": "^2.4.2",
     "svcorelib": "^1.14.2",
