@@ -45,34 +45,6 @@ function printLines(lines, extraNewlines = 0)
     process.stdout.write(`${lines.join("\n")}${finalNLs}`);
 }
 
-// /**
-//  * Pauses the stdin stream until the user presses any key
-//  * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
-//  * @returns {Promise<number>} Resolves with key code - resolves -1 if there was an error extracting the key code
-//  */
-// function pause(message)
-// {
-//     process.stdout.write(`${message.toString()} `);
-
-//     return new Promise(res => {
-//         process.stdin.setRawMode(true);
-//         process.stdin.resume();
-//         process.stdin.on("keypress", (key, ch) => {
-//             process.stdin.pause();
-//             process.stdin.setRawMode(false);
-//             process.stdout.write("\n");
-//             try
-//             {
-//                 return res(parseInt(key[0]));
-//             }
-//             catch(err)
-//             {
-//                 return res(-1);
-//             }
-//         });
-//     });
-// }
-
 /**
  * Pauses the stdin stream until the user presses any key
  * @param {Stringifiable} message Message to display - 1 whitespace is added at the end automatically
@@ -102,8 +74,24 @@ function pause(message)
     });
 }
 
+/**
+ * Pauses for the given `time` in milliseconds, then resolves the returned promise
+ * @param {number} time
+ * @returns {Promise<void>}
+ */
+function pauseFor(time)
+{
+    if(typeof time != "number" || time < 0)
+        throw new TypeError("Provided time is not a number or lower than 0");
+
+    return new Promise((res) => {
+        setTimeout(() => res(), time);
+    });
+}
+
 module.exports = {
     printTitle,
     printLines,
     pause,
+    pauseFor,
 };

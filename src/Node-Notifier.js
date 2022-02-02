@@ -1,7 +1,7 @@
 // Main wrapped entrypoint & control panel
 
 const pm2 = require("pm2");
-const { colors, allOfType, isArrayEmpty } = require("svcorelib");
+const { colors, allOfType, isArrayEmpty, filesystem } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
@@ -10,7 +10,7 @@ const importFresh = require("import-fresh");
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
-const { printTitle, printLines, pause } = require("./cli");
+const { printTitle, printLines, pause, pauseFor } = require("./cli");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
@@ -26,7 +26,7 @@ const { readFile, rm } = require("fs-extra");
 /** @typedef {LogNotificationObj[]} NotificationLog */
 
 
-const col = colors.fg;
+const col = { ...colors.fg, gray: "\x1b[90m" };
 
 const { exit } = process;
 
@@ -154,7 +154,7 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 2
             },
             {
-                title: "Open notification log >",
+                title: "Show notification log >",
                 value: 3,
             },
             {
@@ -198,7 +198,7 @@ async function afterPm2Connected(startupType, err, processes)
             icon: resolve("./www/favicon.png"),
             contentImage: resolve("./www/favicon.png"),
             requireInteraction: false,
-            open: `http://localhost:${cfg.server.port}`,
+            // open: `http://localhost:${cfg.server.port}`,
             timeout: 10,
         });
 
@@ -483,6 +483,16 @@ const notifLogPath = resolve("./.notifier/notifications.json");
  */
 async function notificationLog(procs, page, notifsPerPage)
 {
+    const noNotifs = async () => {
+        console.log("There are no logged notifications, go send some and come back!\n");
+        await pause("Press any key to go back to the control panel...");
+
+        return afterPm2Connected("idle", undefined, procs);
+    };
+
+    if(!(await filesystem.exists(notifLogPath)))
+        return noNotifs();
+
     notifsPerPage = parseInt(notifsPerPage);
     if(isNaN(notifsPerPage))
         notifsPerPage = 5;
@@ -495,11 +505,17 @@ async function notificationLog(procs, page, notifsPerPage)
     /** @type {NotificationLog} */
     const notifications = JSON.parse(notificationsRaw.toString());
 
+    if(notifications.length < 1)
+        return noNotifs();
+
     // sort latest first
     notifications.sort((a, b) => b.timestamp - a.timestamp);
 
+    if(notifications.length < notifsPerPage)
+        notifsPerPage = notifications.length;
 
-    const idxPad = (idx) => idx > 9 ? "" : " ";
+
+    const pipe = `${col.gray}│${col.rst}`;
 
     /**
      * @param {LogNotificationObj} notif
@@ -507,16 +523,18 @@ async function notificationLog(procs, page, notifsPerPage)
      */
     const getFormattedNotification = (notif, idx) => {
         const notifLines = [
-            `${col.blue}#${idx + 1}${col.rst}${idxPad(idx + 1)} [${new Date(notif.timestamp).toLocaleString()}]`,
-            `│ Title:   ${notif.title}`,
-            `│ Message: ${notif.message}`,
-            `│ Icon:    ${notif.icon}`,
+            `${pipe} Title:    ${notif.title}`,
+            `${pipe} Message:  ${notif.message}`,
         ];
 
+        if(notif.icon)
+            notifLines.push(`${pipe} Icon:     ${notif.icon}`);
         if(Array.isArray(notif.actions))
-            notifLines.push(`│ Actions: ${Array.isArray(notif.actions) ? notif.actions.join(", ") : "(none)"}`);
+            notifLines.push(`${pipe} Actions:  ${Array.isArray(notif.actions) ? notif.actions.join(", ") : "(none)"}`);
         if(notif.wait === true)
-            notifLines.push("│ Waited for interaction: yes");
+            notifLines.push(`${pipe} Waited for interaction: yes`);
+
+        notifLines.push(`${col.blue}#${idx + 1}${col.rst}${col.gray} • ${new Date(notif.timestamp).toLocaleString()}]${col.rst}`);
 
         return notifLines.join("\n");
     };
@@ -531,10 +549,10 @@ async function notificationLog(procs, page, notifsPerPage)
         if(short)
             console.log(`Page ${pageTxt}\n`);
         else
-            console.log(`${col.green}Page ${pageTxt}${col.rst} - showing ${col.green}${notifsPerPage} per page${col.rst} - sorted latest first\n`);
+            console.log(`${col.green}Page ${pageTxt}${col.rst} - showing ${col.green}${notifsPerPage} per page${col.rst} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
     };
 
-    let printNotifs = "";
+    let printNotifs = "\n";
 
     const pageFact = page === 0 ? 0 : page * notifsPerPage;
 
@@ -547,6 +565,8 @@ async function notificationLog(procs, page, notifsPerPage)
     }
 
 
+    await pauseFor(30); // slow down consecutive presses
+
     console.clear();
 
     printTitle("Notification Log", "This is a log of the last notifications that have been sent.\nUse the keys at the bottom to navigate.");
@@ -558,7 +578,7 @@ async function notificationLog(procs, page, notifsPerPage)
     printPageLine(true);
 
 
-    const key = await pause(`${col.cyan}[← →]${col.rst} Navigate Pages - ${col.cyan}[+ -]${col.rst} Adjust Page Size - ${col.cyan}[c]${col.rst} Clear - ${col.cyan}[Return / x]${col.rst} Exit`);
+    const key = await pause(`${col.cyan}[← →]${col.rst} Navigate Pages • ${col.cyan}[+ -]${col.rst} Adjust Page Size • ${col.cyan}[c]${col.rst} Clear • ${col.cyan}[x]${col.rst} Exit`);
 
     switch(key.name || key.sequence)
     {
@@ -588,6 +608,8 @@ async function notificationLog(procs, page, notifsPerPage)
         if(key.ctrl)
             return afterPm2Connected("idle", undefined, procs);
 
+        console.clear();
+
         const { confirm } = await prompt({
             type: "confirm",
             name: "confirm",
@@ -596,14 +618,25 @@ async function notificationLog(procs, page, notifsPerPage)
         });
 
         if(confirm)
+        {
             await rm(notifLogPath);
+            console.log(`\n${col.yellow}Successfully deleted all notifications.${col.rst}`);
 
-        console.log(`\n${col.yellow}Successfully deleted all notifications.${col.rst}`);
-        await pause("Press any key to return to the menu...");
+            let to = setTimeout(() => afterPm2Connected("idle", undefined, procs), 8000);
 
-        return afterPm2Connected("idle", undefined, procs);
+            await pause("Press any key (or wait 8s) to return to the menu...");
+
+            clearTimeout(to);
+
+            return afterPm2Connected("idle", undefined, procs);
+        }
+        else
+        {
+            console.log("\nNot deleting notifications.\n");
+
+            return setTimeout(() => notificationLog(procs, page, notifsPerPage), 2000);
+        }
     }
-    case "return":
     case "x":
         return afterPm2Connected("idle", undefined, procs);
     default:
