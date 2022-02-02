@@ -245,9 +245,17 @@ async function parseRequest(req, res, url)
  */
 async function sendNotificationRequest(req, res)
 {
-    const invalidProps = [];
+    if(typeof req.body != "object" || Object.keys(req.body).length < 1)
+    {
+        return respondJSON(res, 400, {
+            error: true,
+            message: "Request body is empty or invalid"
+        });
+    }
 
     const { title, message, icon, actions, timeout } = req.body;
+
+    const invalidProps = [];
 
     (typeof title !== "string") && invalidProps.push("title");
     (typeof message !== "string") && invalidProps.push("message");
@@ -262,92 +270,90 @@ async function sendNotificationRequest(req, res)
             message: `Request body is missing the following ${invalidProps.length === 1 ? "property or it is" : "properties or they are"} invalid: ${invalidProps.join(", ")}`
         });
     }
-    else
+
+    /** @type {Notification} */
+    const iconProps = typeof icon === "string" ? {
+        icon: resolve(icon),
+        contentImage: resolve(icon),
+    } : getDefaultIconProps();
+
+
+    let timeoutInt = typeof timeout === "number" ? parseInt(timeout) : NaN;
+
+    /** @type {Notification} */
+    const timeoutProps = (!isNaN(timeoutInt) && timeoutInt > 0) ? {
+        timeout: timeoutInt
+    } : {};
+
+
+    const { waitForResult } = getQueryParams(req);
+
+
+    /** @type {string[]|undefined} */
+    const parsedActions = (Array.isArray(actions) && allOfType(actions, "string")) ? actions : undefined;
+
+    /** @type {Notification} */
+    const actionProps = (parsedActions && parsedActions.length > 0) ? { actions: parsedActions, wait: true } : {};
+
+
+    let resultProps = {};
+    let responseMessage = "";
+
+
+    /** @type {Notification} Notification properties */
+    const notifProps = {
+        title,
+        message,
+        ...timeoutProps,
+        ...actionProps,
+        ...iconProps,
+    };
+
+    if(waitForResult)
     {
-        /** @type {Notification} */
-        const iconProps = typeof icon === "string" ? {
-            icon: resolve(icon),
-            contentImage: resolve(icon),
-        } : getDefaultIconProps();
-
-
-        let timeoutInt = typeof timeout === "number" ? parseInt(timeout) : null;
-
-        /** @type {Notification} */
-        const timeoutProps = (timeoutInt && !isNaN(timeoutInt) && timeoutInt > 0) ? {
-            timeout: timeoutInt
-        } : {};
-
-
-        const { waitForResult } = getQueryParams(req);
-
-
-        /** @type {string[]|undefined} */
-        const parsedActions = (Array.isArray(actions) && allOfType(actions, "string")) ? actions : undefined;
-
-        /** @type {Notification} */
-        const actionProps = (parsedActions && parsedActions.length > 0) ? { actions: parsedActions, wait: true } : {};
-
-
-        let resultProps = {};
-        let responseMessage = "";
-
-
-        /** @type {Notification} Notification properties */
-        const notifProps = {
-            title,
-            message,
-            ...timeoutProps,
-            ...actionProps,
-            ...iconProps,
-        };
-
-        if(waitForResult)
-        {
-            try
-            {
-                const { result, meta } = await sendNotification(notifProps);
-
-                resultProps = {
-                    result: result || null,
-                    type: meta.activationType,
-                    value: meta.activationValue
-                };
-                responseMessage = "Successfully sent desktop notification and got a result";
-            }
-            catch(err)
-            {
-                return respondJSON(res, 400, {
-                    error: true,
-                    message: `Error while sending desktop notification: ${err}`
-                });
-            }
-        }
-        else
-        {
-            sendNotification(notifProps).catch(unused);
-            responseMessage = "Sent desktop notification";
-        }
-
-
-        // log notification
         try
         {
-            if(cfg.logging.logNotifications)
-                await logNotification(notifProps);
+            const { result, meta } = await sendNotification(notifProps);
+
+            resultProps = {
+                result: result || null,
+                type: meta.activationType,
+                value: meta.activationValue
+            };
+            responseMessage = "Successfully sent desktop notification and got a result";
         }
         catch(err)
         {
-            error("Error while logging notification", err);
+            return respondJSON(res, 400, {
+                error: true,
+                message: `Error while sending desktop notification: ${err}`
+            });
         }
-
-
-        return respondJSON(res, 200, {
-            error: false,
-            message: responseMessage,
-            ...resultProps
-        });
     }
+    else
+    {
+        sendNotification(notifProps).catch(unused);
+        responseMessage = "Sent desktop notification";
+    }
+
+
+    // log notification
+    try
+    {
+        if(cfg.logging.logNotifications)
+            await logNotification(notifProps);
+    }
+    catch(err)
+    {
+        error("Error while logging notification", err);
+    }
+
+
+    return respondJSON(res, 200, {
+        error: false,
+        message: responseMessage,
+        ...resultProps
+    });
 }
 
 /**
