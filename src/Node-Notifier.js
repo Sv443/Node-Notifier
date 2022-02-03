@@ -6,6 +6,7 @@ const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
 const importFresh = require("import-fresh");
+const { exec } = require("child_process");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -17,7 +18,10 @@ const packageJSON = require("../package.json");
 const cfg = require("../config");
 const settings = require("./settings");
 const { readFile, rm } = require("fs-extra");
+const { platform } = require("os");
 
+
+//#SECTION types
 
 
 /** @typedef {import("pm2").Proc} Proc */
@@ -25,6 +29,9 @@ const { readFile, rm } = require("fs-extra");
 /** @typedef {import("./types").Stringifiable} Stringifiable */
 /** @typedef {import("./types").LogNotificationObj} LogNotificationObj */
 /** @typedef {LogNotificationObj[]} NotificationLog */
+
+
+//#MARKER init
 
 
 const col = { ...colors.fg, gray: "\x1b[90m" };
@@ -71,6 +78,72 @@ async function init()
         }
     }
 
+    const firstInstall = true; // TODO
+
+    if(firstInstall && platform() === "win32")
+    {
+        process.stdout.write("\n");
+
+        // pm2 doesn't have native startup support for Windows, so TODO: pm2-installer needs to somehow be used here: https://github.com/jessety/pm2-installer
+
+        if(await isAdmin())
+        {
+            printLines([
+                "This seems to be your first install of Node-Notifier and this is also a Windows machine.",
+                "",
+                "Node-Notifier needs some special setup on Windows devices:",
+                "It needs to install pm2-installer, which will set up a Windows service that keeps Node-Notifier's background process alive.",
+                "Without this, the background process will completely exit if you restart your PC and you have to install Node-Notifier again each time."
+            ], 1);
+
+            const { cont } = await prompt({
+                type: "confirm",
+                name: "cont",
+                message: "Do you want to proceed with the installation?",
+                initial: true,
+            });
+
+            process.stdout.write("\n");
+
+            if(cont)
+            {
+                await setupWindowsStartup();
+
+                console.log(`\n\n${col.green}pm2-installer was successfully set up.${col.rst}`);
+
+                await pause("Press any key to continue...");
+            }
+            else
+            {
+                console.log(`${col.yellow}Skipping installation of pm2-installer.${col.rst}`);
+
+                await pauseFor(2000);
+            }
+        }
+        else
+        {
+            printLines([
+                "Node-Notifier needs administrator rights when first starting up on Windows.",
+                "It needs them to set up a service that automatically revives the background process whenever you restart your PC.",
+                "So please start Node-Notifier again, but with administrator rights."
+            ], 1);
+
+            await pause("Press any key to exit...");
+
+            exit(0);
+        }
+    }
+
+    return initPm2();
+}
+
+//#MARKER pm2 stuff
+
+/**
+ * Connects to the pm2 daemon, grabs Node-Notifier's process and then passes it on to the control panel
+ */
+function initPm2()
+{
     pm2.connect((err) => {
         if(err)
             return console.error(`Error while connecting to pm2: ${err}`);
@@ -79,13 +152,95 @@ async function init()
             if(err)
                 error("Error while listing pm2 processes", err, false);
 
-            const oldProc = procList.find(proc => proc.name == settings.pm2.name);
+            const oldProc = procList.find(proc => proc.name === settings.pm2.name);
 
-            // restart & refresh old process if it exists, else create a new one
+            // restart old process if it exists, else create a new one
+            // TODO: don't restart on every startup
             if(oldProc)
                 pm2.restart(oldProc.pm_id, (err, proc) => afterPm2Connected("restart", err, proc));
             else
                 await startProc();
+        });
+    });
+}
+
+/**
+ * Uses [pm2-installer](https://github.com/jessety/pm2-installer) to set up pm2 startup on Windows
+ * @returns {Promise<void, number>}
+ */
+function setupWindowsStartup()
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            const pm2InstPath = "./pm2-installer/";
+
+            // TODO: pipe command outputs to stdout
+
+            console.log("Configuring pm2-installer (1/3)...");
+            await runCommand("npm run configure", pm2InstPath);
+
+            console.log("Configuring PowerShell policy (2/3)...");
+            await runCommand("npm run configure-policy", pm2InstPath); // TODO: check if necessary
+
+            console.log("Setting up pm2-installer (3/3)...");
+            await runCommand("npm run setup", pm2InstPath);
+
+            return res();
+        }
+        catch(err)
+        {
+            return rej(err);
+        }
+    });
+}
+
+/**
+ * Call to remove any changes made by [pm2-installer](https://github.com/jessety/pm2-installer)
+ */
+function removeWindowsStartup()
+{
+    return new Promise(async (res, rej) => {
+        try
+        {
+            const pm2InstPath = "./pm2-installer/";
+
+            console.log("Reverting pm2-installer configuration (1/2)...");
+            await runCommand("npm run deconfigure", pm2InstPath);
+
+            console.log("Removing pm2-installer (2/2)...");
+            await runCommand("npm run remove", pm2InstPath);
+
+            return res();
+        }
+        catch(err)
+        {
+            return rej(err);
+        }
+    });
+}
+
+/**
+ * Runs a shell command. Resolves void if exit code = 0, else rejects with an error or the exit code.
+ * @param {string} command
+ * @param {string} [cwd]
+ * @returns {Promise<void, (Error | number)>}
+ */
+function runCommand(command, cwd)
+{
+    return new Promise(async (res, rej) => {
+        const cp = exec(command, {
+            ...(cwd ? { cwd } : {}),
+            windowsHide: true,
+        }, (err) => {
+            err && rej(err);
+        });
+
+        cp.on("exit", (code) => {
+            if(code === 0)
+                return res();
+
+            return rej(code);
         });
     });
 }
@@ -112,6 +267,50 @@ function startProc()
         });
     });
 }
+
+/**
+ * [Windows only] Checks if the process has admin rights  
+ * Stolen from [sindresorhus/is-admin](https://github.com/sindresorhus/is-admin) since it uses ES imports & exports and I don't
+ * @throws {Error} if platform is not 'win32'
+ * @returns {Promise<boolean>}
+ */
+function isAdmin()
+{
+    return new Promise(async (res, rej) => {
+        if(platform() !== "win32")
+            return rej(new Error(`Unsupported platform '${platform()}', expected 'win32'`));
+
+        try
+        {
+            await runCommand(`fsutil dirty query ${process.env.systemdrive}`);
+            return res(true);
+        }
+        catch(err)
+        {
+            if(err.code === "ENOENT")
+            {
+                try
+                {
+                    await runCommand("fltmc");
+                    return res(true);
+                }
+                catch(err)
+                {
+                    return res(false);
+                }
+            }
+
+            return res(false);
+        }
+    });
+}
+
+
+//#MARKER UI
+
+
+//#SECTION control panel
+
 
 /**
  * Gets called after the pm2 process has been created. It is also the main menu of the control panel.
@@ -275,6 +474,8 @@ async function afterPm2Connected(startupType, err, processes)
     }
 }
 
+//#SECTION about
+
 /**
  * Prints the "About Node-Notifier" dialog
  * @param {Proc} processes
@@ -348,6 +549,8 @@ async function printAbout(processes)
     });
 }
 
+//#SECTION login manager
+
 /**
  * Opens the login manager
  */
@@ -355,6 +558,8 @@ function openLoginMgr()
 {
     importFresh("./tools/login-manager");
 }
+
+//#SECTION process manager
 
 /**
  * The prompt that manages the pm2 process
@@ -380,7 +585,7 @@ function manageProcessPrompt(proc)
                 "  - To list all processes use the command 'pm2 list'",
                 "  - To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
                 "  - To monitor Node-Notifier use 'pm2 monit'",
-                `  - To view the background process' console output use 'pm2 logs ${proc.name}'\n\n`,
+                `  - To view the background process' console output use 'pm2 logs ${settings.pm2.name}'\n\n`,
             ]);
 
             const { index } = await prompt({
@@ -398,7 +603,7 @@ function manageProcessPrompt(proc)
                     },
                     {
                         title: `${col.yellow}Back to main menu${col.rst}`,
-                        value: 2
+                        value: 2,
                     },
                 ]
             });
@@ -440,6 +645,9 @@ function manageProcessPrompt(proc)
                             if(Array.isArray(newProc))
                                 newProc = newProc[0];
 
+                            if(platform() === "win32")
+                                await removeWindowsStartup();
+
                             console.log(`\n${col.red}Successfully deleted the process.${col.rst}\n`);
 
                             await pause("Press any key to exit...");
@@ -470,6 +678,8 @@ function manageProcessPrompt(proc)
         }
     });
 }
+
+//#SECTION notification log
 
 const notifLogPath = resolve("./.notifier/notifications.json");
 
@@ -643,5 +853,7 @@ async function notificationLog(procs, page, notifsPerPage)
 
     return notificationLog(procs, page, notifsPerPage);
 }
+
+//#MARKER call init
 
 init();

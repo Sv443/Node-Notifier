@@ -1,0 +1,3 @@
+[submodule "pm2-installer"]
+	path = pm2-installer
+	url = https://github.com/jessety/pm2-installer.git
