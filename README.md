@@ -130,7 +130,7 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > <br>
 > 
-> This is the main endpoint, used to send a desktop notification on the device this service is running on.  
+> This is the main endpoint, used to send a desktop notification on the device that Node-Notifier is running on.  
 > It accepts data in JSON format and has a few query parameters you can set.
 > 
 > <br><br>
@@ -143,7 +143,7 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > | :-- | :-- |
 > | `title` | The (short) title of the notification |
 > | `message` | A more detailed message |
-> | `[icon]` | A square icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on.<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
+> | `[icon]` | A square icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on (TODO: auto-download & cache).<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
 > | `[actions]` | Array of actions (buttons or dropdown, depending on OS) the user can select on the notification. Using this automatically enables `?waitForResult` |
 > | `[timeout]` | How many seconds to wait before closing the notification automatically. Prioritised over `?waitForResult` - defaults to `10` if left empty. |
 > 
@@ -153,11 +153,11 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > {
 >     "title": "Door Bell",
 >     "message": "Someone is at the door, open it?",
->     "icon": "assets/door.png",
 >     "actions": [
 >         "Yes",
 >         "No"
 >     ],
+>     "icon": "assets/door.png",
 >     "timeout": 42
 > }
 > ```
@@ -170,13 +170,16 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > > `?waitForResult`  
 > > This is a value-less parameter that makes Node-Notifier wait until the user reacts on a notification or it times out.  
 > > Also, it will make the API return some data on how the user interacted with the notification.  
-> > Make sure your HTTP client waits long enough before getting timed out while the API waits for user interaction!
+> > Make sure your HTTP client waits long enough before getting timed out while the API waits for user interaction!  
+> >   
+> > Example usage:  
+> > `POST /send?waitForResult`
 > 
 > <br><br>
 > 
 > **Possible response bodies:**
 > 
-> <details><summary>Base response (click to view)</summary><br>
+> <details><summary>Base response (click to view)</summary>
 > 
 > ```json
 > {
@@ -188,9 +191,8 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > <br></details>
 > 
-> <br>
 > 
-> <details><summary>Response after having waited for a result (click to view)</summary><br>
+> <details><summary>Response when using ?waitForResult (click to view)</summary>
 > 
 > ```json
 > {
@@ -205,9 +207,8 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > 
 > <br></details>
 > 
-> <br>
 > 
-> <details><summary>Errored response (click to view)</summary><br>
+> <details><summary>Errored response (click to view)</summary>
 > 
 > ```json
 > {
@@ -216,6 +217,21 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > }
 > ```
 > HTTP status code: `400`
+> 
+> <br></details>
+> 
+> 
+> <details><summary>Unauthorized response (click to view)</summary><br>
+> 
+> If the API expects you to authorize with the admin login but you didn't provide it or it is wrong, you will get this response:  
+>   
+> ```json
+> {
+>     "error": true,
+>     "message": "Node-Notifier requires you to authenticate before accessing this resource"
+> }
+> ```
+> HTTP status code: `401`
 > 
 > <br></details>
 > 

@@ -11,6 +11,7 @@ const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
 const { printTitle, printLines, pause, pauseFor } = require("./cli");
+const { getDateTimeFrom } = require("./getDateTime");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
@@ -34,9 +35,6 @@ const { exit } = process;
 async function init()
 {
     console.log("\nStarting up Node-Notifier...");
-
-    // TODO:
-    // - regenerate .env file if it doesn't exist or is invalid
 
     const localEnv = await parseEnvFile();
 
@@ -534,7 +532,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(notif.wait === true)
             notifLines.push(`${pipe} Waited for interaction: yes`);
 
-        notifLines.push(`${col.blue}#${idx + 1}${col.rst}${col.gray} • ${new Date(notif.timestamp).toLocaleString()}]${col.rst}`);
+        notifLines.push(`${col.blue}#${idx + 1}${col.rst}${col.gray} • [${getDateTimeFrom(notif.timestamp)}]${col.rst}`);
 
         return notifLines.join("\n");
     };

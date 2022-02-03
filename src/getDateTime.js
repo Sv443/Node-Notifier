@@ -5,10 +5,20 @@
  */
 function getDateTime(milliseconds)
 {
-    if(milliseconds !== true)
-        milliseconds = false;
+    return getDateTimeFrom(new Date(), milliseconds);
+}
 
-    const d = new Date();
+/**
+ * Returns the datetime string of the provided `date` in the format `yyyy/mm/dd - hh:mm:ss`
+ * @param {Date|number} date Timestamp number or Date instance
+ * @param {boolean} [milliseconds=false] Whether to add milliseconds at the end (in format `yyyy/mm/dd - hh:mm:ss.ms`)
+ */
+function getDateTimeFrom(date, milliseconds)
+{
+    if(!(date instanceof Date) && typeof date != "number")
+        throw new TypeError("Can't resolve datetime of invalid date");
+
+    const d = new Date(date);
 
     let dtString = `${pad(d.getFullYear())}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} - ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
@@ -48,5 +58,6 @@ function padL(n)
 
 module.exports = getDateTime;
 module.exports.getDateTime = getDateTime;
+module.exports.getDateTimeFrom = getDateTimeFrom;
 module.exports.pad = pad;
 module.exports.padL = padL;
