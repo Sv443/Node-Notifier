@@ -38,11 +38,16 @@
         "remindUpdate": {
             "type": "boolean",
             "description": "Whether Node-Notifier should send a notification reminder when an update is available"
+        },
+        "windowsSvcInstalled": {
+            "type": "boolean",
+            "description": "Whether the pm2-installer Windows service was already installed or not"
         }
     },
     "required": [
         "info",
         "fileCreated",
+        "lastStartup",
         "initVersion",
         "lastNotification",
         "version",

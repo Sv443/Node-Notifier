@@ -9,7 +9,7 @@ const internalSettings = {
     pm2: {
         /** Name of pm2 process */
         name: "Node-Notifier",
-        /** Whether pm2 should wait until everything is initialized until it considers Node-Notifier ready */
+        /** Whether pm2 should wait until everything is initialized until it considers Node-Notifier ready (not really sure what exactly that means but eh) */
         wait: true,
         /** Whether Node-Notifier's script files should be watched for changes to immediately restart the process so it can use the new files */
         watch: false,

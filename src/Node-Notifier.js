@@ -13,6 +13,7 @@ const sendNotification = require("./sendNotification");
 const error = require("./error");
 const { printTitle, printLines, pause, pauseFor } = require("./cli");
 const { getDateTimeFrom } = require("./getDateTime");
+const { initDirs, setProperty, getProperty } = require("./files");
 
 const packageJSON = require("../package.json");
 const cfg = require("../config");
@@ -44,6 +45,8 @@ async function init()
     console.log("\nStarting up Node-Notifier...");
 
     const localEnv = await parseEnvFile();
+
+    await initDirs();
 
     if(!allOfType([ localEnv["ADMIN_USER"], localEnv["ADMIN_PASS"] ], "string") || isArrayEmpty([ localEnv["ADMIN_USER"], localEnv["ADMIN_PASS"] ]) === true)
     {
@@ -78,9 +81,9 @@ async function init()
         }
     }
 
-    const firstInstall = true; // TODO
+    const firstInstall = await getProperty("windowsSvcInstalled");
 
-    if(firstInstall && platform() === "win32")
+    if(platform() === "win32" && firstInstall !== true)
     {
         process.stdout.write("\n");
 
@@ -110,6 +113,8 @@ async function init()
                 await setupWindowsStartup();
 
                 console.log(`\n\n${col.green}pm2-installer was successfully set up.${col.rst}`);
+
+                await setProperty("windowsSvcInstalled", true);
 
                 await pause("Press any key to continue...");
             }
@@ -176,6 +181,8 @@ function setupWindowsStartup()
             const pm2InstPath = "./pm2-installer/";
 
             // TODO: pipe command outputs to stdout
+
+            console.log("\nInstalling pm2-installer (this might take a minute)...\n");
 
             console.log("Configuring pm2-installer (1/3)...");
             await runCommand("npm run configure", pm2InstPath);

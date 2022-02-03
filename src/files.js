@@ -5,7 +5,8 @@ const { ensureDir, writeFile, copyFile, readFile } = require("fs-extra");
 const packageJSON = require("../package.json");
 
 /** @typedef {import("./types").JSONCompatible} JSONCompatible */
-/** @typedef {import("../.notifier/properties.json")} PropJsonFile The properties.json file */
+/** @typedef {import("../.notifier/properties.json")} PropJsonFile */
+/** @typedef {Exclude<keyof(PropJsonFile), "$schema">} PropJsonKey */
 
 
 /**
@@ -123,7 +124,7 @@ function getAllProperties()
 /**
  * Grabs the value at the specified `key` of the properties.json file and returns it.  
  * Returns `undefined` if the value wasn't found
- * @param {keyof(PropJsonFile)} key
+ * @param {PropJsonKey} key
  * @returns {Promise<(JSONCompatible | undefined), (Error | string)>}
  */
 function getProperty(key)
@@ -144,7 +145,7 @@ function getProperty(key)
 
 /**
  * Sets a property of the properties.json file with the given `key` to the given JSON-compatible `value`
- * @param {keyof(PropJsonFile)} key
+ * @param {PropJsonKey} key
  * @param {JSONCompatible} value
  * @returns {Promise<void, (Error | string)>}
  */

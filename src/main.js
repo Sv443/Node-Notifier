@@ -1,7 +1,8 @@
 // Main internal / background process entrypoint
 
-const { colors } = require("svcorelib");
+const { colors, filesystem } = require("svcorelib");
 const dotenv = require("dotenv");
+const { resolve } = require("path");
 
 const server = require("./server");
 const error = require("./error");
@@ -21,7 +22,9 @@ const col = colors.fg;
  */
 async function init()
 {
-    dotenv.config({ path: "./.notifier/.env" });
+    const envPath = resolve("./.notifier/.env");
+    if(await filesystem.exists(envPath))
+        dotenv.config({ path: envPath });
 
     console.log(`\n${col.blue}[${getDateTime(true)}]${col.rst} Starting up Node-Notifier v${packageJSON.version}...\n`);
 
