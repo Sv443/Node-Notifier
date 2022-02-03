@@ -100,6 +100,10 @@ Node-Notifier generates a few files and folders:
     It is a log file that contains the last `n` notifications (`n` is defined by the property `logging.notificationLogSize` in the file `config.js`).  
     Feel free to use the contents of this file for your own projects. You can find the JSON schema in `.vscode/schemas/notifications.json`
   
+- `.notifier/cache_manifest.json`  
+    This file will be created to maintain cached icons that have been downloaded from an external URL.  
+    It really shouldn't be touched but it can safely be deleted to "refresh" icons and fix inconsistencies (TODO: verify that lol).
+  
 - `.notifier/.env`  
     This file contains your login data and possibly soon other private data. If needed, modify it with the login manager in the control panel.  
     The password is hashed, so even if the file is leaked, nobody can use it to gain access. Still try to adequately protect it though!
@@ -143,7 +147,7 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 > | :-- | :-- |
 > | `title` | The (short) title of the notification |
 > | `message` | A more detailed message |
-> | `[icon]` | A square icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image needs to be present on the system the Node-Notifier server runs on (TODO: auto-download & cache).<br>An `assets` folder will be created at first startup, it is intended for storing these images. |
+> | `[icon]` | A square icon to attach to the notification. Defaults to a placeholder icon on some operating systems if left empty.<br>This image either needs to be present on the system the Node-Notifier server runs on, or you can provide a URL here, which Node-Notifier will automatically download and cache.<br>An `assets` folder will be created at first startup, it is intended for storing both local and cached images. |
 > | `[actions]` | Array of actions (buttons or dropdown, depending on OS) the user can select on the notification. Using this automatically enables `?waitForResult` |
 > | `[timeout]` | How many seconds to wait before closing the notification automatically. Prioritised over `?waitForResult` - defaults to `10` if left empty. |
 > 

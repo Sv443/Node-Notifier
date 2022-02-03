@@ -2,13 +2,14 @@ const express = require("express");
 const { resolve } = require("path");
 const { unused, allOfType } = require("svcorelib");
 const { platform } = require("os");
-const portUsed = require("tcp-port-used").check;
+const { check: portUsed } = require("tcp-port-used");
 
 const error = require("./error");
 const { hasAuth, respondRequireAuth } = require("./auth");
 const { getAllProperties, setProperty } = require("./files");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
+const { tryCache } = require("./assetCache");
 
 const cfg = require("../config");
 
@@ -271,6 +272,9 @@ async function sendNotificationRequest(req, res)
         });
     }
 
+    if(isValidHttpUrl(icon))
+        await tryCache(icon);
+
     /** @type {Notification} */
     const iconProps = typeof icon === "string" ? {
         icon: resolve(icon),
@@ -354,6 +358,26 @@ async function sendNotificationRequest(req, res)
         message: responseMessage,
         ...resultProps
     });
+}
+
+/**
+ * Checks if `val` is a valid HTTP URL
+ * @param {string} val
+ * @returns {boolean}
+ */
+function isValidHttpUrl(val)
+{
+    let u;
+    try
+    {
+        u = new URL(val);
+    }
+    catch (e)
+    {
+        return false;  
+    }
+  
+    return u.protocol === "http:" || u.protocol === "https:";
 }
 
 /**

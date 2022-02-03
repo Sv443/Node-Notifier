@@ -27,6 +27,28 @@ const internalSettings = {
     dashboard: {
         /** TODO: reimplement: Whether the dashboard needs authentication to be accessed */
         needsAuth: true,
+    },
+    /** Internal server settings */
+    server: {
+        /** Accepted MIME types when trying to download and cache an asset and a mapping to their file extension */
+        dlCacheMimeTypes: [
+            {
+                mime: "image/png",
+                ext: "png",
+            },
+            {
+                mime: "image/jpeg",
+                ext: "jpg",
+            },
+            {
+                mime: "image/gif",
+                ext: "gif",
+            },
+            {
+                mime: "image/vnd.microsoft.icon",
+                ext: "ico",
+            },
+        ],
     }
 };
 
