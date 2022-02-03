@@ -1,17 +1,18 @@
 const { default: axios } = require("axios");
 const { createWriteStream, readFile, writeFile } = require("fs-extra");
 const { createHash } = require("crypto");
-
-const settings = require("./src/settings");
 const { resolve } = require("path");
 const { filesystem } = require("svcorelib");
+
+const settings = require("./settings");
+
 
 /** @typedef {import("./types").CacheEntry} CacheEntry */
 /** @typedef {import("./types").CacheManifest} CacheManifest */
 
 
 /**
- * 
+ * Tries to download and cache a resource at the specified `url`
  * @param {string} url
  * @returns {Promise<{ success: boolean, message: string }>}
  */

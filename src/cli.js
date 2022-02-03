@@ -1,8 +1,5 @@
 const readline = require("readline");
-
-const { colors } = require("svcorelib");
-
-const col = colors.fg;
+const kleur = require("kleur");
 
 
 /** @typedef {import("./types").KeypressObj} KeypressObj */
@@ -19,7 +16,7 @@ readline.emitKeypressEvents(process.stdin);
  */
 function printTitle(title, subtitle)
 {
-    process.stdout.write(`${col.green}Node-Notifier - ${title}${col.rst}\n`);
+    process.stdout.write(kleur.green(`Node-Notifier - ${title}\n`));
 
     if(subtitle)
         process.stdout.write(`${subtitle}\n\n\n`);

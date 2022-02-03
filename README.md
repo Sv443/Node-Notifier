@@ -262,6 +262,7 @@ Node-Notifier wouldn't be possible without these libraries:
 - [express](https://npmjs.com/package/express)
 - [fs-extra](https://npmjs.com/package/fs-extra)
 - [import-fresh](https://npmjs.com/package/import-fresh)
+- [kleur](https://npmjs.com/package/kleur)
 - [node-notifier](https://npmjs.com/package/node-notifier)
 - [node-watch](https://npmjs.com/package/node-watch)
 - [open](https://npmjs.com/package/open)
