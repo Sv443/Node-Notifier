@@ -91,10 +91,10 @@ export type CacheManifest = CacheEntry[];
  * Represents an asset's entry in the cache manifest
  */
 export interface CacheEntry {
-    /** Local absolute path */
-    path: string;
     /** External URL from where this asset was downloaded */
     url: string;
+    /** Local absolute path */
+    path: string;
     /** Hash of the asset as a base64 string */
     hash: string;
     /** Timestamp of when the asset was saved */
