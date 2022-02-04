@@ -268,6 +268,7 @@ Node-Notifier wouldn't be possible without these libraries:
 - [open](https://npmjs.com/package/open)
 - [pm2](https://npmjs.com/package/pm2)
 - [prompts](https://npmjs.com/package/prompts)
+- [request-ip](https://npmjs.com/package/request-ip)
 - [svcorelib](https://npmjs.com/package/svcorelib)
 - [tcp-port-used](https://npmjs.com/package/tcp-port-used)
 

@@ -1,4 +1,4 @@
-const { allOfType, isEmpty, isArrayEmpty, unused, reserialize, filesystem } = require("svcorelib");
+const { allOfType, isEmpty, isArrayEmpty, reserialize, filesystem } = require("svcorelib");
 const dotenv = require("dotenv");
 const { createHash } = require("crypto");
 const watch = require("node-watch").default;
@@ -39,10 +39,9 @@ function init()
 
                 stage = "setting up daemon";
 
-                watch("./.notifier/.env", (e, name) => {
-                    unused(e, name);
-                    reloadAuth();
-                });
+                // Node-Notifier is intended to run 24/7 so if the login info changes, it needs to be reloaded on the fly
+                watch("./.notifier/.env")
+                    .on("change", reloadAuth);
 
                 return res();
             }

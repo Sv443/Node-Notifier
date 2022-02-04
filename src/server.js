@@ -3,6 +3,7 @@ const { resolve } = require("path");
 const { unused, allOfType } = require("svcorelib");
 const { platform } = require("os");
 const { check: portUsed } = require("tcp-port-used");
+const { getClientIp } = require("request-ip");
 
 const error = require("./error");
 const { hasAuth, respondRequireAuth } = require("./auth");
@@ -12,6 +13,7 @@ const logNotification = require("./logNotification");
 const { tryCache } = require("./assetCache");
 
 const cfg = require("../config");
+const config = require("../config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
 /** @typedef {import("express").Request} Request */
@@ -178,8 +180,10 @@ function respondJSON(res, statusCode = 500, jsonObj)
 async function parseRequest(req, res, url)
 {
     const clientHasAuth = hasAuth(req);
+    const whitelisted = isWhitelisted(getClientIp(req));
 
-    const isAuthenticated = cfg.server.requireAuthentication ? clientHasAuth : true;
+    /** Set to true if the client is whitelisted or has provided valid login data */
+    const isAuthenticated = whitelisted || cfg.server.requireAuthentication ? clientHasAuth : true;
 
     if(req.body === undefined || (req.body && req.body.length < 1))
     {
@@ -237,6 +241,16 @@ async function parseRequest(req, res, url)
             message: `Error while parsing request body: ${err.toString()}`
         });
     }
+}
+
+/**
+ * Checks if an IP is whitelisted in the config
+ * @param {string} ip
+ * @returns {boolean}
+ */
+function isWhitelisted(ip)
+{
+    return config.server.ipWhitelist.includes(ip);
 }
 
 /**

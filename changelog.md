@@ -30,8 +30,10 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
     - `POST /send` to send a desktop notification
         - `?waitForResult` to make the API wait for an interaction with the notification
         - `?actions` to have a set of actions the user can select
-- Added dashboard page that displays Node-Notifier's status
-    TODO: - Add password protection to dashboard
+        - Optionally requires basic auth, to not allow unknown clients to trigger notifications
+        - TODO: Automatic downloading and caching of icon URLs
+- Added dashboard page TODO: that displays Node-Notifier's status and notifications
+    - TODO: Dashboard is password protected
 - Added pm2 wrapper so the service runs in the background
 - Added config file at `./config.js`
 - Added update checker

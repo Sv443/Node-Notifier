@@ -24,10 +24,15 @@ const config = {
             /** Host or IP address of the proxy server */
             host: "proxy.mydomain.com",
             /** Port of the proxy server */
-            port: 3128
+            port: 3128,
         },
         /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
         requireAuthentication: true,
+        /** Which request IPs can bypass authentication */
+        ipWhitelist: [
+            "127.0.0.1",
+            "::1",
+        ],
         /** Everything about the asset cache and automatic icon downloading from URLs */
         assetCache: {
             /** After how many seconds of being in the cache a cached asset expires. Eventually it will be re-fetched when it is used the next time - default is 86400 (1 day) */
