@@ -40,8 +40,8 @@
             "description": "Whether Node-Notifier should send a notification reminder when an update is available"
         },
         "windowsSvcInstalled": {
-            "type": "boolean",
-            "description": "Whether the pm2-installer Windows service was already installed or not"
+            "type": [ "boolean", "null" ],
+            "description": "Whether the pm2-installer Windows service was already installed or not. Set to `null` or not present if the OS is not Windows."
         }
     },
     "required": [

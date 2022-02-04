@@ -1,6 +1,4 @@
-const { colors } = require("svcorelib");
-
-const col = colors.fg;
+const kleur = require("kleur");
 
 /**
  * Logs an error to the console
@@ -23,10 +21,10 @@ function error(message, err, fatal = false)
     process.stdout.write("\n\n");
 
     if(typeof err === "string")
-        process.stdout.write(`${col.red}${message}:${col.rst} ${err}\n`);
+        process.stdout.write(`${kleur.red(`${message}:`)} ${err}\n`);
     else if(err instanceof Error)
     {
-        process.stdout.write(`${col.red}${message}${col.rst}\n`);
+        process.stdout.write(`${kleur.red(message)}\n`);
         process.stdout.write(`${err.stack}\n`);
     }
 

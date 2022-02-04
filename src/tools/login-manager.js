@@ -3,14 +3,14 @@
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("../login");
 
 const dotenv = require("dotenv");
-const { Errors, colors } = require("svcorelib");
+const { Errors } = require("svcorelib");
 const prompt = require("prompts");
 const { resolve } = require("path");
 const open = require("open");
+const kleur = require("kleur");
 
 const { printTitle, printLines, pause } = require("../cli");
 
-const col = colors.fg;
 const { exit } = process;
 
 
@@ -57,7 +57,7 @@ async function menu()
                 value: 2
             },
             {
-                title: `${col.yellow}Exit${col.rst}`,
+                title: kleur.yellow("Exit"),
                 value: 3
             }
         ]
@@ -72,7 +72,7 @@ async function menu()
             "Setting a new login:",
             "",
             "│ Your new login data will be required to log into Node-Notifier's dashboard and potentially for HTTP authentication.",
-            `│ It will be saved to the hidden file at ${col.yellow}.notifier/.env${col.rst}`,
+            `│ It will be saved to the hidden file at ${kleur.yellow(".notifier/.env")}`,
             "│ Even though the password is saved as a hash, make sure to adequately protect this file and not leak it!",
         ], 1);
 
@@ -98,7 +98,7 @@ async function menu()
         const { confirmOpen } = await prompt({
             type: "confirm",
             name: "confirmOpen",
-            message: `Opening this file will expose sensitive information. ${col.yellow}Are you sure you want to continue?${col.rst}`,
+            message: `Opening this file will expose sensitive information. ${kleur.yellow("Are you sure you want to continue?")}`,
         });
 
         if(confirmOpen)
@@ -108,7 +108,7 @@ async function menu()
     }
     default:
     case 3: // exit
-        console.log("\nExiting.\n");
+        console.log("\nGoodbye.\n");
         setTimeout(() => exit(0), 250);
         return;
     }
@@ -131,11 +131,11 @@ function setNewLogin()
 
             if(!user || !pass)
             {
-                let to = setTimeout(() => res(), 5000);
+                let to = setTimeout(() => res(), 6000);
 
                 console.log("\n\n");
-                console.log(`${col.red}Login data was not provided or is invalid.${col.rst}`);
-                await pause("Press any key (or wait 5s) to return to the menu...");
+                console.log(kleur.red("Login data was not provided or is invalid."));
+                await pause("Press any key (or wait 6s) to return to the menu...");
 
                 clearTimeout(to);
 
@@ -158,7 +158,7 @@ function setNewLogin()
             {
                 await writeEnvFile(localEnv);
 
-                console.log(`\n\n\n${col.green}Successfully saved the new login data${col.rst}\n`);
+                console.log(kleur.green("\n\n\nSuccessfully saved the new login data\n"));
 
                 let to = setTimeout(() => res(), 10000);
 

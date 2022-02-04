@@ -1,11 +1,11 @@
 const { readFile, writeFile, ensureDir } = require("fs-extra");
-const { filesystem, allOfType, colors } = require("svcorelib");
+const { filesystem, allOfType } = require("svcorelib");
 const dotenv = require("dotenv");
 const prompt = require("prompts");
+const kleur = require("kleur");
 
 const { hashPass } = require("./auth");
 
-const col = colors.fg;
 
 
 /** @typedef {import("./types").LoginTuple} LoginTuple */
@@ -127,7 +127,7 @@ function promptNewLogin()
                     return res(undefined);
                 else if(passRaw != passConf)
                 {
-                    console.log(`\n\n${col.yellow}The password and its confirmation don't match${col.rst}\n`);
+                    console.log(kleur.yellow("\n\nThe password and its confirmation don't match\n"));
 
                     const { tryAgain } = await prompt({
                         type: "confirm",
@@ -157,7 +157,7 @@ function promptNewLogin()
                 (user.length == 0 || user.length == 0)
             )
             {
-                console.log(`\n\n${col.yellow}Username and/or password are invalid${col.rst}\n`);
+                console.log(kleur.yellow("\n\nUsername and/or password are invalid\n"));
 
                 const { tryAgain } = await prompt({
                     type: "confirm",

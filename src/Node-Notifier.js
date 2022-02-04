@@ -1,12 +1,13 @@
 // Main wrapped entrypoint & control panel
 
 const pm2 = require("pm2");
-const { colors, allOfType, isArrayEmpty, filesystem } = require("svcorelib");
+const { allOfType, isArrayEmpty, filesystem } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
 const importFresh = require("import-fresh");
 const { exec } = require("child_process");
+const kleur = require("kleur");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -35,14 +36,12 @@ const { platform } = require("os");
 //#MARKER init
 
 
-const col = { ...colors.fg, gray: "\x1b[90m" };
-
 const { exit } = process;
 
 
 async function init()
 {
-    console.log("\nStarting up Node-Notifier...");
+    console.log(kleur.gray("\nStarting up Node-Notifier..."));
 
     const localEnv = await parseEnvFile();
 
@@ -76,7 +75,7 @@ async function init()
             await writeEnvFile(localEnv);
         else
         {
-            console.log(`\n${col.red}Can't continue without admin user, exiting.${col.rst}\n`);
+            console.log(kleur.red("\nCan't continue without admin user, exiting.\n"));
             return exit(0);
         }
     }
@@ -112,7 +111,7 @@ async function init()
             {
                 await setupWindowsStartup();
 
-                console.log(`\n\n${col.green}pm2-installer was successfully set up.${col.rst}`);
+                console.log(kleur.green("\n\npm2-installer was successfully set up."));
 
                 await setProperty("windowsSvcInstalled", true);
 
@@ -120,7 +119,7 @@ async function init()
             }
             else
             {
-                console.log(`${col.yellow}Skipping installation of pm2-installer.${col.rst}`);
+                console.log(kleur.yellow("Skipping installation of pm2-installer."));
 
                 await pauseFor(2000);
             }
@@ -138,6 +137,9 @@ async function init()
             exit(0);
         }
     }
+
+    if(platform() !== "win32")
+        await setProperty("windowsSvcInstalled", null);
 
     return initPm2();
 }
@@ -370,7 +372,7 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 5,
             },
             {
-                title: `${col.yellow}Exit control panel${col.rst}`,
+                title: kleur.yellow("Exit control panel"),
                 value: 6,
             },
         ]
@@ -392,7 +394,7 @@ async function afterPm2Connected(startupType, err, processes)
     {
         console.clear();
 
-        console.log(`\n${col.cyan}Sending notification and waiting for response (close or otherwise interact with it)\n${col.rst}`);
+        console.log(kleur.cyan("\nSending notification and waiting for response (close or otherwise interact with it)\n"));
 
         let testNotifD = new Date().getTime();
 
@@ -409,7 +411,7 @@ async function afterPm2Connected(startupType, err, processes)
         if(meta.action === "timedout")
         {
             printLines([
-                `${col.yellow}Notification timed out. Your OS might have blocked the notification or you just ignored it.${col.rst}\n`,
+                kleur.yellow("Notification timed out. Your OS might have blocked the notification or you just ignored it.\n"),
                 "On Windows, check no app is in full screen and focus assist is turned off",
                 "On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n",
             ]);
@@ -417,7 +419,7 @@ async function afterPm2Connected(startupType, err, processes)
         else
         {
             printLines([
-                `${col.green}Successfully sent desktop notification.${col.rst}`,
+                kleur.green("Successfully sent desktop notification."),
                 `(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)\n`,
             ]);
         }
@@ -522,7 +524,7 @@ async function printAbout(processes)
                 value: 2
             },
             {
-                title: `${col.yellow}Back to main menu${col.rst}`,
+                title: kleur.yellow("Back to main menu"),
                 value: 3
             }
         ]
@@ -549,7 +551,7 @@ async function printAbout(processes)
         {
             open(openLink);
 
-            console.log(`\n${col.green}Opened the link in your browser.${col.rst}`);
+            console.log(kleur.green("\nOpened the link in your browser."));
 
             setTimeout(() => printAbout(processes), 3000);
         }
@@ -581,14 +583,14 @@ function manageProcessPrompt(proc)
             printTitle("Manage Process", "This menu is used to manage Node-Notifier's background process");
 
             printLines([
-                `${col.blue}Background process info:${col.rst}`,
+                kleur.blue("Background process info:"),
                 `  - Name:   ${proc.name}`,
                 `  - Status: ${proc.status}`,
                 `  - ID:     ${proc.pm_id}`,
             ]);
 
             printLines([
-                `\n${col.blue}External commands:${col.rst}`,
+                kleur.blue("\nExternal commands:"),
                 "  - To list all processes use the command 'pm2 list'",
                 "  - To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
                 "  - To monitor Node-Notifier use 'pm2 monit'",
@@ -609,7 +611,7 @@ function manageProcessPrompt(proc)
                         value: 1
                     },
                     {
-                        title: `${col.yellow}Back to main menu${col.rst}`,
+                        title: kleur.yellow("Back to main menu"),
                         value: 2,
                     },
                 ]
@@ -625,7 +627,7 @@ function manageProcessPrompt(proc)
                     if(Array.isArray(newProc))
                         newProc = newProc[0];
 
-                    console.log(`\n${col.green}Successfully restarted process '${newProc.name}'${col.rst}\n`);
+                    console.log(kleur.green(`\nSuccessfully restarted process '${newProc.name}'\n`));
 
                     setTimeout(() => {
                         afterPm2Connected("restart", undefined, [newProc || proc]);
@@ -655,7 +657,7 @@ function manageProcessPrompt(proc)
                             if(platform() === "win32")
                                 await removeWindowsStartup();
 
-                            console.log(`\n${col.red}Successfully deleted the process.${col.rst}\n`);
+                            console.log(kleur.red("\nSuccessfully deleted the process.\n"));
 
                             await pause("Press any key to exit...");
 
@@ -664,7 +666,7 @@ function manageProcessPrompt(proc)
                     }
                     else
                     {
-                        console.log(`\n\n${col.yellow}Canceled deletion.${col.rst}\n`);
+                        console.log(kleur.yellow("\n\nCanceled deletion.\n"));
 
                         await pause("Press any key to go back to the main menu...");
 
@@ -730,7 +732,7 @@ async function notificationLog(procs, page, notifsPerPage)
         notifsPerPage = notifications.length;
 
 
-    const pipe = `${col.gray}│${col.rst}`;
+    const pipe = kleur.gray("│");
 
     /**
      * @param {LogNotificationObj} notif
@@ -749,7 +751,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(notif.wait === true)
             notifLines.push(`${pipe} Waited for interaction: yes`);
 
-        notifLines.push(`${col.blue}#${idx + 1}${col.rst}${col.gray} • [${getDateTimeFrom(notif.timestamp)}]${col.rst}`);
+        notifLines.push(kleur.gray(`${kleur.blue(`#${idx + 1}`)} • [${getDateTimeFrom(notif.timestamp)}]`));
 
         return notifLines.join("\n");
     };
@@ -764,7 +766,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(short)
             console.log(`Page ${pageTxt}\n`);
         else
-            console.log(`${col.green}Page ${pageTxt}${col.rst} - showing ${col.green}${notifsPerPage} per page${col.rst} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
+            console.log(`${kleur.green(`Page ${pageTxt}`)} - showing ${kleur.green(`${notifsPerPage} per page`)} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
     };
 
     let printNotifs = "\n";
@@ -793,7 +795,9 @@ async function notificationLog(procs, page, notifsPerPage)
     printPageLine(true);
 
 
-    const key = await pause(`${col.cyan}[← →]${col.rst} Navigate Pages • ${col.cyan}[+ -]${col.rst} Adjust Page Size • ${col.cyan}[c]${col.rst} Clear • ${col.cyan}[x]${col.rst} Exit`);
+    const bull = kleur.gray("•");
+
+    const key = await pause(`${kleur.cyan("[← →]")} Navigate Pages ${bull} ${kleur.cyan("[+ -]")} Adjust Page Size ${bull} ${kleur.cyan("[c]")} Clear ${bull} ${kleur.cyan("[x]")} Exit`);
 
     switch(key.name || key.sequence)
     {
@@ -835,7 +839,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(confirm)
         {
             await rm(notifLogPath);
-            console.log(`\n${col.yellow}Successfully deleted all notifications.${col.rst}`);
+            console.log(kleur.yellow("\nSuccessfully deleted all notifications."));
 
             let to = setTimeout(() => afterPm2Connected("idle", undefined, procs), 8000);
 
