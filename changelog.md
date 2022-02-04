@@ -31,6 +31,7 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
         - `?waitForResult` to make the API wait for an interaction with the notification
         - `?actions` to have a set of actions the user can select
         - Optionally requires basic auth, to not allow unknown clients to trigger notifications
+        - Optionally set whitelisted IPs that don't need to provide auth (make sure they are static IPs so no guest device accidentally gets one assigned!)
         - TODO: Automatic downloading and caching of icon URLs
 - Added dashboard page TODO: that displays Node-Notifier's status and notifications
     - TODO: Dashboard is password protected

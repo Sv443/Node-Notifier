@@ -28,7 +28,7 @@ const config = {
         },
         /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
         requireAuthentication: true,
-        /** Which request IPs can bypass authentication */
+        /** Which request IPs can bypass authentication (make sure they are set to be static IPs in your router webinterface so no guest device accidentally gets one assigned!) - (the default IPs here are local, don't worry about them) */
         ipWhitelist: [
             "127.0.0.1",
             "::1",
