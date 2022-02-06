@@ -80,28 +80,82 @@ async function init()
         }
     }
 
-    const firstInstall = await getProperty("windowsSvcInstalled");
+    const firstInstallDone = await getProperty("firstInstallDone");
 
-    if(platform() === "win32" && firstInstall !== true)
+    if(firstInstallDone !== true)
     {
-        process.stdout.write("\n");
-
-        // pm2 doesn't have native startup support for Windows, so TODO: pm2-installer needs to somehow be used here: https://github.com/jessety/pm2-installer
-
-        if(await isAdmin())
+        if(platform() === "win32")
         {
+            // Install pm2-installer on Windows: https://github.com/jessety/pm2-installer
+
+            process.stdout.write("\n");
+
+            if(await isAdmin())
+            {
+                printLines([
+                    "This seems to be your first install of Node-Notifier and this is also a Windows machine.",
+                    "",
+                    "Node-Notifier needs some special setup on Windows devices:",
+                    "It needs to install pm2-installer, which will set up a Windows service that keeps Node-Notifier's background process alive.",
+                    "Without this, the background process will completely exit if you restart your PC and you have to install Node-Notifier again each time."
+                ], 1);
+
+                const { cont } = await prompt({
+                    type: "confirm",
+                    name: "cont",
+                    message: "Do you want to proceed with the installation?",
+                    initial: true,
+                });
+
+                process.stdout.write("\n");
+
+                if(cont)
+                {
+                    await setupWindowsStartup();
+
+                    console.log(kleur.green("\n\npm2-installer was successfully set up."));
+
+                    await setProperty("firstInstallDone", true);
+
+                    await pause("Press any key to continue...");
+                }
+                else
+                {
+                    console.log(kleur.yellow("Skipping installation of pm2-installer."));
+
+                    await pauseFor(2000);
+                }
+            }
+            else
+            {
+                printLines([
+                    "Node-Notifier needs administrator rights when first starting up on Windows.",
+                    "It needs them to set up a service that automatically revives the background process whenever you restart your PC.",
+                    "So please start Node-Notifier again, but with administrator rights."
+                ], 1);
+
+                await pause("Press any key to exit...");
+
+                exit(0);
+            }
+        }
+        else
+        {
+            // startup hook install for Linux & Mac:
+
+            process.stdout.write("\n");
+
             printLines([
-                "This seems to be your first install of Node-Notifier and this is also a Windows machine.",
+                "This seems to be your first install of Node-Notifier.",
                 "",
-                "Node-Notifier needs some special setup on Windows devices:",
-                "It needs to install pm2-installer, which will set up a Windows service that keeps Node-Notifier's background process alive.",
-                "Without this, the background process will completely exit if you restart your PC and you have to install Node-Notifier again each time."
+                "First up, please create the startup hook to automatically start up the background process whenever your PC restarts.",
+                "You can skip this, but then you'd have to run Node-Notifier manually on each PC restart.",
             ], 1);
 
             const { cont } = await prompt({
                 type: "confirm",
                 name: "cont",
-                message: "Do you want to proceed with the installation?",
+                message: "Do you want to set up the startup hook?",
                 initial: true,
             });
 
@@ -109,37 +163,26 @@ async function init()
 
             if(cont)
             {
-                await setupWindowsStartup();
+                console.log("\nSaving process list (1/2)...");
+                await runCommand("npm run save"); // might need to replace with path to pm2 binary after packaging with pkg
 
-                console.log(kleur.green("\n\npm2-installer was successfully set up."));
+                console.log("Creating startup hook (2/2)...");
+                await runCommand("npm run startup");
 
-                await setProperty("windowsSvcInstalled", true);
+                console.log(kleur.green("\n\nStartup hook successfully created."));
+
+                await setProperty("firstInstallDone", true);
 
                 await pause("Press any key to continue...");
             }
             else
             {
-                console.log(kleur.yellow("Skipping installation of pm2-installer."));
+                console.log(kleur.yellow("Skipping startup hook setup."));
 
-                await pauseFor(2000);
+                await pauseFor(1500);
             }
         }
-        else
-        {
-            printLines([
-                "Node-Notifier needs administrator rights when first starting up on Windows.",
-                "It needs them to set up a service that automatically revives the background process whenever you restart your PC.",
-                "So please start Node-Notifier again, but with administrator rights."
-            ], 1);
-
-            await pause("Press any key to exit...");
-
-            exit(0);
-        }
     }
-
-    if(platform() !== "win32")
-        await setProperty("windowsSvcInstalled", null);
 
     return initPm2();
 }
@@ -764,9 +807,9 @@ async function notificationLog(procs, page, notifsPerPage)
     const printPageLine = (short) => {
         const pageTxt = `${page + 1} of ${maxPage + 1}`;
         if(short)
-            console.log(`Page ${pageTxt}\n`);
+            console.log(`Page [${pageTxt}]\n`);
         else
-            console.log(`${kleur.green(`Page ${pageTxt}`)} - showing ${kleur.green(`${notifsPerPage} per page`)} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
+            console.log(`${kleur.green(`Page [${pageTxt}]`)} - showing ${kleur.green(`${notifsPerPage} per page`)} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
     };
 
     let printNotifs = "\n";
