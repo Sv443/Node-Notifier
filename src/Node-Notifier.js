@@ -265,9 +265,9 @@ function startProc()
             name: settings.pm2.name,
             script: "./src/main.js",
             cwd: resolve("./"),
-            max_restarts: 10,
+            max_restarts: settings.pm2.maxRestartAttempts,
             min_uptime: 5000,
-            restart_delay: 500,
+            restart_delay: settings.pm2.restartDelay,
             wait_ready: settings.pm2.wait,
             watch: settings.pm2.watch,
         }, (err, proc) => {

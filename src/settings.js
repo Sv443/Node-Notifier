@@ -13,6 +13,10 @@ const internalSettings = {
         wait: true,
         /** Whether Node-Notifier's script files should be watched for changes to immediately restart the process so it can use the new files */
         watch: false,
+        /** Maximum attempts of starting up the background process if it crashes */
+        maxRestartAttempts: 5,
+        /** Delay in milliseconds between restart attempts after a crash */
+        restartDelay: 1000,
     },
     /** Settings regarding the update checker */
     updateChecker: {
@@ -49,6 +53,8 @@ const internalSettings = {
                 ext: "ico",
             },
         ],
+        /** Interval of node-watch daemons */
+        daemonInterval: 500,
     }
 };
 

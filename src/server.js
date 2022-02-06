@@ -181,10 +181,12 @@ async function parseRequest(req, res, url)
     const clientHasAuth = hasAuth(req);
     const whitelisted = isWhitelisted(getClientIp(req));
 
+    const { body } = req;
+
     /** Is set to true if the client is whitelisted or has provided valid login data or if authentication is disabled in the config */
     const isAuthenticated = whitelisted || cfg.server.requireAuthentication ? clientHasAuth : true;
 
-    if(req.body === undefined || (req.body && req.body.length < 1))
+    if(body === undefined || (body && ((Array.isArray(body) && body.length === 0) || (typeof body === "object" && Object.keys(body).length === 0))))
     {
         return respondJSON(res, 400, {
             error: true,
@@ -204,8 +206,8 @@ async function parseRequest(req, res, url)
             // TODO: add password protection
             try
             {
-                const key = req.body["key"];
-                const value = req.body["value"];
+                const key = body["key"];
+                const value = body["value"];
 
                 if(typeof key === "undefined" || typeof value === "undefined")
                 {
