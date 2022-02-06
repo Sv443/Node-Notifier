@@ -9,7 +9,7 @@ const { setProperty, getProperty } = require("./files");
 
 const packageJson = require("../package.json");
 const settings = require("./settings");
-const cfg = require("../config");
+const { cfg } = require("./config");
 
 
 /**

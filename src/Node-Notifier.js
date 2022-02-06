@@ -17,7 +17,7 @@ const { getDateTimeFrom } = require("./getDateTime");
 const { initDirs, setProperty, getProperty } = require("./files");
 
 const packageJSON = require("../package.json");
-const cfg = require("../config");
+const { cfg } = require("./config");
 const settings = require("./settings");
 const { readFile, rm } = require("fs-extra");
 const { platform } = require("os");

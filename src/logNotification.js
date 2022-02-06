@@ -4,7 +4,7 @@ const { filesystem } = require("svcorelib");
 
 const { setProperty } = require("./files");
 
-const cfg = require("../config");
+const { cfg } = require("./config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
 /** @typedef {import("./types").LogNotificationObj} LogNotificationObj */

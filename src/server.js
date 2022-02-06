@@ -12,8 +12,7 @@ const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
 const { tryCache } = require("./assetCache");
 
-const cfg = require("../config");
-const config = require("../config");
+const { cfg } = require("./config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
 /** @typedef {import("express").Request} Request */
@@ -182,7 +181,7 @@ async function parseRequest(req, res, url)
     const clientHasAuth = hasAuth(req);
     const whitelisted = isWhitelisted(getClientIp(req));
 
-    /** Set to true if the client is whitelisted or has provided valid login data */
+    /** Is set to true if the client is whitelisted or has provided valid login data or if authentication is disabled in the config */
     const isAuthenticated = whitelisted || cfg.server.requireAuthentication ? clientHasAuth : true;
 
     if(req.body === undefined || (req.body && req.body.length < 1))
@@ -250,7 +249,7 @@ async function parseRequest(req, res, url)
  */
 function isWhitelisted(ip)
 {
-    return config.server.ipWhitelist.includes(ip);
+    return cfg.server.ipWhitelist.includes(ip);
 }
 
 /**

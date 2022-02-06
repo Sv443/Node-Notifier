@@ -6,7 +6,7 @@ const { resolve } = require("path");
 const { filesystem } = require("svcorelib");
 
 const settings = require("./settings");
-const config = require("../config");
+const { cfg: config } = require("./config");
 
 
 /** @typedef {import("./types").CacheEntry} CacheEntry */
