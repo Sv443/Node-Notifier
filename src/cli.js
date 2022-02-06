@@ -16,7 +16,7 @@ readline.emitKeypressEvents(process.stdin);
  */
 function printTitle(title, subtitle)
 {
-    process.stdout.write(kleur.green(`Node-Notifier - ${title}\n`));
+    process.stdout.write(kleur.underline().green(`${title}\n`));
 
     if(subtitle)
         process.stdout.write(`${subtitle}\n\n\n`);
@@ -78,7 +78,9 @@ function pause(message)
  */
 function pauseFor(time)
 {
-    if(typeof time != "number" || time < 0)
+    time = parseInt(time);
+
+    if(isNaN(time) || time < 0)
         throw new TypeError("Provided time is not a number or lower than 0");
 
     return new Promise((res) => {

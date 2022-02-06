@@ -6,7 +6,7 @@ const { check: portUsed } = require("tcp-port-used");
 const { getClientIp } = require("request-ip");
 
 const error = require("./error");
-const { hasAuth, respondRequireAuth } = require("./auth");
+const { hasAuth, respondRequireAuth, isWhitelisted } = require("./auth");
 const { getAllProperties, setProperty } = require("./files");
 const sendNotification = require("./sendNotification");
 const logNotification = require("./logNotification");
@@ -245,16 +245,6 @@ async function parseRequest(req, res, url)
 }
 
 /**
- * Checks if an IP is whitelisted in the config
- * @param {string} ip
- * @returns {boolean}
- */
-function isWhitelisted(ip)
-{
-    return cfg.server.ipWhitelist.includes(ip);
-}
-
-/**
  * Called when a request to '/send' is received
  * @param {Request} req
  * @param {Response} res
@@ -305,7 +295,7 @@ async function sendNotificationRequest(req, res)
     } : {};
 
 
-    const { waitForResult } = getQueryParams(req);
+    const { waitForResult } = getQueryParams(req); // TODO: not enabled by default when using actions
 
 
     /** @type {string[]|undefined} */
@@ -328,7 +318,7 @@ async function sendNotificationRequest(req, res)
         ...iconProps,
     };
 
-    if(waitForResult)
+    if(waitForResult) // TODO:FIXME: not working
     {
         try
         {

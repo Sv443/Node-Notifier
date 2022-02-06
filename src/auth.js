@@ -1,9 +1,11 @@
 const { allOfType, isEmpty, isArrayEmpty, reserialize, filesystem } = require("svcorelib");
 const dotenv = require("dotenv");
 const { createHash } = require("crypto");
-const watch = require("node-watch").default;
-
+const { getClientIp } = require("request-ip");
+const { default: watch } = require("node-watch");
 const { writeFile } = require("fs-extra");
+
+const { cfg } = require("./config");
 
 /** @typedef {import("express").Request} Request */
 /** @typedef {import("express").Response} Response */
@@ -100,6 +102,9 @@ function hasAuth(req)
 {
     try
     {
+        if(isWhitelisted(getClientIp(req)))
+            return true;
+
         const authB64 = (req.headers.authorization || "").split(" ")[1] || "";
 
         if(isEmpty(authB64))
@@ -109,7 +114,7 @@ function hasAuth(req)
 
         const [ locUser, hash ] = getLocalAuth();
 
-        return ((user === locUser) && passwordMatches(pass, hash));
+        return (user === locUser && passwordMatches(pass, hash));
     }
     catch(err)
     {
@@ -183,9 +188,20 @@ function passwordMatches(pass, hash)
     return false;
 }
 
+/**
+ * Checks if an IP is whitelisted in the config
+ * @param {string} ip
+ * @returns {boolean}
+ */
+function isWhitelisted(ip)
+{
+    return cfg.server.ipWhitelist.includes(ip);
+}
+
 module.exports = {
     init,
     hasAuth,
     respondRequireAuth,
     hashPass,
+    isWhitelisted,
 };

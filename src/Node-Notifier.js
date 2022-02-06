@@ -215,6 +215,24 @@ function initPm2()
 }
 
 /**
+ * Returns the Node-Notifier pm2 process
+ * @returns {Promise<Proc>}
+ */
+function getPm2Proc()
+{
+    return new Promise((res, rej) => {
+        pm2.list(async (err, procList) => {
+            if(err)
+                return rej(err instanceof Error ? err : new Error(err.toString()));
+
+            const proc = procList.find(pr => pr.name === settings.pm2.name);
+
+            return res(proc);
+        });
+    });
+}
+
+/**
  * Uses [pm2-installer](https://github.com/jessety/pm2-installer) to set up pm2 startup on Windows
  * @returns {Promise<void, number>}
  */
@@ -383,7 +401,7 @@ async function afterPm2Connected(startupType, err, processes)
     // console.log(`\n[${new Date().toLocaleString()}]\n\n`);
     // console.log(`Node-Notifier v${packageJSON.version} is ${startupType !== "stopped" ? `${col.green}running` : `${col.red}stopped`}${col.rst}\n\n`);
 
-    printTitle("Control Panel", "Use this menu to manage Node-Notifier");
+    printTitle("Node-Notifier - Control Panel", "Use this menu to manage Node-Notifier");
 
     const { optIndex } = await prompt({
         type: "select",
@@ -437,7 +455,9 @@ async function afterPm2Connected(startupType, err, processes)
     {
         console.clear();
 
-        console.log(kleur.cyan("\nSending notification and waiting for response (close or otherwise interact with it)\n"));
+        console.log(kleur.cyan("\nSending notification and waiting for response (close or otherwise interact with it)...\n\n"));
+
+        await pauseFor(300);
 
         let testNotifD = new Date().getTime();
 
@@ -455,19 +475,19 @@ async function afterPm2Connected(startupType, err, processes)
         {
             printLines([
                 kleur.yellow("Notification timed out. Your OS might have blocked the notification or you just ignored it.\n"),
-                "On Windows, check no app is in full screen and focus assist is turned off",
-                "On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre\n",
+                "On Windows, check no app is in full screen and focus assist is turned off.",
+                "On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre.",
             ]);
         }
         else
         {
             printLines([
-                kleur.green("Successfully sent desktop notification."),
-                `(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)\n`,
+                kleur.green("Successfully sent desktop notification.\n"),
+                kleur.gray(`(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)`),
             ]);
         }
 
-        await pause("Press any key to continue...");
+        await pause("\n\nPress any key to continue...");
 
         return afterPm2Connected("idle", err, processes);
     }
@@ -536,7 +556,7 @@ async function printAbout(processes)
 {
     console.clear();
 
-    printTitle("About", packageJSON.description);
+    printTitle("About Node-Notifier", packageJSON.description);
 
     printLines([
         `Version:      ${packageJSON.version}`,
@@ -623,17 +643,48 @@ function manageProcessPrompt(proc)
     return new Promise(async (res, rej) => {
         try
         {
+            console.log(kleur.gray("Loading process info..."));
+
+            await pauseFor(200);
+
+            const pr = await getPm2Proc();
+
+            const descProc = () => new Promise((res, rej) => {
+                pm2.describe(settings.pm2.name, (err, procDesc) => {
+                    if(err)
+                        return rej(err);
+                    return res(procDesc[0]);
+                });
+            });
+
+            const prDesc = await descProc();
+
+            const statColMap = {
+                "online": kleur.green,
+                "launching": kleur.blue,
+                "stopped": kleur.red,
+                "crashed": kleur.magenta,
+            };
+
+            const statusCol = st => statColMap[st](st);
+
+
+            console.clear();
+
             printTitle("Manage Process", "This menu is used to manage Node-Notifier's background process");
+
+            const stat = prDesc.pid === 0 ? "stopped" : "online";
 
             printLines([
                 kleur.blue("Background process info:"),
-                `  - Name:   ${proc.name}`,
-                `  - Status: ${proc.status}`,
-                `  - ID:     ${proc.pm_id}`,
+                `  - Name:   ${kleur.yellow(pr.name)}`,
+                `  - Status: ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
+                `  - ID:     ${kleur.yellow(pr.pm_id)}`,
+                `  - PWD:    ${(pr.env ?? pr.pm2_env)?.PWD ?? `unknown, but probably ${process.cwd()}`}`
             ]);
 
             printLines([
-                kleur.blue("\nExternal commands:"),
+                kleur.blue("\npm2 commands:"),
                 "  - To list all processes use the command 'pm2 list'",
                 "  - To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
                 "  - To monitor Node-Notifier use 'pm2 monit'",
@@ -794,7 +845,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(notif.wait === true)
             notifLines.push(`${pipe} Waited for interaction: yes`);
 
-        notifLines.push(kleur.gray(`${kleur.blue(`#${idx + 1}`)} • [${getDateTimeFrom(notif.timestamp)}]`));
+        notifLines.push(`#${idx + 1} ${kleur.gray(`• [${getDateTimeFrom(notif.timestamp, true)}]`)}`);
 
         return notifLines.join("\n");
     };
@@ -825,7 +876,7 @@ async function notificationLog(procs, page, notifsPerPage)
     }
 
 
-    await pauseFor(30); // slow down consecutive presses
+    await pauseFor(30); // slow down consecutive presses (user holding down key)
 
     console.clear();
 

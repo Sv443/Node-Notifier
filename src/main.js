@@ -33,6 +33,8 @@ async function init()
         {
             await initDirs();
 
+            // throw new Error("#DEBUG");
+
             await setProps();
 
             await auth.init();
