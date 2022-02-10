@@ -46,19 +46,19 @@ async function menu()
         choices: [
             {
                 title: "Set new login",
-                value: 0
+                value: 0,
             },
             {
                 title: "Delete current login",
-                value: 1
+                value: 1,
             },
             {
-                title: "Open login data file ⧉ ",
-                value: 2
+                title: `Open login data file ${kleur.reset("")} ↗`,
+                value: 2,
             },
             {
                 title: kleur.yellow("Exit"),
-                value: 3
+                value: 3,
             }
         ]
     });

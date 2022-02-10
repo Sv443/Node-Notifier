@@ -1,13 +1,14 @@
 // Main wrapped entrypoint & control panel
 
 const pm2 = require("pm2");
-const { allOfType, isArrayEmpty, filesystem } = require("svcorelib");
+const { allOfType, isArrayEmpty, filesystem, mapRange } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
 const importFresh = require("import-fresh");
 const { exec } = require("child_process");
 const kleur = require("kleur");
+const { freemem } = require("os");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
@@ -409,7 +410,7 @@ async function afterPm2Connected(startupType, err, processes)
         name: "optIndex",
         choices: [
             {
-                title: "Open dashboard ⧉ ",
+                title: `Open dashboard${kleur.reset("")} ↗`,
                 value: 0
             },
             {
@@ -417,19 +418,19 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 1
             },
             {
-                title: "Manage background process >",
+                title: `Manage background process${kleur.reset("")} >`,
                 value: 2
             },
             {
-                title: "Show notification log >",
+                title: `Show notification log${kleur.reset("")} >`,
                 value: 3,
             },
             {
-                title: "About Node-Notifier >",
+                title: `About Node-Notifier${kleur.reset("")} >`,
                 value: 4,
             },
             {
-                title: "Manage login data >",
+                title: `Manage login data${kleur.reset("")} >`,
                 value: 5,
             },
             {
@@ -455,29 +456,43 @@ async function afterPm2Connected(startupType, err, processes)
     {
         console.clear();
 
-        console.log(kleur.cyan("\nSending notification and waiting for response (close or otherwise interact with it)...\n\n"));
+        printTitle("Test Notification");
 
         await pauseFor(300);
+
+        console.log(`Sent notification and waiting for response ${kleur.cyan("(close or otherwise interact with it)")}\n`);
 
         let testNotifD = new Date().getTime();
 
         const { meta } = await sendNotification({
-            title: "Node-Notifier works!",
-            message: `It's running in the background, waiting for requests on port ${cfg.server.port}`,
+            title: "Node-Notifier works",
+            message: "Click me!",
             icon: resolve("./www/favicon.png"),
             contentImage: resolve("./www/favicon.png"),
-            requireInteraction: false,
+            requireInteraction: true,
             // open: `http://localhost:${cfg.server.port}`,
-            timeout: 10,
+            timeout: 20,
         });
 
         if(meta.action === "timedout")
         {
-            printLines([
-                kleur.yellow("Notification timed out. Your OS might have blocked the notification or you just ignored it.\n"),
-                "On Windows, check no app is in full screen and focus assist is turned off.",
-                "On Mac, check that 'terminal-notifier' isn't being blocked in the notification centre.",
-            ]);
+            const plat = platform();
+
+            const osName = plat === "win32" ? "Windows" : (plat === "darwin" ? "MacOS" : "Your OS");
+
+            const lns = [ kleur.yellow(`Notification timed out. ${osName} might have blocked the notification or you just ignored it.\n`) ];
+
+            if(plat === "win32")
+            {
+                lns.push("Check no app is in full screen and focus assist is turned off (no moon on the notifications icon at the far right of the task bar).");
+                lns.push("To turn it off, right-click the notifications icon in the task bar, then select 'Off' under 'Focus assist'. Then, please try again.");
+            }
+            else if(plat === "darwin")
+                lns.push("Check that 'terminal-notifier' is allowed in the 'notification centre' of the system preferences.");
+            else
+                lns.push("Check that 'growl' isn't blocked in your specific operating system's notification manager.");
+
+            printLines(lns);
         }
         else
         {
@@ -575,15 +590,15 @@ async function printAbout(processes)
         message: "Choose what to do",
         choices: [
             {
-                title: "Open GitHub repo ⧉ ",
+                title: `Open GitHub repo${kleur.reset("")} ↗`,
                 value: 0
             },
             {
-                title: "Submit an issue ⧉ ",
+                title: `Submit an issue${kleur.reset("")} ↗`,
                 value: 1
             },
             {
-                title: "Support development ⧉ ",
+                title: `Support development${kleur.reset("")} ↗`,
                 value: 2
             },
             {
@@ -675,20 +690,25 @@ function manageProcessPrompt(proc)
 
             const stat = prDesc.pid === 0 ? "stopped" : "online";
 
+            const ramUsage = parseFloat(mapRange(pr.monit.memory, 0, freemem(), 0, 100).toFixed(2));
+            const ramUsageMB = pr.monit.memory / 1e+6;
+
+            const ramCol = ramUsageMB < 100 ? kleur.green : (ramUsageMB < 250 ? kleur.yellow : kleur.red);
+
             printLines([
                 kleur.blue("Background process info:"),
-                `  - Name:   ${kleur.yellow(pr.name)}`,
-                `  - Status: ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
-                `  - ID:     ${kleur.yellow(pr.pm_id)}`,
-                `  - PWD:    ${(pr.env ?? pr.pm2_env)?.PWD ?? `unknown, but probably ${process.cwd()}`}`
+                `│ Process: ${kleur.yellow(pr.name)} ${kleur.gray(`[${kleur.yellow(pr.pm_id)}]`)}`,
+                `│ Status:  ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
+                `│ Memory:  ${ramCol(`${ramUsage}%`)} ${kleur.gray(`(${ramUsageMB.toFixed(2)} MB)`)}`,
+                `│ PWD:     ${(pr.env ?? pr.pm2_env)?.PWD ?? `most likely ${process.cwd()}`}`,
             ]);
 
             printLines([
-                kleur.blue("\npm2 commands:"),
-                "  - To list all processes use the command 'pm2 list'",
-                "  - To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
-                "  - To monitor Node-Notifier use 'pm2 monit'",
-                `  - To view the background process' console output use 'pm2 logs ${settings.pm2.name}'\n\n`,
+                kleur.blue("\nPM2 commands:"),
+                "│ To list all processes use the command 'pm2 list'",
+                "│ To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
+                "│ To monitor Node-Notifier use 'pm2 monit'",
+                `│ To view the background process' console output use 'pm2 logs ${settings.pm2.name}'\n\n`,
             ]);
 
             const { index } = await prompt({
@@ -697,16 +717,20 @@ function manageProcessPrompt(proc)
                 name: "index",
                 choices: [
                     {
-                        title: "Restart process",
-                        value: 0
+                        title: `Restart process${kleur.reset("")} ${kleur.yellow("↻")}`,
+                        value: 0,
                     },
                     {
-                        title: "Delete process",
-                        value: 1
+                        title: stat === "online" ? `Stop process${kleur.reset("")} ${kleur.red("ϴ")}` : `Start process${kleur.reset("")} ${kleur.green("►")}`,
+                        value: 1,
+                    },
+                    {
+                        title: `Delete process${kleur.reset("")} ${kleur.magenta("X")}`,
+                        value: 2,
                     },
                     {
                         title: kleur.yellow("Back to main menu"),
-                        value: 2,
+                        value: 3,
                     },
                 ]
             });
@@ -724,11 +748,37 @@ function manageProcessPrompt(proc)
                     console.log(kleur.green(`\nSuccessfully restarted process '${newProc.name}'\n`));
 
                     setTimeout(() => {
-                        afterPm2Connected("restart", undefined, [newProc || proc]);
+                        manageProcessPrompt(newProc || proc);
                     }, 2000);
                 });
                 break;
-            case 1: // delete
+            case 1: // stop / start
+                if(stat === "online")
+                {
+                    pm2.stop(proc.pm_id, (err, newProc) => {
+                        if(err)
+                            return rej(err instanceof Error ? err : new Error(`Error while stopping process: ${err}`));
+                        
+                        if(Array.isArray(newProc))
+                            newProc = newProc[0];
+
+                        console.log(kleur.yellow(`\nSuccessfully stopped process '${newProc.name}'\n`));
+
+                        setTimeout(() => {
+                            manageProcessPrompt(newProc || proc);
+                        }, 2000);
+                    });
+                }
+                else
+                {
+                    console.log(kleur.green("\nStarting process..."));
+
+                    await pauseFor(1000);
+
+                    return startProc();
+                }
+                break;
+            case 2: // delete
                 {
                     console.log("\nIf you delete the pm2 process, Node-Notifier will no longer run in the background.");
                     console.log("Note that when starting up Node-Notifier, the background process will automatically be launched again.\n");
@@ -768,7 +818,7 @@ function manageProcessPrompt(proc)
                     }
                 }
                 break;
-            case 2: // main menu
+            case 3: // main menu
             default:
                 return afterPm2Connected("idle", undefined, [proc]);
             }
@@ -806,7 +856,10 @@ async function notificationLog(procs, page, notifsPerPage)
 
     notifsPerPage = parseInt(notifsPerPage);
     if(isNaN(notifsPerPage))
-        notifsPerPage = 5;
+        notifsPerPage = Math.min(Math.round((process.stdout.rows - 16) / 7), 5);
+
+    if(notifsPerPage == Infinity || isNaN(notifsPerPage) || notifsPerPage < 1)
+        notifsPerPage = 1;
 
     page = parseInt(page);
     if(isNaN(page))

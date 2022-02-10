@@ -17,7 +17,7 @@ async function run()
     try
     {
         printTitle("Config Encoding", [
-            `This script encodes the config file at ${kleur.yellow("./config.yml")} with Brotli and base64.`,
+            "This script encodes the config file at ./config.yml with Brotli and base64.",
             "This is so that the default config template can be packed together with the script.",
             "",
             `Copy the variable below and replace it in ${kleur.yellow("./src/config.js")} in the function ${kleur.green("getCfgTemplate")}():`
