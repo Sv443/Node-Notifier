@@ -34,6 +34,8 @@ const internalSettings = {
     },
     /** Internal server settings */
     server: {
+        /** Interval of daemons that supervise files to hot-reload them when they're modified (like config.yml for example) */
+        daemonInterval: 500,
         /** Accepted MIME types when trying to download and cache an asset and a mapping to their file extension */
         dlCacheMimeTypes: [
             {
@@ -54,8 +56,6 @@ const internalSettings = {
             },
         ],
         dlCachePath: "./.notifier/cache_manifest.json",
-        /** Interval of node-watch daemons */
-        daemonInterval: 500,
     }
 };
 

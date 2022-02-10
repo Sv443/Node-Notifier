@@ -1,5 +1,6 @@
 const readline = require("readline");
 const kleur = require("kleur");
+const NanoTimer = require("nanotimer");
 
 
 /** @typedef {import("./types").KeypressObj} KeypressObj */
@@ -12,14 +13,19 @@ readline.emitKeypressEvents(process.stdin);
 /**
  * Prints a title and optionally subtitle
  * @param {string} title
- * @param {string} [subtitle]
+ * @param {string|string[]} [subtitle]
  */
 function printTitle(title, subtitle)
 {
     process.stdout.write(kleur.underline().green(`${title}\n`));
 
     if(subtitle)
+    {
+        if(Array.isArray(subtitle))
+            subtitle = subtitle.join("\n");
+
         process.stdout.write(`${subtitle}\n\n\n`);
+    }
     else
         process.stdout.write("\n\n");
 }
@@ -72,13 +78,13 @@ function pause(message)
 }
 
 /**
- * Pauses for the given `time` in milliseconds, then resolves the returned promise
+ * Pauses for the given `time` in **milliseconds**, then resolves the returned promise
  * @param {number} time
  * @returns {Promise<void>}
  */
 function pauseFor(time)
 {
-    time = parseInt(time);
+    time = parseFloat(time);
 
     if(isNaN(time) || time < 0)
         throw new TypeError("Provided time is not a number or lower than 0");
@@ -88,9 +94,24 @@ function pauseFor(time)
     });
 }
 
+/**
+ * Pauses for the given `time` in **microseconds**, then resolves the returned promise
+ * @param {number} time
+ * @returns {Promise<void>}
+ */
+function pauseForMicroS(time)
+{
+    return new Promise(res => {
+        const nt = new NanoTimer();
+
+        nt.setTimeout(res, "", `${time}u`);
+    });
+}
+
 module.exports = {
     printTitle,
     printLines,
     pause,
     pauseFor,
+    pauseForMicroS,
 };

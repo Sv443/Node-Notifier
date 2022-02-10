@@ -7,6 +7,7 @@ const { filesystem } = require("svcorelib");
 
 const settings = require("./settings");
 const { cfg: config } = require("./config");
+const { getAxiosCfg } = require("./request");
 
 
 /** @typedef {import("./types").CacheEntry} CacheEntry */
@@ -44,8 +45,10 @@ async function tryCache(url)
         }
     }
 
+    const axCfg = getAxiosCfg();
+
     // do preflight to make sure the requested resource is valid and can be downloaded
-    const { status, headers } = await axios.request({ url, method: "HEAD" });
+    const { status, headers } = await axios.request({ ...axCfg, url, method: "HEAD" });
 
     const contTypeRaw = headers["content-type"];
     const contType = contTypeRaw.match(/;/) ? contTypeRaw.split(/;/)[0] : contTypeRaw;
@@ -63,6 +66,7 @@ async function tryCache(url)
     if(contType && mimes.includes(contType))
     {
         const { data } = await axios.get(url, {
+            ...axCfg,
             responseType: "stream"
         });
 

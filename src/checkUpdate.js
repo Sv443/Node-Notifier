@@ -10,6 +10,7 @@ const { setProperty, getProperty } = require("./files");
 const packageJson = require("../package.json");
 const settings = require("./settings");
 const { cfg } = require("./config");
+const { getAxiosCfg } = require("./request");
 
 
 /**
@@ -53,14 +54,8 @@ function checkUpdate()
 
             try
             {
-                /** @type {import("axios").AxiosRequestConfig|undefined} */
-                const axCfg = cfg.server.proxy.enabled ? {
-                    proxy: {
-                        host: cfg.server.proxy.host,
-                        port: cfg.server.proxy.port,
-                    }
-                } : undefined;
-                
+                const axCfg = getAxiosCfg();
+
                 result = await axios.get(settings.updateChecker.apiUrl, axCfg);
             }
             catch(err)

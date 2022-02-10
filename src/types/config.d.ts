@@ -21,6 +21,10 @@ export interface ConfigFile {
             host: string;
             /** Port of the proxy server */
             port: number;
+            /** Username (leave empty to disable proxy authentication) */
+            user: string;
+            /** Password (leave empty to disable proxy authentication) */
+            pass: string;
         };
         /** Whether all clients need to provide authentication (the same you need to enter when visiting the dashboard) to interact with the server */
         requireAuthentication: boolean;
