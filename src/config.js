@@ -57,7 +57,7 @@ function getCfgTemplate()
 {
     // Update from './config.yml' with the command 'npm run enc-cfg'
 
-    const encTempl = `\
+    const template = `\
         GwkJAIyUbq5QkoFutmeZrlBRTLK92+Tok5fQWKXfysLy+n3TVqqwKHfe5v+ZyWOTK6UpDnUPn93rjjiIQ6EMQiIFKuJ0Rw445FoBWn9uZwNB9xJjQ9Aj7N+rW5q1rJEO
         sRdJtj1QWuajtND4clwlK1VeOD/qazCTuIIs0zlrEXbllEX0jc0iHX27sEc2G+UcJSGOlNaAjT0GFRR1HYTBRGHb5edFtmjDWnD6ne0aZduMn0rJroPtW0OeD++emjZi
         O5Y01YOOgLltdEaC+bkvYAz9wXR2J11TJBgiLEPpCXmwmPhgM1EoeAVPvMS7zPkUGejIZgWgYaHBHhOzxsgix8M1CCJgtsHzeFrua4vyK4yyCKf895lD4MHWHXdfQ4SU
@@ -69,7 +69,7 @@ function getCfgTemplate()
         oEBwFhQXQ18b6ZrGdlSmX1i9SMgl79JkVXQMy5AhWTQ1gVkPwc8VY1fOE8B3Ja69QiFKEwNuxiUfzbG3mBqbeVnHZxFCD5EG1777TDuqi8/ytJSDUDRmBA==\
     `;
 
-    const serEncTempl = encTempl.split(/\n/gm).map(l => l.trim()).join("");
+    const serEncTempl = template.split(/\n/gm).map(l => l.trim()).join("");
 
     const rawCfg = Buffer.from(serEncTempl, "base64");
 

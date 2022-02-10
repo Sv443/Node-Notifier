@@ -1,3 +1,5 @@
+// dev tool to generate an encoded config template for ./src/config.js - getCfgTemplate()
+
 const { readFile } = require("fs-extra");
 const { resolve } = require("path");
 const { brotliCompress } = require("zlib");
@@ -15,8 +17,8 @@ async function run()
     try
     {
         printTitle("Config Encoding", [
-            `This script encodes the config file at ${kleur.yellow("./config.yml")} with Brotli.`,
-            "This is so that the default config can be packed together with the script.",
+            `This script encodes the config file at ${kleur.yellow("./config.yml")} with Brotli and base64.`,
+            "This is so that the default config template can be packed together with the script.",
             "",
             `Copy the variable below and replace it in ${kleur.yellow("./src/config.js")} in the function ${kleur.green("getCfgTemplate")}():`
         ]);
@@ -31,7 +33,7 @@ async function run()
         const chars = result.split("");
         let i = 0;
 
-        console.log(`${kleur.cyan("const")} ${kleur.blue("defaultConf")} ${kleur.red("=")} ${kleur.yellow("`")}${kleur.cyan("\\")}`);
+        console.log(`${kleur.cyan("const")} ${kleur.blue("template")} ${kleur.red("=")} ${kleur.yellow("`")}${kleur.cyan("\\")}`);
 
         process.stdout.write("    ");
 
