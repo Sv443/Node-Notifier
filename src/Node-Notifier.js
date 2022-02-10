@@ -203,12 +203,10 @@ function initPm2()
             if(err)
                 error("Error while listing pm2 processes", err, false);
 
-            const oldProc = procList.find(proc => proc.name === settings.pm2.name);
+            const proc = procList.find(pr => pr.name === settings.pm2.name);
 
-            // restart old process if it exists, else create a new one
-            // TODO: don't restart on every startup
-            if(oldProc)
-                pm2.restart(oldProc.pm_id, (err, proc) => afterPm2Connected("restart", err, proc));
+            if(proc)
+                afterPm2Connected("idle", undefined, proc);
             else
                 await startProc();
         });
@@ -397,12 +395,16 @@ async function afterPm2Connected(startupType, err, processes)
         return console.error(`Error while starting process: ${typeof err === "object" ? JSON.stringify(err) : (typeof err.toString === "function" ? err.toString() : err )}`);
 
     const fProc = Array.isArray(processes) ? processes[0] : processes;
+    /** @type {Proc} */
     const proc = fProc.pm2_env || fProc;
 
     // console.log(`\n[${new Date().toLocaleString()}]\n\n`);
     // console.log(`Node-Notifier v${packageJSON.version} is ${startupType !== "stopped" ? `${col.green}running` : `${col.red}stopped`}${col.rst}\n\n`);
 
     printTitle("Node-Notifier - Control Panel", "Use this menu to manage Node-Notifier");
+
+    const procStat = proc.status;
+    const procStatCol = procStat === "online" ? kleur.green : (procStat === "stopped" ? kleur.red : kleur.yellow);
 
     const { optIndex } = await prompt({
         type: "select",
@@ -418,7 +420,7 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 1
             },
             {
-                title: `Manage background process${kleur.reset("")} >`,
+                title: `Manage PM2 process${kleur.reset("")} ${kleur.gray("[")}${procStatCol(procStat)}${kleur.gray("]")}${kleur.reset("")} >`,
                 value: 2
             },
             {
@@ -691,15 +693,15 @@ function manageProcessPrompt(proc)
             const stat = prDesc.pid === 0 ? "stopped" : "online";
 
             const ramUsage = parseFloat(mapRange(pr.monit.memory, 0, freemem(), 0, 100).toFixed(2));
-            const ramUsageMB = pr.monit.memory / 1e+6;
+            const ramUsageMiB = pr.monit.memory / 1.049e+6;
 
-            const ramCol = ramUsageMB < 100 ? kleur.green : (ramUsageMB < 250 ? kleur.yellow : kleur.red);
+            const ramCol = ramUsageMiB < 75 ? kleur.green : (ramUsageMiB < 150 ? kleur.yellow : kleur.red);
 
             printLines([
                 kleur.blue("Background process info:"),
                 `│ Process: ${kleur.yellow(pr.name)} ${kleur.gray(`[${kleur.yellow(pr.pm_id)}]`)}`,
                 `│ Status:  ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
-                `│ Memory:  ${ramCol(`${ramUsage}%`)} ${kleur.gray(`(${ramUsageMB.toFixed(2)} MB)`)}`,
+                `│ Memory:  ${stat === "online" ? ramCol(`${ramUsage}%`) : kleur.gray("0%")} ${kleur.gray(`(${stat === "online" ? ramUsageMiB.toFixed(1) : 0} MiB)`)}`,
                 `│ PWD:     ${(pr.env ?? pr.pm2_env)?.PWD ?? `most likely ${process.cwd()}`}`,
             ]);
 
@@ -711,28 +713,36 @@ function manageProcessPrompt(proc)
                 `│ To view the background process' console output use 'pm2 logs ${settings.pm2.name}'\n\n`,
             ]);
 
+            const choices = [];
+
+            if(stat === "online")
+            {
+                choices.push({
+                    title: `Restart process${kleur.reset("")} ${kleur.yellow("↻")}`,
+                    value: 0,
+                });
+            }
+
+            [
+                {
+                    title: stat === "online" ? `Stop process${kleur.reset("")} ${kleur.red("ϴ")}` : `Start process${kleur.reset("")} ${kleur.green("►")}`,
+                    value: 1,
+                },
+                {
+                    title: `Delete process${kleur.reset("")} ${kleur.magenta("X")}`,
+                    value: 2,
+                },
+                {
+                    title: kleur.yellow("Back to main menu"),
+                    value: 3,
+                },
+            ].forEach(ch => choices.push(ch));
+
             const { index } = await prompt({
                 type: "select",
                 message: "Choose what to do",
                 name: "index",
-                choices: [
-                    {
-                        title: `Restart process${kleur.reset("")} ${kleur.yellow("↻")}`,
-                        value: 0,
-                    },
-                    {
-                        title: stat === "online" ? `Stop process${kleur.reset("")} ${kleur.red("ϴ")}` : `Start process${kleur.reset("")} ${kleur.green("►")}`,
-                        value: 1,
-                    },
-                    {
-                        title: `Delete process${kleur.reset("")} ${kleur.magenta("X")}`,
-                        value: 2,
-                    },
-                    {
-                        title: kleur.yellow("Back to main menu"),
-                        value: 3,
-                    },
-                ]
+                choices,
             });
 
             switch(index)
@@ -749,7 +759,7 @@ function manageProcessPrompt(proc)
 
                     setTimeout(() => {
                         manageProcessPrompt(newProc || proc);
-                    }, 2000);
+                    }, 1000);
                 });
                 break;
             case 1: // stop / start
@@ -766,7 +776,7 @@ function manageProcessPrompt(proc)
 
                         setTimeout(() => {
                             manageProcessPrompt(newProc || proc);
-                        }, 2000);
+                        }, 1000);
                     });
                 }
                 else
