@@ -20,6 +20,7 @@ const { cfg } = require("./config");
 /** @typedef {import("./types").JSONCompatible} JSONCompatible */
 /** @typedef {import("./types").HttpMethod} HttpMethod */
 /** @typedef {import("./types").QueryObj} QueryObj */
+/** @typedef {import("./types").RequestBody} RequestBody */
 
 
 /** Placeholder icon path - relative to project root */
@@ -259,7 +260,10 @@ async function sendNotificationRequest(req, res)
         });
     }
 
-    const { title, message, icon, actions, timeout } = req.body;
+    /** @type {RequestBody} */
+    const body = req.body;
+
+    const { title, message, icon, actions, timeout } = body;
 
     const invalidProps = [];
 
@@ -277,13 +281,18 @@ async function sendNotificationRequest(req, res)
         });
     }
 
+    let cachedIconPath;
+
+    // download image if it's a URL and not already in the cache
     if(isValidHttpUrl(icon))
-        await tryCache(icon);
+        cachedIconPath = (await tryCache(icon))?.path;
+
+    const icn = cachedIconPath ?? icon;
 
     /** @type {Notification} */
     const iconProps = typeof icon === "string" ? {
-        icon: resolve(icon),
-        contentImage: resolve(icon),
+        icon: resolve(icn),
+        contentImage: resolve(icn),
     } : getDefaultIconProps();
 
 

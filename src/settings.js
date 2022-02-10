@@ -53,6 +53,7 @@ const internalSettings = {
                 ext: "ico",
             },
         ],
+        dlCachePath: "./.notifier/cache_manifest.json",
         /** Interval of node-watch daemons */
         daemonInterval: 500,
     }

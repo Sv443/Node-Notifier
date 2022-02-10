@@ -1,5 +1,5 @@
 const { default: axios } = require("axios");
-const { createWriteStream, readFile, writeFile } = require("fs-extra");
+const { createWriteStream, readFile, writeFile, pathExists } = require("fs-extra");
 const { createHash } = require("crypto");
 
 const { resolve } = require("path");
@@ -13,12 +13,12 @@ const { cfg: config } = require("./config");
 /** @typedef {import("./types").CacheManifest} CacheManifest */
 
 
-const cacheManifPath = resolve("./.notifier/cache_manifest.json");
+const cacheManifPath = resolve(settings.server.dlCachePath);
 
 /**
  * Tries to download and cache the asset at `url`
  * @param {string} url
- * @returns {Promise<{ success: boolean, message: string }>}
+ * @returns {Promise<{ success: boolean, message: string, path?: string }>}
  */
 async function tryCache(url)
 {
@@ -29,12 +29,19 @@ async function tryCache(url)
 
     const nonExpired = manif.filter(en => (curTime - en.time) > entryExpiresAfter);
 
-    if(nonExpired.find(en => en.url === url))
+    const assetExists = nonExpired.find(en => en.url === url);
+
+    if(assetExists)
     {
-        return {
-            success: true,
-            message: "Item exists already and didn't time out yet",
-        };
+        const { path } = assetExists;
+        if(await pathExists(path))
+        {
+            return {
+                success: true,
+                message: "Item exists already and didn't time out yet",
+                path,
+            };
+        }
     }
 
     // do preflight to make sure the requested resource is valid and can be downloaded
@@ -110,7 +117,7 @@ async function tryCache(url)
 async function addCacheEntry(path, url, hash)
 {
     if(!(await filesystem.exists(cacheManifPath)))
-        await writeFile(cacheManifPath, "[]");
+        await saveManifest([]);
 
     /** @type {CacheEntry} */
     const newCacheEntry = {
@@ -133,26 +140,61 @@ async function addCacheEntry(path, url, hash)
     if(typeof oldEntry === "object")
         newManif = await removeOldEntry(manif, oldEntry);
 
-    // delete all expired entries while we're at it
-    const curTime = new Date().getTime();
-    const entryExpiresAfter = config.server.assetCache.entryExpiresAfter * 1000;
-
-    const nonExpired = (newManif || manif).filter(en => (curTime - en.time) > entryExpiresAfter);
+    // omit all expired entries while we're at it
+    const nonExpired = await omitExpiredEntries(newManif || manif);
 
     nonExpired.push(newCacheEntry);
 
-    await writeFile(cacheManifPath, JSON.stringify(nonExpired));
+    await saveManifest(nonExpired);
 }
+
+/**
+ * Removes all expired entries of a cache manifest and returns it
+ * @param {CacheManifest} [manif]
+ * @returns {Promise<CacheManifest>}
+ */
+async function omitExpiredEntries(manif)
+{
+    if(!manif)
+        manif = await getManifest();
+    
+    const curTime = new Date().getTime();
+    const entryExpiresAfter = config.server.assetCache.entryExpiresAfter * 1000;
+
+    const nonExpired = manif.filter(en => (curTime - en.time) > entryExpiresAfter);
+
+    return nonExpired;
+}
+
+// /**
+//  * Checks if an entry identified by `url` is expired
+//  * @param {string} url
+//  * @returns {Promise<boolean>}
+//  */
+// async function cacheEntryExpired(url)
+// {
+//     const manif = await getManifest();
+
+//     const curTime = new Date().getTime();
+//     const entryExpiresAfter = config.server.assetCache.entryExpiresAfter * 1000;
+
+//     const targetEn = manif.find(en => en.url === url);
+//     if(targetEn && (curTime - targetEn.time) < entryExpiresAfter)
+//     {
+//         const newManif = await removeOldEntry(manif, { url });
+//         await saveManifest(newManif);
+//     }
+// }
 
 /**
  * Removes the `oldEntry` from the cache `manif`, then returns the new cache manifest
  * @param {CacheManifest} manif
- * @param {CacheEntry} oldEntry
+ * @param {CacheEntry} oldEntry Property url is needed, hash is optional, everything else is ignored
  * @returns {CacheManifest}
  */
 async function removeOldEntry(manif, oldEntry)
 {
-    manif = manif.filter(en => !(en.url === oldEntry.url && en.hash !== oldEntry.hash));
+    manif = manif.filter(en => !(en.url === oldEntry.url && oldEntry.hash ? en.hash !== oldEntry.hash : true));
 
     return manif || [];
 }
@@ -174,13 +216,23 @@ async function getManifest()
     {
         if(!(await filesystem.exists(cacheManifPath)))
         {
-            await writeFile(cacheManifPath, "[]");
+            await saveManifest([]);
 
             return [];
         }
 
         throw (err instanceof Error) ? err : new Error(err.toString());
     }
+}
+
+/**
+ * Saves a cache manifest to the disk
+ * @param {CacheManifest} manif
+ * @returns {Promise<void>}
+ */
+async function saveManifest(manif)
+{
+    await writeFile(cacheManifPath, JSON.stringify(manif));
 }
 
 async function dbg()

@@ -38,6 +38,7 @@ function initDirs()
         try
         {
             await ensureDir("./assets");
+            await ensureDir("./assets/cache");
 
             currentAction = "checking if ./.notifier exists";
 
