@@ -114,7 +114,7 @@ async function init()
                 {
                     await setupWindowsStartup();
 
-                    console.log(kleur.green("\n\npm2-installer was successfully set up."));
+                    console.log(kleur.green("\n\npm2-installer was successfully set up.\n"));
 
                     await setProperty("firstInstallDone", true);
 
@@ -244,7 +244,7 @@ function setupWindowsStartup()
 
             // TODO: pipe command outputs to stdout
 
-            console.log("\nInstalling pm2-installer (this might take a minute)...\n");
+            console.log("\nInstalling pm2-installer (this could take a while)...\n");
 
             console.log("Configuring pm2-installer (1/3)...");
             await runCommand("npm run configure", pm2InstPath);
@@ -266,18 +266,20 @@ function setupWindowsStartup()
 
 /**
  * Call to remove any changes made by [pm2-installer](https://github.com/jessety/pm2-installer)
+ * @param {number} firstStep
+ * @param {number} maxSteps
  */
-function removeWindowsStartup()
+function removeWindowsStartup(firstStep = 1, maxSteps = 2)
 {
     return new Promise(async (res, rej) => {
         try
         {
             const pm2InstPath = "./pm2-installer/";
 
-            console.log("Reverting pm2-installer configuration (1/2)...");
+            console.log(`Reverting pm2-installer configuration (${firstStep}/${maxSteps})...`);
             await runCommand("npm run deconfigure", pm2InstPath);
 
-            console.log("Removing pm2-installer (2/2)...");
+            console.log(`Removing pm2-installer (${firstStep + 1}/${maxSteps})...`);
             await runCommand("npm run remove", pm2InstPath);
 
             return res();
@@ -662,7 +664,7 @@ function manageProcessPrompt(proc)
         {
             console.log(kleur.gray("Loading process info..."));
 
-            await pauseFor(200);
+            await pauseFor(100);
 
             const pr = await getPm2Proc();
 
@@ -790,6 +792,8 @@ function manageProcessPrompt(proc)
                 break;
             case 2: // delete
                 {
+                    console.clear();
+
                     console.log("\nIf you delete the pm2 process, Node-Notifier will no longer run in the background.");
                     console.log("Note that when starting up Node-Notifier, the background process will automatically be launched again.\n");
 
@@ -801,6 +805,10 @@ function manageProcessPrompt(proc)
 
                     if(delProc)
                     {
+                        const plat = platform();
+
+                        console.log(`\nDeleting pm2 process (1/${plat === "win32" ? 4 : 2})...`);
+
                         pm2.delete(proc.pm_id, async (err, newProc) => {
                             if(err)
                                 return rej(new Error(`Error while deleting process: ${err}`));
@@ -808,8 +816,12 @@ function manageProcessPrompt(proc)
                             if(Array.isArray(newProc))
                                 newProc = newProc[0];
 
-                            if(platform() === "win32")
-                                await removeWindowsStartup();
+                            if(plat === "win32")
+                                await removeWindowsStartup(2, 4);
+
+                            console.log(`Adjusting properties.json (${plat === "win32" ? "4/4" : "2/2"})...`);
+
+                            await setProperty("firstInstallDone", false);
 
                             console.log(kleur.red("\nSuccessfully deleted the process.\n"));
 
@@ -919,11 +931,11 @@ async function notificationLog(procs, page, notifsPerPage)
         return notificationLog(procs, maxPage, notifsPerPage);
 
     const printPageLine = (short) => {
-        const pageTxt = `${page + 1} of ${maxPage + 1}`;
+        const pageTxt = `${kleur.cyan().underline(page + 1)} of ${maxPage + 1}`;
         if(short)
-            console.log(`Page [${pageTxt}]\n`);
+            console.log(`Page [${pageTxt}] ${kleur.gray("• Timestamp format: [yyyy/mm/dd - hh:mm:ss.ms]")}\n`);
         else
-            console.log(`${kleur.green(`Page [${pageTxt}]`)} - showing ${kleur.green(`${notifsPerPage} per page`)} - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
+            console.log(`Page [${pageTxt}] - showing ${kleur.cyan().underline(`${notifsPerPage}`)} per page - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
     };
 
     let printNotifs = "\n";
