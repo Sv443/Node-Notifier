@@ -241,10 +241,10 @@ async function saveManifest(manif)
 
 async function dbg()
 {
-    const { success, message } = await tryCache("https://i.kym-cdn.com/photos/images/original/001/658/936/411.jpg");
+    const { success, message, path } = await tryCache("https://i.kym-cdn.com/photos/images/original/001/658/936/411.jpg");
 
     if(success)
-        console.log("succ");
+        console.log("succ:", message, "- path:", path);
     else
         console.log("err:", message);
 }
