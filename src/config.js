@@ -55,7 +55,7 @@ function initDaemon()
  */
 function getCfgTemplate()
 {
-    // Update from './config.yml' with the command 'npm run enc-cfg'
+    // Update from './config.yml' with the command 'npm run enc-conf'
 
     const template = `\
         GwkJAIyUbq5QkoFutmeZrlBRTLK92+Tok5fQWKXfysLy+n3TVqqwKHfe5v+ZyWOTK6UpDnUPn93rjjiIQ6EMQiIFKuJ0Rw445FoBWn9uZw

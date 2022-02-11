@@ -13,7 +13,7 @@
     "start": "node .",
     "debug": "node src/main",
     "test": "snyk test",
-    "enc-cfg": "node src/tools/encode-config.js",
+    "enc-conf": "node src/tools/encode-config.js",
     "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
     "build-linux": "pkg -t node14-linux -o dist/NodeNotifier-Linux .",

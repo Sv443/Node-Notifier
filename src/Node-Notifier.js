@@ -242,15 +242,13 @@ function setupWindowsStartup()
         {
             const pm2InstPath = "./pm2-installer/";
 
-            // TODO: pipe command outputs to stdout
-
             console.log("\nInstalling pm2-installer (this could take a while)...\n");
 
             console.log("Configuring pm2-installer (1/3)...");
             await runCommand("npm run configure", pm2InstPath);
 
             console.log("Configuring PowerShell policy (2/3)...");
-            await runCommand("npm run configure-policy", pm2InstPath); // TODO: check if necessary
+            await runCommand("npm run configure-policy", pm2InstPath);
 
             console.log("Setting up pm2-installer (3/3)...");
             await runCommand("npm run setup", pm2InstPath);
@@ -318,7 +316,7 @@ function runCommand(command, cwd)
 
 /**
  * Starts the pm2 process
- * @returns {Promise<Proc>}
+ * @returns {Promise<void>}
  */
 function startProc()
 {
@@ -334,7 +332,7 @@ function startProc()
             watch: settings.pm2.watch,
         }, (err, proc) => {
             afterPm2Connected("new", err, proc);
-            return res(proc);
+            return res();
         });
     });
 }
