@@ -159,11 +159,11 @@ async function firstInstall()
                     "\n",
                     kleur.green("pm2-installer was successfully set up."),
                     kleur.yellow("Please now switch out of the administrator terminal into a normal one."),
-                ]);
+                ], 1);
 
                 await setProperty("firstInstallDone", true);
 
-                await pause("Please any key to exit...");
+                await pause("Press any key to exit...");
 
                 exit(0);
             }
