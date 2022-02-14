@@ -100,7 +100,7 @@ async function init()
             printLines([
                 "Node-Notifier can't be started as an admin in Windows.",
                 "This is because spawning or connecting to the pm2 background process somehow causes issues with trying to access",
-                "files owned by the admin account.",
+                "sockets owned by the admin account.",
                 "Please restart your terminal without admin privileges.",
             ], 2);
 
