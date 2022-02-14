@@ -1,4 +1,5 @@
 const kleur = require("kleur");
+const { Errors } = require("svcorelib");
 
 /**
  * Logs an error to the console
@@ -36,4 +37,17 @@ function error(message, err, fatal = false)
     return;
 }
 
+class CommandError extends Errors.SCLError
+{
+    constructor(message, ...params)
+    {
+        super(message, ...params);
+        this.name = "Command Error";
+
+        if(Error.captureStackTrace)
+            Error.captureStackTrace(this, CommandError);
+    }
+}
+
 module.exports = error;
+module.exports.CommandError = CommandError;
