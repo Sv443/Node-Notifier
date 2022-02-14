@@ -8,21 +8,22 @@ const prompt = require("prompts");
 const importFresh = require("import-fresh");
 const { exec } = require("child_process");
 const kleur = require("kleur");
-const { freemem, networkInterfaces } = require("os");
+const { networkInterfaces, totalmem } = require("os");
+const { readFile, rm } = require("fs-extra");
+const { platform } = require("os");
+const { createConnection } = require("net");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
 const { CommandError } = require("./error");
-const { printTitle, printLines, pause, pauseFor } = require("./cli");
+const { printTitle, printLines, pause, pauseFor, censor } = require("./cli");
 const { getDateTimeFrom } = require("./getDateTime");
 const { initDirs, setProperty, getProperty } = require("./files");
 
 const packageJSON = require("../package.json");
 const { cfg } = require("./config");
 const settings = require("./settings");
-const { readFile, rm } = require("fs-extra");
-const { platform } = require("os");
 
 
 //#SECTION types
@@ -458,7 +459,7 @@ async function afterPm2Connected(startupType, err, processes)
         name: "optIndex",
         choices: [
             {
-                title: `Open dashboard${kleur.reset("")} ↗`,
+                title: `Open web dashboard${kleur.reset("")} ↗`,
                 value: 0
             },
             {
@@ -512,7 +513,7 @@ async function afterPm2Connected(startupType, err, processes)
 
         await pauseFor(300);
 
-        console.log(`Sent notification and waiting for response ${kleur.cyan("(close or otherwise interact with it)")}\n`);
+        console.log(`Sent notification and waiting for response ${kleur.cyan("(click or close it)")}\n`);
 
         let testNotifD = new Date().getTime();
 
@@ -562,21 +563,17 @@ async function afterPm2Connected(startupType, err, processes)
     {
         process.stdout.write("\n");
     
-        const { showConnInfo } = await prompt({
+        const { showInfo } = await prompt({
             type: "confirm",
-            name: "showConnInfo",
-            message: `Do you want to show connection info? ${kleur.yellow("This might expose some private information.")}`,
-            initial: false,
+            name: "showInfo",
+            message: `Do you really want to show your connection info? ${kleur.yellow("This might expose some private data.")}`,
+            initial: true,
         });
 
-        if(showConnInfo)
-        {
-            console.clear();
+        if(showInfo)
             return showConnectionInfo(processes);
-        }
         else
-            afterPm2Connected("idle", undefined, processes);
-        break;
+            return afterPm2Connected("idle", undefined, processes);
     }
     case 3: // manage pm2 process
     {
@@ -641,15 +638,27 @@ async function afterPm2Connected(startupType, err, processes)
  */
 async function showConnectionInfo(processes)
 {
+    console.clear();
+
     printTitle("Connection Info", "This is Node-Notifier's connection info, needed to set up a new connection.");
 
-    const ip = getLocalIP();
+    const ip = await getLocalIP();
 
-    printLines([
+    const lns = [
         kleur.blue("Server info:"),
-        `IP address: ${ip ?? kleur.yellow("Unknown, please look up your local IP in your OS")}`,
-        `TCP port:   ${cfg.server.port}`
-    ], 2);
+        `│ IP address:  ${ip ?? kleur.yellow("Unknown, please look up your local IP in your OS")}`,
+        `│ Port (TCP):  ${cfg.server.port}`,
+        `│ Local URL:   http://${ip ?? "ip_of_this_device_here"}:${cfg.server.port}`,
+        `│ Timeout:     ${cfg.server.timeout}s`,
+        "│",
+        `│ Basic auth (admin login) ${cfg.server.requireAuthentication ? kleur.green("enabled") : kleur.yellow("disabled in the config")}`,
+    ];
+
+    const proxyAuth = typeof cfg.server.proxy.user === "string" && cfg.server.proxy.user.length > 0;
+
+    cfg.server.proxy.enabled && lns.push(`│ Proxy server: ${cfg.server.proxy.host}:${cfg.server.proxy.port}${proxyAuth ? ` (user ${censor(cfg.server.proxy.user, 2)})` : ""}`);
+
+    printLines(lns, 2);
 
     await pause("Press any key to return to the main menu...");
 
@@ -657,23 +666,50 @@ async function showConnectionInfo(processes)
 }
 
 /**
- * Tries to return the system's local IP address, else returns null
- * @returns {string|null}
+ * Tries to return the system's local IP address, else returns null  
+ * This function uses a socket connection so keep in mind it isn't the fastest!
+ * [Source](https://stackoverflow.com/a/7074687/8602926)
+ * @returns {Promise<string | null>}
  */
 function getLocalIP()
 {
-    const interfaces = Object.values(networkInterfaces());
+    return new Promise((res, rej) => {
+        const sock = createConnection(80, "www.wikipedia.org");
 
-    for(const intf of interfaces)
-    {
-        for(const alias of intf)
-        {
-            if(alias.family === "IPv4" && alias.address !== "127.0.0.1" && !alias.internal)
-                return alias.address;
-        }
-    }
+        /**
+         * Checks if `ip` is assigned to a network interface that isn't internal
+         */
+        const matchesLocalInterface = ip => {
+            try
+            {
+                const interfaces = Object.values(networkInterfaces());
 
-    return null;
+                for(const intf of interfaces)
+                {
+                    for(const alias of intf)
+                    {
+                        if(alias.address === ip && alias.internal === false)
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+            catch(e)
+            {
+                return false;
+            }
+        };
+
+        sock.on("connect", () => {
+            const ip = sock.address().address;
+
+            res(matchesLocalInterface(ip) ? ip : null);
+            sock.end();
+        });
+
+        sock.on("error", (e) => rej(e));
+    });
 }
 
 //#SECTION about
@@ -805,25 +841,24 @@ function manageProcessPrompt(proc)
 
             const stat = prDesc.pid === 0 ? "stopped" : "online";
 
-            const ramUsage = parseFloat(mapRange(pr.monit.memory, 0, freemem(), 0, 100).toFixed(2));
+            const ramUsage = parseFloat(mapRange(pr.monit.memory, 0, totalmem(), 0, 100).toFixed(2));
             const ramUsageMiB = pr.monit.memory / 1.049e+6;
 
             const ramCol = ramUsageMiB < 75 ? kleur.green : (ramUsageMiB < 150 ? kleur.yellow : kleur.red);
 
             printLines([
                 kleur.blue("Background process info:"),
-                `│ Process: ${kleur.yellow(pr.name)} ${kleur.gray(`[${kleur.yellow(pr.pm_id)}]`)}`,
+                `│ Name:    ${kleur.yellow(pr.name)} ${kleur.gray(`[ID: ${kleur.yellow(pr.pm_id)}]`)}`,
                 `│ Status:  ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
-                `│ Memory:  ${stat === "online" ? ramCol(`${ramUsage}%`) : kleur.gray("0%")} ${kleur.gray(`(${stat === "online" ? ramUsageMiB.toFixed(1) : 0} MiB)`)}`,
+                `│ Memory:  ${stat === "online" ? ramCol(`${ramUsage}%`) : kleur.gray("0%")}${stat === "online" ? kleur.gray(` (${ramUsageMiB.toFixed(1)} MiB)`) : ""}`,
                 `│ PWD:     ${(pr.env ?? pr.pm2_env)?.PWD ?? `most likely ${process.cwd()}`}`,
             ]);
 
             printLines([
                 kleur.blue("\nPM2 commands:"),
-                "│ To list all processes use the command 'pm2 list'",
-                "│ To automatically start Node-Notifier after system reboot use 'pm2 save' and 'pm2 startup'",
-                "│ To monitor Node-Notifier use 'pm2 monit'",
-                `│ To view the background process' console output use 'pm2 logs ${settings.pm2.name}'\n\n`,
+                "│ To list all processes use the command 'pm2 ls'",
+                `│ To monitor Node-Notifier and see some miscellaneous stats use 'pm2 monit' or 'pm2 desc ${pr.name || pr.pm_id }'`,
+                `│ To view the console output of the background process use 'pm2 logs ${settings.pm2.name}'\n\n`,
             ]);
 
             const choices = [];
@@ -905,8 +940,11 @@ function manageProcessPrompt(proc)
                 {
                     console.clear();
 
-                    console.log("\nIf you delete the pm2 process, Node-Notifier will no longer run in the background.");
-                    console.log("Note that when starting up Node-Notifier, the background process will automatically be launched again.\n");
+                    printLines([
+                        "",
+                        "If you delete the pm2 process, Node-Notifier will no longer run in the background.",
+                        "When you start up Node-Notifier again, you will be prompted to install the process again."
+                    ], 1);
 
                     const { delProc } = await prompt({
                         type: "confirm",
@@ -943,7 +981,7 @@ function manageProcessPrompt(proc)
                     }
                     else
                     {
-                        console.log(kleur.yellow("\n\nCanceled deletion.\n"));
+                        console.log(kleur.yellow("\n\nNot deleting process.\n"));
 
                         await pause("Press any key to go back to the main menu...");
 

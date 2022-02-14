@@ -48,7 +48,7 @@ function init()
                 return res();
             }
             else
-                return rej(new Error("Error while initializing auth module, local auth is not available. Please run 'npm run login-manager' to generate a new password in the login manager"));
+                return rej(new Error("Error while initializing auth module, local auth is not available. Please run 'npm run login-mgr' to generate a new password in the login manager"));
         }
         catch(err)
         {

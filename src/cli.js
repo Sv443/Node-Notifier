@@ -108,10 +108,43 @@ function pauseForMicroS(time)
     });
 }
 
+/**
+ * Censors the `str` by replacing all chars with `*` after skipping `shownCharsAmt` characters
+ * @param {string} str
+ * @param {number} [shownCharsAmt=3]
+ * @returns {string}
+ */
+function censor(str, shownCharsAmt)
+{
+    shownCharsAmt = parseInt(shownCharsAmt);
+    if(isNaN(shownCharsAmt) || shownCharsAmt < 0)
+        shownCharsAmt = 3;
+
+    // needs full censor since string is so short
+    if(str.length <= shownCharsAmt)
+    {
+        let fullCensor = "";
+
+        for(let i = 0; i < str.length; i++)
+            fullCensor += "*";
+
+        return fullCensor;
+    }
+
+    /** Replacement chars */
+    let repl = "";
+
+    for(let i = 0; i < str.length - shownCharsAmt; i++)
+        repl += "*";
+
+    return `${str.substring(0, shownCharsAmt)}${repl}`;
+}
+
 module.exports = {
     printTitle,
     printLines,
     pause,
     pauseFor,
     pauseForMicroS,
+    censor,
 };

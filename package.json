@@ -21,7 +21,6 @@
     "build-mac": "pkg -t node14-macos -o dist/NodeNotifier-MacOS .",
     "login-manager": "node src/tools/login-manager.js",
     "login-mgr": "node src/tools/login-manager.js",
-    "login": "node src/tools/login-manager.js",
     "save": "pm2 save",
     "startup": "pm2 startup",
     "postinstall": "npm i -g pm2"

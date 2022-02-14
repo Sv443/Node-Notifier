@@ -34,12 +34,16 @@ To suggest more, please [open an issue](https://github.com/Sv443/Node-Notifier/i
         - Optionally set whitelisted IPs that don't need to provide auth (make sure they are static IPs so no guest device accidentally gets one assigned!)
         - TODO: Automatic downloading and caching of icon URLs
 - Added dashboard page TODO: that displays Node-Notifier's status and notifications
-    - TODO: Dashboard is password protected
+    - TODO: verify Dashboard is password protected
 - Added pm2 wrapper so the service runs in the background
 - Added config file at `./config.js`
-- Added update checker
+- Added update checker TODO: verify works
     - Update instructions in dashboard
     - Desktop notification if update available
+- Added menus:
+    - Process manager
+    - Notification log
+    - Login manager
 
 
 <br><br>

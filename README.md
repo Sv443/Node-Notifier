@@ -51,7 +51,7 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 6. Enter new login info for the admin user
 7. Now you're in the control panel, from here:
     - Test the notification system by selecting the option `Send test notification`
-    - Open the dashboard by selecting the option `Open dashboard` or opening [`http://127.0.0.1:8042`](http://127.0.0.1:8042/) in your browser
+    - Open the dashboard by selecting the option `Open web dashboard` or opening [`http://127.0.0.1:8042`](http://127.0.0.1:8042/) in your browser
 8. To make use of Node-Notifier, you can now do either of these:
     - Build an [ESP-Notifier](https://github.com/Sv443/ESP-Notifier) and configure it to work together with Node-Notifier
     - Send requests to the server in another way (see [REST API usage](#rest-api-usage))
@@ -68,7 +68,7 @@ After saving, if Node-Notifier is already running, make sure to restart its back
 If this is still not enough, you can follow the [advanced configuration section.](#advanced-configuration)
   
 - If you need to change or delete your password, use the login manager in the control panel.  
-If it's unavailable, you can use the command `npm run login-manager` to open it instead.  
+If it's unavailable, you can use the command `npm run login-mgr` to open it instead.  
   
 - If you need help with anything or just want to chat you can [join my Discord server.](https://dc.sv443.net/)
 
