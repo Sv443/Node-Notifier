@@ -58,17 +58,16 @@ function getCfgTemplate()
     // Update from './config.yml' with the command 'npm run enc-conf'
 
     const template = `\
-        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\
+        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
+        6CHb8Nr32OuI6uIrndaWEIpqRgA=\
     `;
 
     const serEncTempl = template.split(/\n/gm).map(l => l.trim()).join("");
