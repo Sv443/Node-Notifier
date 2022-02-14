@@ -1,18 +1,19 @@
 // Main wrapped entrypoint & control panel
 
 const pm2 = require("pm2");
-const { allOfType, isArrayEmpty, filesystem, mapRange } = require("svcorelib");
+const { allOfType, isArrayEmpty, filesystem, mapRange, Errors } = require("svcorelib");
 const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
 const importFresh = require("import-fresh");
 const { exec } = require("child_process");
 const kleur = require("kleur");
-const { freemem } = require("os");
+const { freemem, networkInterfaces } = require("os");
 
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
+const { CommandError } = require("./error");
 const { printTitle, printLines, pause, pauseFor } = require("./cli");
 const { getDateTimeFrom } = require("./getDateTime");
 const { initDirs, setProperty, getProperty } = require("./files");
@@ -42,6 +43,9 @@ const { exit } = process;
 
 async function init()
 {
+    if(!process.stdin.isTTY)
+        throw new Errors.NoStdinError("Process doesn't have a TTY stdin channel. Please run this process in an interactive terminal.");
+
     console.log(kleur.gray("\nStarting up Node-Notifier..."));
 
     const localEnv = await parseEnvFile();
@@ -83,80 +87,48 @@ async function init()
 
     const firstInstallDone = await getProperty("firstInstallDone");
 
-    if(firstInstallDone !== true)
+    try
     {
-        if(platform() === "win32")
+        if(firstInstallDone !== true)
+            await firstInstall(); // TODO:FIXME: code 1 on 'npm run startup' on Mac
+    }
+    catch(err)
+    {
+        console.error(`\n${kleur.red("Error while running first install:")}\n${err.toString()}`);
+
+        await pause("Press any key to exit...");
+
+        exit(1);
+    }
+
+    return initPm2();
+}
+
+/**
+ * Runs the first install procedure (cross-platform)
+ */
+async function firstInstall()
+{
+    if(platform() === "win32")
+    {
+        // Install pm2-installer on Windows: https://github.com/jessety/pm2-installer
+
+        process.stdout.write("\n");
+
+        if(await isAdmin())
         {
-            // Install pm2-installer on Windows: https://github.com/jessety/pm2-installer
-
-            process.stdout.write("\n");
-
-            if(await isAdmin())
-            {
-                printLines([
-                    "This seems to be your first install of Node-Notifier and this is also a Windows machine.",
-                    "",
-                    "Node-Notifier needs some special setup on Windows devices:",
-                    "It needs to install pm2-installer, which will set up a Windows service that keeps Node-Notifier's background process alive.",
-                    "Without this, the background process will completely exit if you restart your PC and you have to install Node-Notifier again each time."
-                ], 1);
-
-                const { cont } = await prompt({
-                    type: "confirm",
-                    name: "cont",
-                    message: "Do you want to proceed with the installation?",
-                    initial: true,
-                });
-
-                process.stdout.write("\n");
-
-                if(cont)
-                {
-                    await setupWindowsStartup();
-
-                    console.log(kleur.green("\n\npm2-installer was successfully set up.\n"));
-
-                    await setProperty("firstInstallDone", true);
-
-                    await pause("Press any key to continue...");
-                }
-                else
-                {
-                    console.log(kleur.yellow("Skipping installation of pm2-installer."));
-
-                    await pauseFor(2000);
-                }
-            }
-            else
-            {
-                printLines([
-                    "Node-Notifier needs administrator rights when first starting up on Windows.",
-                    "It needs them to set up a service that automatically revives the background process whenever you restart your PC.",
-                    "So please start Node-Notifier again, but with administrator rights."
-                ], 1);
-
-                await pause("Press any key to exit...");
-
-                exit(0);
-            }
-        }
-        else
-        {
-            // startup hook install for Linux & Mac:
-
-            process.stdout.write("\n");
-
             printLines([
-                "This seems to be your first install of Node-Notifier.",
+                "This seems to be your first install of Node-Notifier and this is also a Windows machine.",
                 "",
-                "First up, please create the startup hook to automatically start up the background process whenever your PC restarts.",
-                "You can skip this, but then you'd have to run Node-Notifier manually on each PC restart.",
+                "Node-Notifier needs some special setup on Windows devices:",
+                "It needs to install pm2-installer, which will set up a Windows service that keeps Node-Notifier's background process alive.",
+                "Without this, the background process will completely exit if you restart your PC and you have to install Node-Notifier again each time."
             ], 1);
 
             const { cont } = await prompt({
                 type: "confirm",
                 name: "cont",
-                message: "Do you want to set up the startup hook?",
+                message: "Do you want to proceed with the installation?",
                 initial: true,
             });
 
@@ -164,13 +136,9 @@ async function init()
 
             if(cont)
             {
-                console.log("\nSaving process list (1/2)...");
-                await runCommand("npm run save"); // might need to replace with path to pm2 binary after packaging with pkg
+                await setupWindowsStartup();
 
-                console.log("Creating startup hook (2/2)...");
-                await runCommand("npm run startup");
-
-                console.log(kleur.green("\n\nStartup hook successfully created."));
+                console.log(kleur.green("\n\npm2-installer was successfully set up.\n"));
 
                 await setProperty("firstInstallDone", true);
 
@@ -178,14 +146,69 @@ async function init()
             }
             else
             {
-                console.log(kleur.yellow("Skipping startup hook setup."));
+                console.log(kleur.yellow("Skipping installation of pm2-installer."));
 
-                await pauseFor(1500);
+                await pauseFor(2000);
             }
+        }
+        else
+        {
+            printLines([
+                "Node-Notifier needs administrator rights when first starting up on Windows.",
+                "It needs them to set up a service that automatically revives the background process whenever you restart your PC.",
+                "So please start Node-Notifier again, but with administrator rights."
+            ], 1);
+
+            await pause("Press any key to exit...");
+
+            exit(0);
+        }
+    }
+    else
+    {
+        // startup hook install for Linux & Mac:
+
+        process.stdout.write("\n");
+
+        printLines([
+            "This seems to be your first install of Node-Notifier.",
+            "",
+            "First up, please create the startup hook to automatically start up the background process whenever your PC restarts.",
+            "You can skip this, but then you'd have to run Node-Notifier manually on each PC restart.",
+        ], 1);
+
+        const { cont } = await prompt({
+            type: "confirm",
+            name: "cont",
+            message: "Do you want to set up the startup hook?",
+            initial: true,
+        });
+
+        process.stdout.write("\n");
+
+        if(cont)
+        {
+            console.log("\nSaving process list (1/2)...");
+            await runCommand("npm run save"); // might need to replace with path to pm2 binary after packaging with pkg
+
+            console.log("Creating startup hook (2/2)...");
+            await runCommand("npm run startup");
+
+            console.log(kleur.green("\n\nStartup hook successfully created."));
+
+            await setProperty("firstInstallDone", true);
+
+            await pause("Press any key to continue...");
+        }
+        else
+        {
+            console.log(kleur.yellow("Skipping startup hook setup."));
+
+            await pauseFor(1500);
         }
     }
 
-    return initPm2();
+    return;
 }
 
 //#MARKER pm2 stuff
@@ -309,7 +332,7 @@ function runCommand(command, cwd)
             if(code === 0)
                 return res();
 
-            return rej(code);
+            return rej(typeof code === "number" ? new CommandError(`Command '${command}' exited with code ${code}`) : code);
         });
     });
 }
@@ -420,24 +443,28 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 1
             },
             {
-                title: `Manage PM2 process${kleur.reset("")} ${kleur.gray("[")}${procStatCol(procStat)}${kleur.gray("]")}${kleur.reset("")} >`,
-                value: 2
+                title: "Show connection info",
+                value: 2,
             },
             {
-                title: `Show notification log${kleur.reset("")} >`,
+                title: `Manage PM2 process${kleur.reset("")} ${kleur.gray("[")}${procStatCol(procStat)}${kleur.gray("]")}${kleur.reset("")} >`,
                 value: 3,
             },
             {
-                title: `About Node-Notifier${kleur.reset("")} >`,
+                title: `Show notification log${kleur.reset("")} >`,
                 value: 4,
             },
             {
-                title: `Manage login data${kleur.reset("")} >`,
+                title: `About Node-Notifier${kleur.reset("")} >`,
                 value: 5,
             },
             {
-                title: kleur.yellow("Exit control panel"),
+                title: `Manage login data${kleur.reset("")} >`,
                 value: 6,
+            },
+            {
+                title: kleur.yellow("Exit control panel"),
+                value: 7,
             },
         ]
     });
@@ -508,7 +535,27 @@ async function afterPm2Connected(startupType, err, processes)
 
         return afterPm2Connected("idle", err, processes);
     }
-    case 2: // manage pm2 process
+    case 2: // connection info
+    {
+        process.stdout.write("\n");
+    
+        const { showConnInfo } = await prompt({
+            type: "confirm",
+            name: "showConnInfo",
+            message: `Do you want to show connection info? ${kleur.yellow("This might expose some private information.")}`,
+            initial: false,
+        });
+
+        if(showConnInfo)
+        {
+            console.clear();
+            return showConnectionInfo(processes);
+        }
+        else
+            afterPm2Connected("idle", undefined, processes);
+        break;
+    }
+    case 3: // manage pm2 process
     {
         try
         {
@@ -522,21 +569,21 @@ async function afterPm2Connected(startupType, err, processes)
         }
         break;
     }
-    case 3: // notification log
+    case 4: // notification log
     {
         console.clear();
 
         notificationLog(processes);
         break;
     }
-    case 4: // about
+    case 5: // about
     {
         console.clear();
 
         printAbout(processes);
         break;
     }
-    case 5: // login mgr
+    case 6: // login mgr
     {
         process.stdout.write("\n");
     
@@ -557,10 +604,53 @@ async function afterPm2Connected(startupType, err, processes)
 
         break;
     }
-    case 6: // exit
+    case 7: // exit
     default:
         exit(0);
     }
+}
+
+//#SECTION connection info
+
+/**
+ * Shows some info about Node-Notifier's connection(s)
+ * @param {Proc} processes
+ */
+async function showConnectionInfo(processes)
+{
+    printTitle("Connection Info", "This is Node-Notifier's connection info, needed to set up a new connection.");
+
+    const ip = getLocalIP();
+
+    printLines([
+        kleur.blue("Server info:"),
+        `IP address: ${ip ?? kleur.yellow("Unknown, please look up your local IP in your OS")}`,
+        `TCP port:   ${cfg.server.port}`
+    ], 2);
+
+    await pause("Press any key to return to the main menu...");
+
+    return afterPm2Connected("idle", undefined, processes);
+}
+
+/**
+ * Tries to return the system's local IP address, else returns null
+ * @returns {string|null}
+ */
+function getLocalIP()
+{
+    const interfaces = Object.values(networkInterfaces());
+
+    for(const intf of interfaces)
+    {
+        for(const alias of intf)
+        {
+            if(alias.family === "IPv4" && alias.address !== "127.0.0.1" && !alias.internal)
+                return alias.address;
+        }
+    }
+
+    return null;
 }
 
 //#SECTION about
