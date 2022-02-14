@@ -9,7 +9,7 @@ const { cfg } = require("./config");
 function getAxiosCfg()
 {
     const proxyCfg = cfg.server.proxy;
-    const proxyNeedsAuth = proxyCfg.user.length && proxyCfg.user.length > 0;
+    const proxyNeedsAuth = typeof proxyCfg.user === "string" && proxyCfg.user.length > 0;
 
     return proxyCfg.enabled ? {
         proxy: {
