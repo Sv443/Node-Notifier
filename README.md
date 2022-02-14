@@ -31,6 +31,7 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
     - [Advanced configuration](#advanced-configuration)
 - **[REST API usage](#rest-api-usage)**
     - [Sending a notification](#sending-a-notification)
+- [Troubleshooting (help something broke)](#troubleshooting)
 - [Disclaimers](#disclaimers)
 - [Dependencies](#dependencies)
 
@@ -44,7 +45,7 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 2. Clone or download and extract this repo
 3. Open a terminal in the project directory
 4. Install dependencies with the command `npm i`
-    - Optionally install [pm2](https://npmjs.com/package/pm2) if you want to enable autostart, monitoring, etc. (to install run `npm i -g pm2`)
+    - This also installs [pm2](https://npmjs.com/package/pm2) globally. It enables autostart on reboot, monitoring, etc.
 5. Start Node-Notifier with `npm start`
     - To start it without being wrapped by pm2 (not recommended for normal use) you can use the command `npm run debug`
 6. Enter new login info for the admin user
@@ -243,6 +244,63 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 
 <br><br><br>
 
+## Troubleshooting:
+You can try these troubleshooting steps if something doesn't work:
+
+<br>
+
+- Clear cache files
+    > If you encounter issues using icon URLs (like the image being outdated) you can clear Node-Notifier's cache files:
+    >   
+    > Within the main directory which contains the package.json file, there should be a folder called `.notifier`  
+    > (If you can't see it, your OS has hidden it by default. Please look up how to show hidden files and folders for your operating system and follow those steps.)  
+    > This folder may contain the file `cache_manifest.json`, which you can delete to make Node-Notifier re-fetch all images.
+
+<br>
+
+- Reset the `config.yml` file
+    > This config file contains values that you can tweak to configure Node-Notifier to your liking.  
+    > If you need to reset it to its default values, just delete it. Even while Node-Notifier is running, it should automatically be regenerated after a second. If not, restart Node-Notifier.  
+    > To permanently delete this file, you need to stop or delete the background process and exit the control panel, then try deleting again.
+
+<br>
+
+- Not autostarting after reboot
+    > This could mean the pm2-installer Windows service or the systemd (or equivalent) hook on other OSes somehow didn't get registered.  
+    > To fix this, make sure Node-Notifier is running and then, in a terminal without admin rights, run the commands `pm2 save` and `pm2 startup`
+
+<br>
+
+- Reinstall the background process
+    > If the background process constantly shows its status as `errored` or `stopped` or is otherwise acting up, first try reading the background process log.  
+    > To do this, grab the ID or name of the process in the "Manage PM2 process" menu and then run the command `pm2 logs id_or_name_here` in a terminal without admin rights.  
+    >   
+    > If the logs are inconclusive or you just want to try the good old "did you turn it off and back on again", do this:  
+    >   
+    > 1. Open Node-Notifier with `npm start`
+    > 2. In the control panel, navigate to the "Manage PM2 process" menu
+    > 3. Select "Delete process" and confirm with <kbd>Y</kbd>  
+    >     Don't be scared, this process will **not** delete any data, it just reinstalls the pm2 process
+    > 4. After it's finished...
+    >     - If you're on Windows you need to exit your current terminal and start a new one with admin permissions (<kbd>WinKey</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Return</kbd>).  
+    >         Now enter `npm start` and follow the prompts until you exit. Now go back to a normal terminal without admin permissions and enter `npm start` again.
+    >     - On other operating systems, just enter `npm start` and you should be prompted to install
+
+<br>
+
+- Kill the pm2 daemon
+    > If nothing else worked or you are getting the error `connect EPERM //./pipe/rpc.sock`, you can try these steps:  
+    >   
+    > 1. On Windows, open a terminal with administrator rights (<kbd>WinKey</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Return</kbd>).  
+    >    On Linux and MacOS sudo or root usually isn't needed for this.  
+    > 2. Navigate to the Node-Notifier folder which contains the package.json file with `cd path_here`
+    > 3. Now enter the command `npm run fix`
+    > 4. To correctly start up Node-Notifier again **it's important you exit the admin terminal if you're on Windows** and always use a normal terminal from now on, unless you are prompted for it.
+
+
+<br><br><br>
+
+
 ## Disclaimers:
 - The current version of Node-Notifier only supports HTTP.  
     Usually this is fine as long as all devices are part of the same network.  
@@ -253,12 +311,15 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 - This software is provided "as is", without any warranty or liability.  
     If you notice something wrong, please [submit an issue](https://github.com/Sv443/Node-Notifier/issues/new/choose) and I'll try my best to take care of it.
 
+
 <br><br>
+
 
 ## Dependencies:
 Node-Notifier wouldn't be possible without these libraries:
 - [axios](https://npmjs.com/package/axios)
 - [dotenv](https://npmjs.com/package/dotenv)
+- [eslint](https://npmjs.com/package/eslint)
 - [express](https://npmjs.com/package/express)
 - [fs-extra](https://npmjs.com/package/fs-extra)
 - [import-fresh](https://npmjs.com/package/import-fresh)
@@ -270,12 +331,14 @@ Node-Notifier wouldn't be possible without these libraries:
 - [pm2](https://npmjs.com/package/pm2)
 - [prompts](https://npmjs.com/package/prompts)
 - [request-ip](https://npmjs.com/package/request-ip)
+- [snyk](https://npmjs.com/package/snyk)
 - [svcorelib](https://npmjs.com/package/svcorelib)
 - [tcp-port-used](https://npmjs.com/package/tcp-port-used)
 - [yaml](https://npmjs.com/package/yaml)
 
 
 <br><br>
+
 
 <div style="text-align:center;" align="center">
 
