@@ -91,6 +91,23 @@ async function init()
     {
         if(firstInstallDone !== true)
             await firstInstall(); // TODO:FIXME: code 1 on 'npm run startup' on Mac
+
+        if(platform() === "win32" && await isAdmin())
+        {
+            // running as admin in Windows even though pm2-installer is already installed is not allowed because it
+            // causes an 'Error: connect EPERM //./pipe/rpc.sock' due to pm2's files being owned by the admin account or some bs like that
+
+            printLines([
+                "Node-Notifier can't be started as an admin in Windows.",
+                "This is because spawning or connecting to the pm2 background process somehow causes issues with trying to access",
+                "files owned by the admin account.",
+                "Please restart your terminal without admin privileges.",
+            ], 2);
+
+            await pause("Press any key to exit...");
+
+            exit(0);
+        }
     }
     catch(err)
     {
@@ -138,11 +155,17 @@ async function firstInstall()
             {
                 await setupWindowsStartup();
 
-                console.log(kleur.green("\n\npm2-installer was successfully set up.\n"));
+                printLines([
+                    "\n",
+                    kleur.green("pm2-installer was successfully set up."),
+                    kleur.yellow("Please now switch out of the administrator terminal into a normal one."),
+                ]);
 
                 await setProperty("firstInstallDone", true);
 
-                await pause("Press any key to continue...");
+                await pause("Please any key to exit...");
+
+                exit(0);
             }
             else
             {

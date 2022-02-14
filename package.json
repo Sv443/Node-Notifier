@@ -14,6 +14,7 @@
     "debug": "node src/main",
     "test": "snyk test",
     "enc-conf": "node src/tools/encode-config.js",
+    "fix": "pm2 kill",
     "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
     "build-linux": "pkg -t node14-linux -o dist/NodeNotifier-Linux .",
@@ -22,7 +23,8 @@
     "login-mgr": "node src/tools/login-manager.js",
     "login": "node src/tools/login-manager.js",
     "save": "pm2 save",
-    "startup": "pm2 startup"
+    "startup": "pm2 startup",
+    "postinstall": "npm i -g pm2"
   },
   "author": {
     "name": "Sv443",
