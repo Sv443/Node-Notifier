@@ -245,33 +245,36 @@ If the client and server are running on the same device, you can use `127.0.0.1`
 <br><br><br>
 
 ## Troubleshooting:
-You can try these troubleshooting steps if something doesn't work:
+You can try these troubleshooting steps if something doesn't work.  
+Note that all commands listed here need to be run in the same directory Node-Notifier's package.json file is in.  
+  
+If this still didn't help you, feel free to [contact me.](https://sv443.net)  
 
 <br>
 
-- Clear cache files
-    > If you encounter issues using icon URLs (like the image being outdated) you can clear Node-Notifier's cache files:
-    >   
+- **Clear cache files**
+    > If you encounter issues using icon URLs (like the image being outdated) you can clear Node-Notifier's cache files:  
     > Within the main directory which contains the package.json file, there should be a folder called `.notifier`  
     > (If you can't see it, your OS has hidden it by default. Please look up how to show hidden files and folders for your operating system and follow those steps.)  
-    > This folder may contain the file `cache_manifest.json`, which you can delete to make Node-Notifier re-fetch all images.
+    > This folder may contain the file `cache_manifest.json`, which you can delete to make Node-Notifier re-fetch all icons before they are used the next time.
 
 <br>
 
-- Reset the `config.yml` file
+- **Reset the `config.yml` file**
     > This config file contains values that you can tweak to configure Node-Notifier to your liking.  
     > If you need to reset it to its default values, just delete it. Even while Node-Notifier is running, it should automatically be regenerated after a second. If not, restart Node-Notifier.  
     > To permanently delete this file, you need to stop or delete the background process and exit the control panel, then try deleting again.
 
 <br>
 
-- Not autostarting after reboot
+- **Not autostarting after reboot**
     > This could mean the pm2-installer Windows service or the systemd (or equivalent) hook on other OSes somehow didn't get registered.  
-    > To fix this, make sure Node-Notifier is running and then, in a terminal without admin rights, run the commands `pm2 save` and `pm2 startup`
+    > To fix this, make sure Node-Notifier is running and then, in a terminal without admin rights, run the commands `pm2 save` and `pm2 startup`  
+    > If the `pm2` command isn't recognized, install it with `npm i -g pm2`
 
 <br>
 
-- Reinstall the background process
+- **Reinstall the background process**
     > If the background process constantly shows its status as `errored` or `stopped` or is otherwise acting up, first try reading the background process log.  
     > To do this, grab the ID or name of the process in the "Manage PM2 process" menu and then run the command `pm2 logs id_or_name_here` in a terminal without admin rights.  
     >   
@@ -280,22 +283,21 @@ You can try these troubleshooting steps if something doesn't work:
     > 1. Open Node-Notifier with `npm start`
     > 2. In the control panel, navigate to the "Manage PM2 process" menu
     > 3. Select "Delete process" and confirm with <kbd>Y</kbd>  
-    >     Don't be scared, this process will **not** delete any data, it just reinstalls the pm2 process
-    > 4. After it's finished...
-    >     - If you're on Windows you need to exit your current terminal and start a new one with admin permissions (<kbd>WinKey</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Return</kbd>).  
-    >         Now enter `npm start` and follow the prompts until you exit. Now go back to a normal terminal without admin permissions and enter `npm start` again.
-    >     - On other operating systems, just enter `npm start` and you should be prompted to install
+    >     Don't be scared, doing this will **not** delete any data, it just uninstalls the background process
+    > 4. After it's finished:
+    >     - If you're on Windows you need to exit your current terminal and start a new one with admin permissions (<kbd>Windows</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>).  
+    >         Now enter `npm start` and follow the prompts until the process exits. Now go back to a normal terminal without admin permissions and enter `npm start` again.
+    >     - On other operating systems, just enter `npm start` and you should be prompted to install.
 
 <br>
 
-- Kill the pm2 daemon
+- **Kill the pm2 daemon**
     > If nothing else worked or you are getting the error `connect EPERM //./pipe/rpc.sock`, you can try these steps:  
     >   
-    > 1. On Windows, open a terminal with administrator rights (<kbd>WinKey</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Return</kbd>).  
-    >    On Linux and MacOS sudo or root usually isn't needed for this.  
-    > 2. Navigate to the Node-Notifier folder which contains the package.json file with `cd path_here`
-    > 3. Now enter the command `npm run fix`
-    > 4. To correctly start up Node-Notifier again **it's important you exit the admin terminal if you're on Windows** and always use a normal terminal from now on, unless you are prompted for it.
+    > 1. On Windows, open a terminal with administrator rights (<kbd>Windows</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>).  
+    >    On Linux and MacOS sudo or root usually isn't needed for this.
+    > 2. Now enter the command `npm run fix`
+    > 3. To correctly start up Node-Notifier again **it's important you exit the admin terminal if you're on Windows** and always use a normal terminal from now on, unless you are prompted for it.
 
 
 <br><br><br>
@@ -309,14 +311,15 @@ You can try these troubleshooting steps if something doesn't work:
     If I feel like it and there's demand, I might add HTTPS support in the future.
 
 - This software is provided "as is", without any warranty or liability.  
-    If you notice something wrong, please [submit an issue](https://github.com/Sv443/Node-Notifier/issues/new/choose) and I'll try my best to take care of it.
+    If you notice something wrong, please [submit an issue](https://github.com/Sv443/Node-Notifier/issues/new/choose) and I'll try my best to take care of it.  
+    If you found a security vulnerability, please [contact me directly.](https://sv443.net/)
 
 
 <br><br>
 
 
 ## Dependencies:
-Node-Notifier wouldn't have been possible without these dependencies:
+Node-Notifier wouldn't be possible without these awesome projects:
 - [axios](https://npmjs.com/package/axios)
 - [dotenv](https://npmjs.com/package/dotenv)
 - [eslint](https://npmjs.com/package/eslint)
