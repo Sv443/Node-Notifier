@@ -316,7 +316,7 @@ You can try these troubleshooting steps if something doesn't work:
 
 
 ## Dependencies:
-Node-Notifier wouldn't be possible without these libraries:
+Node-Notifier wouldn't have been possible without these dependencies:
 - [axios](https://npmjs.com/package/axios)
 - [dotenv](https://npmjs.com/package/dotenv)
 - [eslint](https://npmjs.com/package/eslint)
@@ -329,6 +329,7 @@ Node-Notifier wouldn't be possible without these libraries:
 - [node-watch](https://npmjs.com/package/node-watch)
 - [open](https://npmjs.com/package/open)
 - [pm2](https://npmjs.com/package/pm2)
+- [pm2-installer](https://github.com/jessety/pm2-installer)
 - [prompts](https://npmjs.com/package/prompts)
 - [request-ip](https://npmjs.com/package/request-ip)
 - [snyk](https://npmjs.com/package/snyk)
