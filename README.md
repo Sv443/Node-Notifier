@@ -15,7 +15,7 @@ Intended to be used together with [ESP-Notifier](https://github.com/Sv443/ESP-No
 
 ## Video Showcase:
 
-[![TODO: image preview of video, click to open video in new tab](./.github/assets/video_showcase.png)](https://youtu.be/)
+[![video showcase (click to watch)](./.github/video_thumb.png)](https://youtu.be/)
 
 </div>
 
