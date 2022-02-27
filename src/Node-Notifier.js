@@ -6,8 +6,7 @@ const { resolve } = require("path");
 const open = require("open");
 const prompt = require("prompts");
 const importFresh = require("import-fresh");
-const { exec } = require("child_process");
-const kleur = require("kleur");
+const k = require("kleur");
 const { networkInterfaces, totalmem } = require("os");
 const { readFile, rm } = require("fs-extra");
 const { platform } = require("os");
@@ -16,8 +15,7 @@ const { createConnection } = require("net");
 const { parseEnvFile, writeEnvFile, promptNewLogin } = require("./login");
 const sendNotification = require("./sendNotification");
 const error = require("./error");
-const { CommandError } = require("./error");
-const { printTitle, printLines, pause, pauseFor, censor } = require("./cli");
+const { printTitle, printLines, pause, pauseFor, censor, runCommand } = require("./cli");
 const { getDateTimeFrom } = require("./getDateTime");
 const { initDirs, setProperty, getProperty } = require("./files");
 
@@ -40,6 +38,8 @@ const settings = require("./settings");
 
 
 const { exit } = process;
+// fuck Windows, I hate this so much
+const npmCmd = platform() === "win32" ? "npm.cmd" : "npm";
 
 
 async function init()
@@ -47,7 +47,7 @@ async function init()
     if(!process.stdin.isTTY)
         throw new Errors.NoStdinError("Process doesn't have a TTY stdin channel. Please run this process in an interactive terminal.");
 
-    console.log(kleur.gray("\nStarting up Node-Notifier..."));
+    console.log(k.gray("\nStarting up Node-Notifier..."));
 
     const localEnv = await parseEnvFile();
 
@@ -81,7 +81,7 @@ async function init()
             await writeEnvFile(localEnv);
         else
         {
-            console.log(kleur.red("\nCan't continue without admin user, exiting.\n"));
+            console.log(k.red("\nCan't continue without admin user, exiting.\n"));
             return exit(0);
         }
     }
@@ -112,7 +112,7 @@ async function init()
     }
     catch(err)
     {
-        console.error(`\n${kleur.red("Error while running first install:")}\n${err.toString()}`);
+        console.error(`\n${k.red("Error while running first install:")}\n${err.toString()}`);
 
         await pause("Press any key to exit...");
 
@@ -120,6 +120,17 @@ async function init()
     }
 
     return initPm2();
+}
+
+/**
+ * Default `runCommand()` message handler
+ * @param {string} msg
+ */
+function onCommandMessage(msg)
+{
+    const out = msg.replace(/\r{0,1}\n$/gm, "").replace(/(\r{0,1}\n){2,}/gm, "");
+
+    out.length > 0 && console.log(out.replace(/^/gm, k.gray("│ ")));
 }
 
 /**
@@ -158,8 +169,8 @@ async function firstInstall()
 
                 printLines([
                     "\n",
-                    kleur.green("pm2-installer was successfully set up."),
-                    kleur.yellow("Please now switch out of the administrator terminal into a normal one."),
+                    k.green("pm2-installer was successfully set up."),
+                    k.yellow("Please now switch out of the administrator terminal into a normal one."),
                 ], 1);
 
                 await setProperty("firstInstallDone", true);
@@ -170,7 +181,7 @@ async function firstInstall()
             }
             else
             {
-                console.log(kleur.yellow("Skipping installation of pm2-installer."));
+                console.log(k.yellow("Skipping installation of pm2-installer."));
 
                 await pauseFor(2000);
             }
@@ -213,12 +224,12 @@ async function firstInstall()
         if(cont)
         {
             console.log("\nSaving process list (1/2)...");
-            await runCommand("npm run save"); // might need to replace with path to pm2 binary after packaging with pkg
+            await runCommand(npmCmd, [ "run", "save" ], undefined, onCommandMessage); // might need to replace with path to pm2 binary after packaging with pkg
 
             console.log("Creating startup hook (2/2)...");
-            await runCommand("npm run startup");
+            await runCommand(npmCmd, [ "run", "startup" ], undefined, onCommandMessage);
 
-            console.log(kleur.green("\n\nStartup hook successfully created."));
+            console.log(k.green("\n\nStartup hook successfully created."));
 
             await setProperty("firstInstallDone", true);
 
@@ -226,7 +237,7 @@ async function firstInstall()
         }
         else
         {
-            console.log(kleur.yellow("Skipping startup hook setup."));
+            console.log(k.yellow("Skipping startup hook setup."));
 
             await pauseFor(1500);
         }
@@ -287,18 +298,18 @@ function setupWindowsStartup()
     return new Promise(async (res, rej) => {
         try
         {
-            const pm2InstPath = "./pm2-installer/";
+            const pm2InstPath = resolve("./pm2-installer/");
 
             console.log("\nInstalling pm2-installer (this could take a while)...\n");
 
-            console.log("Configuring pm2-installer (1/3)...");
-            await runCommand("npm run configure", pm2InstPath);
+            console.log(k.blue("\n\nConfiguring pm2-installer") + " (1/3)");
+            await runCommand(npmCmd, [ "run", "configure" ], pm2InstPath, onCommandMessage);
 
-            console.log("Configuring PowerShell policy (2/3)...");
-            await runCommand("npm run configure-policy", pm2InstPath);
+            console.log(k.blue("\n\nConfiguring PowerShell policy") + " (2/3)");
+            await runCommand(npmCmd, [ "run", "configure-policy" ], pm2InstPath, onCommandMessage);
 
-            console.log("Setting up pm2-installer (3/3)...");
-            await runCommand("npm run setup", pm2InstPath);
+            console.log(k.blue("\n\nSetting up pm2-installer") + " (3/3)");
+            await runCommand(npmCmd, [ "run", "setup" ], pm2InstPath, onCommandMessage);
 
             return res();
         }
@@ -321,11 +332,11 @@ function removeWindowsStartup(firstStep = 1, maxSteps = 2)
         {
             const pm2InstPath = "./pm2-installer/";
 
-            console.log(`Reverting pm2-installer configuration (${firstStep}/${maxSteps})...`);
-            await runCommand("npm run deconfigure", pm2InstPath);
+            console.log(`${k.blue("Reverting pm2-installer configuration")} (${firstStep}/${maxSteps})...`);
+            await runCommand(npmCmd, [ "run", "deconfigure" ], pm2InstPath, onCommandMessage);
 
-            console.log(`Removing pm2-installer (${firstStep + 1}/${maxSteps})...`);
-            await runCommand("npm run remove", pm2InstPath);
+            console.log(`${k.blue("Removing pm2-installer")} (${firstStep + 1}/${maxSteps})...`);
+            await runCommand(npmCmd, [ "run", "remove" ], pm2InstPath, onCommandMessage);
 
             return res();
         }
@@ -333,31 +344,6 @@ function removeWindowsStartup(firstStep = 1, maxSteps = 2)
         {
             return rej(err);
         }
-    });
-}
-
-/**
- * Runs a shell command. Resolves void if exit code = 0, else rejects with an error or the exit code.
- * @param {string} command
- * @param {string} [cwd]
- * @returns {Promise<void, (Error | number)>}
- */
-function runCommand(command, cwd)
-{
-    return new Promise(async (res, rej) => {
-        const cp = exec(command, {
-            ...(cwd ? { cwd } : {}),
-            windowsHide: true,
-        }, (err) => {
-            err && rej(err);
-        });
-
-        cp.on("exit", (code) => {
-            if(code === 0)
-                return res();
-
-            return rej(typeof code === "number" ? new CommandError(`Command '${command}' exited with code ${code}`) : code);
-        });
     });
 }
 
@@ -398,7 +384,7 @@ function isAdmin()
 
         try
         {
-            await runCommand(`fsutil dirty query ${process.env.systemdrive}`);
+            await runCommand("fsutil", [ "dirty", "query", process.env.systemdrive ]);
             return res(true);
         }
         catch(err)
@@ -407,7 +393,7 @@ function isAdmin()
             {
                 try
                 {
-                    await runCommand("fltmc");
+                    await runCommand("fltmc", [], m => onCommandMessage(m, "check_admin_fallback"));
                     return res(true);
                 }
                 catch(err)
@@ -451,7 +437,7 @@ async function afterPm2Connected(startupType, err, processes)
     printTitle("Node-Notifier - Control Panel", "Use this menu to manage Node-Notifier");
 
     const procStat = proc.status;
-    const procStatCol = procStat === "online" ? kleur.green : (procStat === "stopped" ? kleur.red : kleur.yellow);
+    const procStatCol = procStat === "online" ? k.green : (procStat === "stopped" ? k.red : k.yellow);
 
     const { optIndex } = await prompt({
         type: "select",
@@ -459,7 +445,7 @@ async function afterPm2Connected(startupType, err, processes)
         name: "optIndex",
         choices: [
             {
-                title: `Open web dashboard${kleur.reset("")} ↗`,
+                title: `Open web dashboard${k.reset("")} ↗`,
                 value: 0
             },
             {
@@ -471,23 +457,23 @@ async function afterPm2Connected(startupType, err, processes)
                 value: 2,
             },
             {
-                title: `Manage PM2 process${kleur.reset("")} ${kleur.gray("[")}${procStatCol(procStat)}${kleur.gray("]")}${kleur.reset("")} >`,
+                title: `Manage PM2 process${k.reset("")} ${k.gray("[")}${procStatCol(procStat)}${k.gray("]")}${k.reset("")} >`,
                 value: 3,
             },
             {
-                title: `Show notification log${kleur.reset("")} >`,
+                title: `Show notification log${k.reset("")} >`,
                 value: 4,
             },
             {
-                title: `About Node-Notifier${kleur.reset("")} >`,
+                title: `About Node-Notifier${k.reset("")} >`,
                 value: 5,
             },
             {
-                title: `Manage login data${kleur.reset("")} >`,
+                title: `Manage login data${k.reset("")} >`,
                 value: 6,
             },
             {
-                title: kleur.yellow("Exit control panel"),
+                title: k.yellow("Exit control panel"),
                 value: 7,
             },
         ]
@@ -513,7 +499,7 @@ async function afterPm2Connected(startupType, err, processes)
 
         await pauseFor(300);
 
-        console.log(`Sent notification and waiting for response ${kleur.cyan("(click or close it)")}\n`);
+        console.log(`Sent notification and waiting for response ${k.cyan("(click or close it)")}\n`);
 
         let testNotifD = new Date().getTime();
 
@@ -533,7 +519,7 @@ async function afterPm2Connected(startupType, err, processes)
 
             const osName = plat === "win32" ? "Windows" : (plat === "darwin" ? "MacOS" : "Your OS");
 
-            const lns = [ kleur.yellow(`Notification timed out. ${osName} might have blocked the notification or you just ignored it.\n`) ];
+            const lns = [ k.yellow(`Notification timed out. ${osName} might have blocked the notification or you just ignored it.\n`) ];
 
             if(plat === "win32")
             {
@@ -550,8 +536,8 @@ async function afterPm2Connected(startupType, err, processes)
         else
         {
             printLines([
-                kleur.green("Successfully sent desktop notification.\n"),
-                kleur.gray(`(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)`),
+                k.green("Successfully sent desktop notification.\n"),
+                k.gray(`(Time until interaction: ${((new Date().getTime() - testNotifD) / 1000).toFixed(1)}s)`),
             ]);
         }
 
@@ -566,7 +552,7 @@ async function afterPm2Connected(startupType, err, processes)
         const { showInfo } = await prompt({
             type: "confirm",
             name: "showInfo",
-            message: `Do you really want to show your connection info? ${kleur.yellow("This might expose some private data.")}`,
+            message: `Do you really want to show your connection info? ${k.yellow("This might expose some private data.")}`,
             initial: true,
         });
 
@@ -645,13 +631,13 @@ async function showConnectionInfo(processes)
     const ip = await getLocalIP();
 
     const lns = [
-        kleur.blue("Server info:"),
-        `│ IP address:  ${ip ?? kleur.yellow("Unknown, please look up your local IP in your OS")}`,
+        k.blue("Server info:"),
+        `│ IP address:  ${ip ?? k.yellow("Unknown, please look up your local IP in your OS")}`,
         `│ Port (TCP):  ${cfg.server.port}`,
         `│ Local URL:   http://${ip ?? "ip_of_this_device_here"}:${cfg.server.port}`,
         `│ Timeout:     ${cfg.server.timeout}s`,
         "│",
-        `│ Basic auth (admin login) ${cfg.server.requireAuthentication ? kleur.green("enabled") : kleur.yellow("disabled in the config")}`,
+        `│ Basic auth (admin login) ${cfg.server.requireAuthentication ? k.green("enabled") : k.yellow("disabled in the config")}`,
     ];
 
     const proxyAuth = typeof cfg.server.proxy.user === "string" && cfg.server.proxy.user.length > 0;
@@ -741,19 +727,19 @@ async function printAbout(processes)
         message: "Choose what to do",
         choices: [
             {
-                title: `Open GitHub repo${kleur.reset("")} ↗`,
+                title: `Open GitHub repo${k.reset("")} ↗`,
                 value: 0
             },
             {
-                title: `Submit an issue${kleur.reset("")} ↗`,
+                title: `Submit an issue${k.reset("")} ↗`,
                 value: 1
             },
             {
-                title: `Support development${kleur.reset("")} ↗`,
+                title: `Support development${k.reset("")} ↗`,
                 value: 2
             },
             {
-                title: kleur.yellow("Back to main menu"),
+                title: k.yellow("Back to main menu"),
                 value: 3
             }
         ]
@@ -780,7 +766,7 @@ async function printAbout(processes)
         {
             open(openLink);
 
-            console.log(kleur.green("\nOpened the link in your browser."));
+            console.log(k.green("\nOpened the link in your browser."));
 
             setTimeout(() => printAbout(processes), 3000);
         }
@@ -809,7 +795,7 @@ function manageProcessPrompt(proc)
     return new Promise(async (res, rej) => {
         try
         {
-            console.log(kleur.gray("Loading process info..."));
+            console.log(k.gray("Loading process info..."));
 
             await pauseFor(100);
 
@@ -826,10 +812,10 @@ function manageProcessPrompt(proc)
             const prDesc = await descProc();
 
             const statColMap = {
-                "online": kleur.green,
-                "launching": kleur.blue,
-                "stopped": kleur.red,
-                "crashed": kleur.magenta,
+                "online": k.green,
+                "launching": k.blue,
+                "stopped": k.red,
+                "crashed": k.magenta,
             };
 
             const statusCol = st => statColMap[st](st);
@@ -844,18 +830,18 @@ function manageProcessPrompt(proc)
             const ramUsage = parseFloat(mapRange(pr.monit.memory, 0, totalmem(), 0, 100).toFixed(2));
             const ramUsageMiB = pr.monit.memory / 1.049e+6;
 
-            const ramCol = ramUsageMiB < 75 ? kleur.green : (ramUsageMiB < 150 ? kleur.yellow : kleur.red);
+            const ramCol = ramUsageMiB < 75 ? k.green : (ramUsageMiB < 150 ? k.yellow : k.red);
 
             printLines([
-                kleur.blue("Background process info:"),
-                `│ Name:    ${kleur.yellow(pr.name)} ${kleur.gray(`[ID: ${kleur.yellow(pr.pm_id)}]`)}`,
+                k.blue("Background process info:"),
+                `│ Name:    ${k.yellow(pr.name)} ${k.gray(`[ID: ${k.yellow(pr.pm_id)}]`)}`,
                 `│ Status:  ${statusCol((pr.status || prDesc.status || "online") !== "online" ? pr.status : stat)}`,
-                `│ Memory:  ${stat === "online" ? ramCol(`${ramUsage}%`) : kleur.gray("0%")}${stat === "online" ? kleur.gray(` (${ramUsageMiB.toFixed(1)} MiB)`) : ""}`,
+                `│ Memory:  ${stat === "online" ? ramCol(`${ramUsage}%`) : k.gray("0%")}${stat === "online" ? k.gray(` (${ramUsageMiB.toFixed(1)} MiB)`) : ""}`,
                 `│ PWD:     ${(pr.env ?? pr.pm2_env)?.PWD ?? `most likely ${process.cwd()}`}`,
             ]);
 
             printLines([
-                kleur.blue("\nPM2 commands:"),
+                k.blue("\nPM2 commands:"),
                 "│ To list all processes use the command 'pm2 ls'",
                 `│ To monitor Node-Notifier and see some miscellaneous stats use 'pm2 monit' or 'pm2 desc ${pr.name || pr.pm_id }'`,
                 `│ To view the console output of the background process use 'pm2 logs ${settings.pm2.name}'\n\n`,
@@ -866,22 +852,22 @@ function manageProcessPrompt(proc)
             if(stat === "online")
             {
                 choices.push({
-                    title: `Restart process${kleur.reset("")} ${kleur.yellow("↻")}`,
+                    title: `Restart process${k.reset("")} ${k.yellow("↻")}`,
                     value: 0,
                 });
             }
 
             [
                 {
-                    title: stat === "online" ? `Stop process${kleur.reset("")} ${kleur.red("ϴ")}` : `Start process${kleur.reset("")} ${kleur.green("►")}`,
+                    title: stat === "online" ? `Stop process${k.reset("")} ${k.red("ϴ")}` : `Start process${k.reset("")} ${k.green("►")}`,
                     value: 1,
                 },
                 {
-                    title: `Delete process${kleur.reset("")} ${kleur.magenta("X")}`,
+                    title: `Delete process${k.reset("")} ${k.magenta("X")}`,
                     value: 2,
                 },
                 {
-                    title: kleur.yellow("Back to main menu"),
+                    title: k.yellow("Back to main menu"),
                     value: 3,
                 },
             ].forEach(ch => choices.push(ch));
@@ -903,7 +889,7 @@ function manageProcessPrompt(proc)
                     if(Array.isArray(newProc))
                         newProc = newProc[0];
 
-                    console.log(kleur.green(`\nSuccessfully restarted process '${newProc.name}'\n`));
+                    console.log(k.green(`\nSuccessfully restarted process '${newProc.name}'\n`));
 
                     setTimeout(() => {
                         manageProcessPrompt(newProc || proc);
@@ -920,7 +906,7 @@ function manageProcessPrompt(proc)
                         if(Array.isArray(newProc))
                             newProc = newProc[0];
 
-                        console.log(kleur.yellow(`\nSuccessfully stopped process '${newProc.name}'\n`));
+                        console.log(k.yellow(`\nSuccessfully stopped process '${newProc.name}'\n`));
 
                         setTimeout(() => {
                             manageProcessPrompt(newProc || proc);
@@ -929,7 +915,7 @@ function manageProcessPrompt(proc)
                 }
                 else
                 {
-                    console.log(kleur.green("\nStarting process..."));
+                    console.log(k.green("\nStarting process..."));
 
                     await pauseFor(1000);
 
@@ -972,7 +958,7 @@ function manageProcessPrompt(proc)
 
                             await setProperty("firstInstallDone", false);
 
-                            console.log(kleur.red("\nSuccessfully deleted the process.\n"));
+                            console.log(k.red("\nSuccessfully deleted the process.\n"));
 
                             await pause("Press any key to exit...");
 
@@ -981,7 +967,7 @@ function manageProcessPrompt(proc)
                     }
                     else
                     {
-                        console.log(kleur.yellow("\n\nNot deleting process.\n"));
+                        console.log(k.yellow("\n\nNot deleting process.\n"));
 
                         await pause("Press any key to go back to the main menu...");
 
@@ -1050,7 +1036,7 @@ async function notificationLog(procs, page, notifsPerPage)
         notifsPerPage = notifications.length;
 
 
-    const pipe = kleur.gray("│");
+    const pipe = k.gray("│");
 
     /**
      * @param {LogNotificationObj} notif
@@ -1069,7 +1055,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(notif.wait === true)
             notifLines.push(`${pipe} Waited for interaction: yes`);
 
-        notifLines.push(`#${idx + 1} ${kleur.gray(`• [${getDateTimeFrom(notif.timestamp, true)}]`)}`);
+        notifLines.push(`#${idx + 1} ${k.gray(`• [${getDateTimeFrom(notif.timestamp, true)}]`)}`);
 
         return notifLines.join("\n");
     };
@@ -1080,11 +1066,11 @@ async function notificationLog(procs, page, notifsPerPage)
         return notificationLog(procs, maxPage, notifsPerPage);
 
     const printPageLine = (short) => {
-        const pageTxt = `${kleur.cyan().underline(page + 1)} of ${maxPage + 1}`;
+        const pageTxt = `${k.cyan().underline(page + 1)} of ${maxPage + 1}`;
         if(short)
-            console.log(`Page [${pageTxt}] ${kleur.gray("• Timestamp format: [yyyy/mm/dd - hh:mm:ss.ms]")}\n`);
+            console.log(`Page [${pageTxt}] ${k.gray("• Timestamp format: [yyyy/mm/dd - hh:mm:ss.ms]")}\n`);
         else
-            console.log(`Page [${pageTxt}] - showing ${kleur.cyan().underline(`${notifsPerPage}`)} per page - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
+            console.log(`Page [${pageTxt}] - showing ${k.cyan().underline(`${notifsPerPage}`)} per page - ${notifications.length} notification${notifications.length == 1 ? "" : "s"} in total - sorted latest first\n`);
     };
 
     let printNotifs = "\n";
@@ -1113,9 +1099,9 @@ async function notificationLog(procs, page, notifsPerPage)
     printPageLine(true);
 
 
-    const bull = kleur.gray("•");
+    const bull = k.gray("•");
 
-    const key = await pause(`${kleur.cyan("[← →]")} Navigate Pages ${bull} ${kleur.cyan("[+ -]")} Adjust Page Size ${bull} ${kleur.cyan("[c]")} Clear ${bull} ${kleur.cyan("[x]")} Exit`);
+    const key = await pause(`${k.cyan("[← →]")} Navigate Pages ${bull} ${k.cyan("[+ -]")} Adjust Page Size ${bull} ${k.cyan("[c]")} Clear ${bull} ${k.cyan("[x]")} Exit`);
 
     switch(key.name || key.sequence)
     {
@@ -1157,7 +1143,7 @@ async function notificationLog(procs, page, notifsPerPage)
         if(confirm)
         {
             await rm(notifLogPath);
-            console.log(kleur.yellow("\nSuccessfully deleted all notifications."));
+            console.log(k.yellow("\nSuccessfully deleted all notifications."));
 
             let to = setTimeout(() => afterPm2Connected("idle", undefined, procs), 8000);
 

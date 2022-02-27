@@ -1,4 +1,4 @@
-const { writeFile, readFile } = require("fs-extra");
+const { writeFile, readFile, pathExists } = require("fs-extra");
 const { resolve } = require("path");
 const { filesystem } = require("svcorelib");
 
@@ -8,6 +8,9 @@ const { cfg } = require("./config");
 
 /** @typedef {import("node-notifier/notifiers/notificationcenter").Notification} Notification */
 /** @typedef {import("./types").LogNotificationObj} LogNotificationObj */
+
+
+const notificationLogPath = resolve("./.notifier/notifications.json");
 
 
 /**
@@ -22,8 +25,6 @@ function logNotification(notification)
 
         try
         {
-            const notificationLogPath = resolve("./.notifier/notifications.json");
-
             if(!(await filesystem.exists(notificationLogPath)))
             {
                 action = "creating notification file";
@@ -76,4 +77,27 @@ function logNotification(notification)
     });
 }
 
+/**
+ * Returns all notifications from the notification log
+ * @returns {Promise<LogNotificationObj[]>} Empty array if no notifications were sent
+ */
+const getAllNotifications = () => new Promise(async (res, rej) => {
+    try
+    {
+        if(!await pathExists(notificationLogPath))
+            return res([]);
+
+        /** @type {LogNotificationObj[]} */
+        const notifications = await (await readFile(notificationLogPath)).toJSON();
+
+        return res(notifications);
+    }
+    catch(err)
+    {
+        return rej(err);
+    }
+});
+
+
 module.exports = logNotification;
+module.exports.getAllNotifications = getAllNotifications;

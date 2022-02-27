@@ -1,6 +1,10 @@
 const readline = require("readline");
-const kleur = require("kleur");
+const k = require("kleur");
 const NanoTimer = require("nanotimer");
+const { spawn } = require("child_process");
+const { allOfType } = require("svcorelib");
+
+const { CommandError } = require("./error");
 
 
 /** @typedef {import("./types").KeypressObj} KeypressObj */
@@ -17,7 +21,7 @@ readline.emitKeypressEvents(process.stdin);
  */
 function printTitle(title, subtitle)
 {
-    process.stdout.write(kleur.underline().green(`${title}\n`));
+    process.stdout.write(k.underline().green(`${title}\n`));
 
     if(subtitle)
     {
@@ -140,6 +144,70 @@ function censor(str, shownCharsAmt)
     return `${str.substring(0, shownCharsAmt)}${repl}`;
 }
 
+/**
+ * Runs a shell command. Resolves void if exit code = 0, else rejects with an error or the exit code.
+ * @param {string} command The command to run
+ * @param {string[]} [args] The arguments
+ * @param {string} [cwd] The current working directory of this command - defaults to `process.cwd()`
+ * @param {(msg: string) => void} [onMessage] Gets called whenever the command sends a line to its stdout
+ * @returns {Promise<void, (Error | number)>}
+ */
+function runCommand(command, args, cwd, onMessage)
+{
+    if(!Array.isArray(args) || !allOfType(args, "string"))
+        args = [];
+
+    if(!["string", "undefined"].includes(typeof cwd))
+        cwd = process.cwd();
+
+    if(typeof onMessage !== "function")
+        onMessage = () => {};
+
+    return new Promise(async (res, rej) => {
+        try
+        {
+            /** @type {import("child_process").SpawnOptionsWithoutStdio} */
+            const cpOpts = {
+                ...(cwd ? { cwd } : {}),
+                windowsHide: true,
+            };
+
+            const cp = spawn(command, args, cpOpts);
+
+            cp.on("error", err => {
+                console.error(k.red("Command failed due to error:\n"), err);
+                return rej(err);
+            });
+
+            cp.stdout.on("data", async chunk => {
+                const msg = String(chunk);
+
+                onMessage(msg);
+
+                if(msg.includes("(Y/N)") || msg.includes("To fix this automatically"))
+                {
+                    setImmediate(() => {
+                        cp.stdin.setEncoding("utf-8");
+                        cp.stdin.write("Y\n");
+                        cp.stdin.end();
+                    });
+                }
+            });
+
+            cp.on("exit", (code) => {
+                if(code === 0)
+                    return res();
+
+                return rej(typeof code === "number" ? new CommandError(`Command '${command}' exited with code ${code}`) : code);
+            });
+        }
+        catch(err)
+        {
+            return rej(err);
+        }
+    });
+}
+
 module.exports = {
     printTitle,
     printLines,
@@ -147,4 +215,5 @@ module.exports = {
     pauseFor,
     pauseForMicroS,
     censor,
+    runCommand,
 };

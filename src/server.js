@@ -27,7 +27,7 @@ const { cfg } = require("./config");
 const placeholderIconPath = "./www/favicon.png";
 
 /** URLs that can be accessed with GET */
-const getURLs = [ "/", "/int/getproperties" ];
+const getURLs = [ "/", "/int/getproperties", "/int/getnotifications" ];
 /** URLs that can be accessed with POST */
 const postURLs = [ "/send", "/int/setproperty" ];
 
@@ -135,7 +135,9 @@ async function incomingRequest(method, req, res, url)
         }
 
         if(clientHasAuth && url === "/int/getproperties")
-            return respondJSON(res, 200, (await getAllProperties()));
+            return respondJSON(res, 200, await getAllProperties());
+        else if(clientHasAuth && url === "/int/getnotifications")
+            return respondJSON(res, 200, await logNotification.getAllNotifications());
         else if(!clientHasAuth)
             return respondRequireAuth(res);
 
