@@ -322,20 +322,18 @@ function setupWindowsStartup()
 
 /**
  * Call to remove any changes made by [pm2-installer](https://github.com/jessety/pm2-installer)
- * @param {number} firstStep
- * @param {number} maxSteps
  */
-function removeWindowsStartup(firstStep = 1, maxSteps = 2)
+function removeWindowsStartup()
 {
     return new Promise(async (res, rej) => {
         try
         {
             const pm2InstPath = "./pm2-installer/";
 
-            console.log(`${k.blue("Reverting pm2-installer configuration")} (${firstStep}/${maxSteps})...`);
+            console.log(`${k.blue("\n\nReverting pm2-installer configuration")} (1/2)`);
             await runCommand(npmCmd, [ "run", "deconfigure" ], pm2InstPath, onCommandMessage);
 
-            console.log(`${k.blue("Removing pm2-installer")} (${firstStep + 1}/${maxSteps})...`);
+            console.log(`${k.blue("\n\nRemoving pm2-installer")} (2/2)`);
             await runCommand(npmCmd, [ "run", "remove" ], pm2InstPath, onCommandMessage);
 
             return res();
@@ -942,7 +940,7 @@ function manageProcessPrompt(proc)
                     {
                         const plat = platform();
 
-                        console.log(`\nDeleting pm2 process (1/${plat === "win32" ? 4 : 2})...`);
+                        console.log("\nDeleting pm2 process...");
 
                         pm2.delete(proc.pm_id, async (err, newProc) => {
                             if(err)
@@ -951,14 +949,33 @@ function manageProcessPrompt(proc)
                             if(Array.isArray(newProc))
                                 newProc = newProc[0];
 
-                            if(plat === "win32")
-                                await removeWindowsStartup(2, 4);
+                            let addText = "";
 
-                            console.log(`Adjusting properties.json (${plat === "win32" ? "4/4" : "2/2"})...`);
+                            if(plat === "win32" && await getProperty("firstInstallDone") === true)
+                            {
+                                printLines([
+                                    "",
+                                    "Do you also want to remove the Windows-specific configuration and service?",
+                                    "This is only recommended if you want to completely uninstall Node-Notifier.",
+                                ], 1);
 
-                            await setProperty("firstInstallDone", false);
+                                const { removeStartup } = await prompt({
+                                    type: "confirm",
+                                    message: "Remove Windows-specific stuff",
+                                    name: "removeStartup",
+                                    initial: false,
+                                });
+                                console.log("\n");
 
-                            console.log(k.red("\nSuccessfully deleted the process.\n"));
+                                if(removeStartup)
+                                {
+                                    await removeWindowsStartup();
+                                    await setProperty("firstInstallDone", false);
+                                    addText = " and reverted the Windows-specific changes made by pm2-installer";
+                                }
+                            }
+
+                            console.log(k.red(`\nSuccessfully deleted the process${addText}.\n`));
 
                             await pause("Press any key to exit...");
 

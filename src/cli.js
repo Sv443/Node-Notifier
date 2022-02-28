@@ -184,13 +184,16 @@ function runCommand(command, args, cwd, onMessage)
 
                 onMessage(msg);
 
+                // this is not ideal but idk what else to do
                 if(msg.includes("(Y/N)") || msg.includes("To fix this automatically"))
                 {
-                    setImmediate(() => {
+                    onMessage(k.cyan(">> automatically confirming…"));
+                
+                    setTimeout(() => {
                         cp.stdin.setEncoding("utf-8");
                         cp.stdin.write("Y\n");
                         cp.stdin.end();
-                    });
+                    }, 500);
                 }
             });
 

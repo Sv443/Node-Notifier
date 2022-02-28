@@ -291,13 +291,13 @@ If this still didn't help you, feel free to [contact me.](https://sv443.net)
 
 <br>
 
-- **Kill the pm2 daemon**
+- **Reinstall everything**
     > If nothing else worked or you are getting the error `connect EPERM //./pipe/rpc.sock`, you can try these steps:  
     >   
     > 1. On Windows, open a terminal with administrator rights (<kbd>Windows</kbd> + <kbd>R</kbd>, enter `powershell` and press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>).  
     >    On Linux and MacOS sudo or root usually isn't needed for this.
-    > 2. Now enter the command `npm run fix`
-    > 3. To correctly start up Node-Notifier again **it's important you exit the admin terminal if you're on Windows** and always use a normal terminal from now on, unless you are prompted for it.
+    > 2. Enter the command `npm run deconfigure`
+    > 3. Run `npm start` to install the process again
 
 
 <br><br><br>

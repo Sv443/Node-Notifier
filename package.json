@@ -14,7 +14,6 @@
     "debug": "node src/main",
     "test": "snyk test",
     "enc-conf": "node src/tools/encode-config.js",
-    "fix": "pm2 kill",
     "deconfigure": "cd pm2-installer && npm run deconfigure && npm run remove && cd ..",
     "build": "npm run build-win && npm run build-linux && npm run build-mac && echo Files located in dist/",
     "build-win": "pkg -t node14-win -o dist/NodeNotifier-Win.exe .",
